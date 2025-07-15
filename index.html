@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رانيا شوب - بوتيك إلكتروني</title>
+    <meta name="description" content="رانيا شوب - بوتيك إلكتروني للجمال والأزياء. شعر، مكياج، عناية، عدسات، ملابس">
+    <meta name="keywords" content="رانيا شوب, مكياج, شعر, عناية, عدسات, ملابس, بوتيك">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <img src="image/logo.jpeg" alt="رانيا شوب">
+            </div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <button class="lang-btn active" data-lang="ar">العربية</button>
+        <button class="lang-btn" data-lang="fr">Français</button>
+    </div>
+
+
+
+    <!-- Fixed Sidebar Menu -->
+    <nav class="sidebar-menu" id="sidebarMenu">
+        <div class="sidebar-header">
+            <img src="image/logo.jpeg" alt="رانيا شوب" class="sidebar-logo">
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#home" data-category="all"><i class="fas fa-home"></i> <span data-ar="الرئيسية"
+                        data-fr="Accueil">الرئيسية</span></a></li>
+            <li><a href="#products" data-category="hair"><i class="fas fa-cut"></i> <span data-ar="شعر"
+                        data-fr="Cheveux">شعر</span></a></li>
+            <li><a href="#products" data-category="makeup"><i class="fas fa-palette"></i> <span data-ar="مكياج"
+                        data-fr="Maquillage">مكياج</span></a></li>
+            <li><a href="#products" data-category="skincare"><i class="fas fa-spa"></i> <span data-ar="عناية"
+                        data-fr="Soins">عناية</span></a></li>
+            <li><a href="#products" data-category="lenses"><i class="fas fa-eye"></i> <span data-ar="عدسات"
+                        data-fr="Lentilles">عدسات</span></a></li>
+            <li><a href="#products" data-category="clothing"><i class="fas fa-tshirt"></i> <span data-ar="ملابس"
+                        data-fr="Vêtements">ملابس</span></a></li>
+            <li><a href="#cart" class="cart-link"><i class="fas fa-shopping-cart"></i> <span data-ar="السلة"
+                        data-fr="Panier">السلة</span> <span class="cart-count">0</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="hero-background">
+                <div class="floating-elements">
+                    <div class="floating-element"></div>
+                    <div class="floating-element"></div>
+                    <div class="floating-element"></div>
+                </div>
+            </div>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title" data-ar="رانيا شوب" data-fr="Rania Shop">رانيا شوب</h1>
+                    <p class="hero-subtitle" data-ar="بوتيك إلكتروني للجمال والأزياء"
+                        data-fr="Boutique en ligne de beauté et mode">بوتيك إلكتروني للجمال والأزياء</p>
+                    <p class="hero-description"
+                        data-ar="اكتشفي عالم الجمال والأناقة مع مجموعتنا المتنوعة من منتجات العناية والأزياء"
+                        data-fr="Découvrez le monde de la beauté et de l'élégance avec notre collection variée de produits de soins et de mode">
+                        اكتشفي عالم الجمال والأناقة مع مجموعتنا المتنوعة من منتجات العناية والأزياء</p>
+                    <button class="cta-button" onclick="scrollToSection('products')">
+                        <span data-ar="تسوقي الآن" data-fr="Acheter maintenant">تسوقي الآن</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-gallery">
+                        <div class="hero-card main-card">
+                            <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&h=400&fit=crop&crop=center&auto=format&q=80"
+                                alt="مكياج فاخر">
+                        </div>
+                        <div class="hero-card secondary-card">
+                            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop&crop=center&auto=format&q=80"
+                                alt="منتجات العناية">
+                        </div>
+                        <div class="hero-card tertiary-card">
+                            <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=300&fit=crop&crop=center&auto=format&q=80"
+                                alt="أزياء أنيقة">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="products-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">منتجاتنا</h2>
+                    <p class="section-subtitle">اختاري من مجموعتنا المتنوعة</p>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="البحث عن المنتجات..." data-ar-placeholder="البحث عن المنتجات..." data-fr-placeholder="Rechercher des produits...">
+                        <button class="search-btn" onclick="searchProducts()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="search-suggestions" id="searchSuggestions"></div>
+                </div>
+
+                <!-- Product Filter -->
+                <div class="product-filter">
+                    <button class="filter-btn active" data-filter="all" data-ar="الكل" data-fr="Tous">الكل</button>
+                    <button class="filter-btn" data-filter="hair" data-ar="شعر" data-fr="Cheveux">شعر</button>
+                    <button class="filter-btn" data-filter="makeup" data-ar="مكياج" data-fr="Maquillage">مكياج</button>
+                    <button class="filter-btn" data-filter="skincare" data-ar="عناية" data-fr="Soins">عناية</button>
+                    <button class="filter-btn" data-filter="lenses" data-ar="عدسات" data-fr="Lentilles">عدسات</button>
+                    <button class="filter-btn" data-filter="clothing" data-ar="ملابس" data-fr="Vêtements">ملابس</button>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be dynamically loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Cart Section -->
+        <section id="cart" class="cart-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">سلة التسوق</h2>
+                </div>
+                <div class="cart-content">
+                    <div class="cart-items" id="cartItems">
+                        <div class="empty-cart">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>سلة التسوق فارغة</p>
+                        </div>
+                    </div>
+                    <div class="cart-summary" id="cartSummary" style="display: none;">
+                        <div class="summary-item">
+                            <span>المجموع الفرعي:</span>
+                            <span id="subtotal">0 دج</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>التوصيل:</span>
+                            <span id="deliveryPrice">0 دج</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>المجموع الكلي:</span>
+                            <span id="totalPrice">0 دج</span>
+                        </div>
+                        <button class="checkout-btn" onclick="showCheckoutForm()">
+                            <span>إتمام الطلب</span>
+                            <i class="fas fa-credit-card"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="image/logo.jpeg" alt="رانيا شوب">
+                        <h3 data-ar="رانيا شوب" data-fr="Rania Shop">رانيا شوب</h3>
+                        <p data-ar="بوتيك إلكتروني للجمال والأزياء" data-fr="Boutique en ligne de beauté et mode">بوتيك إلكتروني للجمال والأزياء</p>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 data-ar="روابط سريعة" data-fr="Liens rapides">روابط سريعة</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home" data-ar="الرئيسية" data-fr="Accueil">الرئيسية</a></li>
+                        <li><a href="#products" data-ar="المنتجات" data-fr="Produits">المنتجات</a></li>
+                        <li><a href="#cart" data-ar="السلة" data-fr="Panier">السلة</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 data-ar="الفئات" data-fr="Catégories">الفئات</h4>
+                    <ul class="footer-links">
+                        <li><a href="#products" data-category="hair" data-ar="شعر" data-fr="Cheveux">شعر</a></li>
+                        <li><a href="#products" data-category="makeup" data-ar="مكياج" data-fr="Maquillage">مكياج</a></li>
+                        <li><a href="#products" data-category="skincare" data-ar="عناية" data-fr="Soins">عناية</a></li>
+                        <li><a href="#products" data-category="lenses" data-ar="عدسات" data-fr="Lentilles">عدسات</a></li>
+                        <li><a href="#products" data-category="clothing" data-ar="ملابس" data-fr="Vêtements">ملابس</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4 data-ar="تابعينا" data-fr="Suivez-nous">تابعينا</h4>
+                    <div class="social-media-links">
+                        <a href="https://www.facebook.com/raniashop" target="_blank" class="social-link facebook" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://www.instagram.com/raniashop" target="_blank" class="social-link instagram" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://wa.me/213XXXXXXXXX" target="_blank" class="social-link whatsapp" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="https://www.tiktok.com/@raniashop" target="_blank" class="social-link tiktok" title="TikTok">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                    </div>
+                    <div class="contact-info">
+                        <p><i class="fas fa-phone"></i> <span dir="ltr">+213 XXX XXX XXX</span></p>
+                        <p><i class="fas fa-envelope"></i> contact@raniashop.dz</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-divider"></div>
+                <div class="footer-copyright">
+                    <p data-ar="© 2024 رانيا شوب. جميع الحقوق محفوظة." data-fr="© 2024 Rania Shop. Tous droits réservés.">© 2024 رانيا شوب. جميع الحقوق محفوظة.</p>
+                    <div class="payment-methods">
+                        <span data-ar="الدفع عند الاستلام" data-fr="Paiement à la livraison">الدفع عند الاستلام</span>
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img id="modalMainImage" src="" alt="">
+                    </div>
+                </div>
+                <div class="product-details">
+                    <h3 id="modalProductName"></h3>
+                    <p class="product-price" id="modalProductPrice"></p>
+                    <p class="product-description" id="modalProductDescription"></p>
+                    <div class="product-actions">
+                        <div class="quantity-selector">
+                            <button class="qty-btn" onclick="changeQuantity(-1)">-</button>
+                            <input type="number" id="modalQuantity" value="1" min="1">
+                            <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+                        </div>
+                        <button class="add-to-cart-btn" onclick="addToCartFromModal()">
+                            <i class="fas fa-cart-plus"></i>
+                            إضافة للسلة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <h3>إتمام الطلب</h3>
+                <form id="checkoutForm" class="checkout-form">
+                    <div class="form-group">
+                        <label for="customerName">الاسم الكامل *</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">رقم الهاتف *</label>
+                        <input type="tel" id="customerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">العنوان الكامل *</label>
+                        <textarea id="customerAddress" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="wilaya">الولاية *</label>
+                        <select id="wilaya" required onchange="calculateDelivery()">
+                            <option value="">اختر الولاية</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliveryType">نوع التوصيل *</label>
+                        <select id="deliveryType" required onchange="calculateDelivery()">
+                            <option value="">اختر نوع التوصيل</option>
+                            <option value="home">توصيل للمنزل</option>
+                            <option value="stopdesk">StopDesk</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerComment">ملاحظات (اختياري)</label>
+                        <textarea id="customerComment"></textarea>
+                    </div>
+                    <div class="order-summary">
+                        <div class="summary-item">
+                            <span>المجموع الفرعي:</span>
+                            <span id="checkoutSubtotal">0 دج</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>التوصيل:</span>
+                            <span id="checkoutDelivery">0 دج</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>المجموع الكلي:</span>
+                            <span id="checkoutTotal">0 دج</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-order-btn">
+                        <i class="fas fa-check"></i>
+                        تأكيد الطلب
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-body success-content">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>تم إرسال طلبك بنجاح!</h3>
+                <p>سيتم التواصل معك قريباً لتأكيد الطلب</p>
+                <button class="success-btn" onclick="closeSuccessModal()">حسناً</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
