@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - RANIA SHOP</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="../image/logo.jpeg" alt="RANIA SHOP" class="login-logo">
+                <h1>Admin Panel</h1>
+                <p>RANIA SHOP - Administration</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email Admin</label>
+                    <input type="email" id="email" required>
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" required>
+                    <i class="fas fa-lock"></i>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar">
+            <div class="sidebar-header">
+                <img src="../image/logo.jpeg" alt="RANIA SHOP" class="sidebar-logo">
+                <h3>RANIA SHOP</h3>
+                <p>Administration</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#dashboard" class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a></li>
+                <li><a href="#products" class="menu-item" data-section="products">
+                    <i class="fas fa-box"></i> Produits
+                </a></li>
+                <li><a href="#orders" class="menu-item" data-section="orders">
+                    <i class="fas fa-shopping-cart"></i> Commandes
+                </a></li>
+                <li><a href="#settings" class="menu-item" data-section="settings">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a></li>
+                <li><a href="#logout" class="menu-item logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="admin-user">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="adminEmail">admin@raniashop.com</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboardSection" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalProducts">0</h3>
+                            <p>Produits</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalOrders">0</h3>
+                            <p>Commandes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pendingOrders">0</h3>
+                            <p>En attente</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalRevenue">0 DA</h3>
+                            <p>Chiffre d'affaires</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="recent-orders">
+                        <h3>Commandes récentes</h3>
+                        <div id="recentOrdersList" class="orders-list">
+                            <!-- Recent orders will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="productsSection" class="content-section">
+                <div class="section-header">
+                    <h3>Gestion des Produits</h3>
+                    <button class="btn btn-primary" onclick="showAddProductModal()">
+                        <i class="fas fa-plus"></i> Ajouter Produit
+                    </button>
+                </div>
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Nom (AR)</th>
+                                <th>Nom (FR)</th>
+                                <th>Prix</th>
+                                <th>Catégorie</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Products will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="ordersSection" class="content-section">
+                <div class="section-header">
+                    <h3>Gestion des Commandes</h3>
+                    <div class="order-filters">
+                        <select id="orderStatusFilter">
+                            <option value="all">Toutes les commandes</option>
+                            <option value="pending">En attente</option>
+                            <option value="processing">En cours</option>
+                            <option value="completed">Terminées</option>
+                            <option value="cancelled">Annulées</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="orders-table-container">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Téléphone</th>
+                                <th>Wilaya</th>
+                                <th>Total</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settingsSection" class="content-section">
+                <div class="section-header">
+                    <h3>Paramètres du Site</h3>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-card">
+                        <h4>Informations générales</h4>
+                        <form id="siteSettingsForm">
+                            <div class="form-group">
+                                <label>Nom du site</label>
+                                <input type="text" id="siteName" value="RANIA SHOP">
+                            </div>
+                            <div class="form-group">
+                                <label>Email de contact</label>
+                                <input type="email" id="contactEmail" value="contact@raniashop.dz">
+                            </div>
+                            <div class="form-group">
+                                <label>Téléphone</label>
+                                <input type="tel" id="contactPhone" value="+213 XXX XXX XXX">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                        </form>
+                    </div>
+
+                    <div class="settings-card">
+                        <h4>Réseaux sociaux</h4>
+                        <form id="socialSettingsForm">
+                            <div class="form-group">
+                                <label>Facebook</label>
+                                <input type="url" id="facebookUrl" value="https://www.facebook.com/raniashop">
+                            </div>
+                            <div class="form-group">
+                                <label>Instagram</label>
+                                <input type="url" id="instagramUrl" value="https://www.instagram.com/raniashop">
+                            </div>
+                            <div class="form-group">
+                                <label>WhatsApp</label>
+                                <input type="tel" id="whatsappNumber" value="+213XXXXXXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>TikTok</label>
+                                <input type="url" id="tiktokUrl" value="https://www.tiktok.com/@raniashop">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="productModalTitle">Ajouter un produit</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="productForm" class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nom (Arabe)</label>
+                        <input type="text" id="productNameAr" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nom (Français)</label>
+                        <input type="text" id="productNameFr" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Prix (DA)</label>
+                        <input type="number" id="productPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Catégorie</label>
+                        <select id="productCategory" required>
+                            <option value="">Choisir une catégorie</option>
+                            <option value="hair">Cheveux</option>
+                            <option value="makeup">Maquillage</option>
+                            <option value="skincare">Soins</option>
+                            <option value="lenses">Lentilles</option>
+                            <option value="clothing">Vêtements</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description (Arabe)</label>
+                    <textarea id="productDescriptionAr" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Description (Français)</label>
+                    <textarea id="productDescriptionFr" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL de l'image</label>
+                    <input type="url" id="productImage" placeholder="https://example.com/image.jpg">
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Sauvegarder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Détails de la commande</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="orderDetails">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Admin Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

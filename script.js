@@ -290,9 +290,8 @@ function initializeApp() {
         }, 500);
     }, 2000);
 
-    // Load products
-    products = sampleProducts;
-    displayProducts(products);
+    // Load products from Firebase or fallback to sample data
+    loadProductsFromFirebase();
     
     // Setup event listeners
     setupEventListeners();
@@ -308,6 +307,65 @@ function initializeApp() {
     
     // Setup smooth scrolling
     setupSmoothScrolling();
+}
+
+// Load products from Firebase
+async function loadProductsFromFirebase() {
+    try {
+        // Check if Firebase is available
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            console.log('Firebase not available, using sample products');
+            products = sampleProducts;
+            displayProducts(products);
+            return;
+        }
+
+        // Try to load from Firebase
+        const productsSnapshot = await firebase.firestore()
+            .collection('products')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        if (productsSnapshot.empty) {
+            console.log('No products in Firebase, using sample products');
+            products = sampleProducts;
+        } else {
+            products = [];
+            productsSnapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            console.log(`Loaded ${products.length} products from Firebase`);
+        }
+
+        displayProducts(products);
+        
+        // Setup real-time listener for product updates
+        setupProductsListener();
+
+    } catch (error) {
+        console.error('Error loading products from Firebase:', error);
+        console.log('Falling back to sample products');
+        products = sampleProducts;
+        displayProducts(products);
+    }
+}
+
+// Setup real-time listener for products
+function setupProductsListener() {
+    try {
+        firebase.firestore().collection('products').onSnapshot((snapshot) => {
+            products = [];
+            snapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            displayProducts(products);
+            console.log('Products updated in real-time');
+        }, (error) => {
+            console.error('Error in products listener:', error);
+        });
+    } catch (error) {
+        console.error('Error setting up products listener:', error);
+    }
 }
 
 function setupEventListeners() {
@@ -789,7 +847,7 @@ function populateWilayaDropdown() {
     });
 }
 
-function handleCheckoutSubmission(e) {
+async function handleCheckoutSubmission(e) {
     e.preventDefault();
     
     const formData = {
@@ -800,21 +858,49 @@ function handleCheckoutSubmission(e) {
         deliveryType: document.getElementById('deliveryType')?.value,
         comment: document.getElementById('customerComment')?.value,
         cart: cart,
-        total: document.getElementById('checkoutTotal')?.textContent
+        total: document.getElementById('checkoutTotal')?.textContent,
+        status: 'pending',
+        timestamp: new Date()
     };
 
-    console.log('Order submitted:', formData);
-    
-    // Show success modal
-    closeModal();
-    const successModal = document.getElementById('successModal');
-    if (successModal) successModal.style.display = 'block';
-    
-    // Clear cart
-    cart = [];
-    updateCartDisplay();
-    updateCartCount();
-    saveCartToStorage();
+    try {
+        // Try to save to Firebase if available
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            await firebase.firestore()
+                .collection('orders')
+                .add({
+                    ...formData,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            console.log('Order saved to Firebase successfully');
+        } else {
+            console.log('Firebase not available, order logged locally:', formData);
+        }
+        
+        // Show success modal
+        closeModal();
+        const successModal = document.getElementById('successModal');
+        if (successModal) successModal.style.display = 'block';
+        
+        // Clear cart
+        cart = [];
+        updateCartDisplay();
+        updateCartCount();
+        saveCartToStorage();
+        
+    } catch (error) {
+        console.error('Error saving order:', error);
+        // Still show success to user, but log the error
+        closeModal();
+        const successModal = document.getElementById('successModal');
+        if (successModal) successModal.style.display = 'block';
+        
+        // Clear cart anyway
+        cart = [];
+        updateCartDisplay();
+        updateCartCount();
+        saveCartToStorage();
+    }
 }
 
 function closeSuccessModal() {

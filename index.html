@@ -118,7 +118,8 @@
                 <!-- Search Bar -->
                 <div class="search-container">
                     <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="البحث عن المنتجات..." data-ar-placeholder="البحث عن المنتجات..." data-fr-placeholder="Rechercher des produits...">
+                        <input type="text" id="searchInput" placeholder="البحث عن المنتجات..."
+                            data-ar-placeholder="البحث عن المنتجات..." data-fr-placeholder="Rechercher des produits...">
                         <button class="search-btn" onclick="searchProducts()">
                             <i class="fas fa-search"></i>
                         </button>
@@ -187,10 +188,11 @@
                     <div class="footer-logo">
                         <img src="image/logo.jpeg" alt="رانيا شوب">
                         <h3 data-ar="رانيا شوب" data-fr="Rania Shop">رانيا شوب</h3>
-                        <p data-ar="بوتيك إلكتروني للجمال والأزياء" data-fr="Boutique en ligne de beauté et mode">بوتيك إلكتروني للجمال والأزياء</p>
+                        <p data-ar="بوتيك إلكتروني للجمال والأزياء" data-fr="Boutique en ligne de beauté et mode">بوتيك
+                            إلكتروني للجمال والأزياء</p>
                     </div>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4 data-ar="روابط سريعة" data-fr="Liens rapides">روابط سريعة</h4>
                     <ul class="footer-links">
@@ -199,31 +201,38 @@
                         <li><a href="#cart" data-ar="السلة" data-fr="Panier">السلة</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4 data-ar="الفئات" data-fr="Catégories">الفئات</h4>
                     <ul class="footer-links">
                         <li><a href="#products" data-category="hair" data-ar="شعر" data-fr="Cheveux">شعر</a></li>
-                        <li><a href="#products" data-category="makeup" data-ar="مكياج" data-fr="Maquillage">مكياج</a></li>
+                        <li><a href="#products" data-category="makeup" data-ar="مكياج" data-fr="Maquillage">مكياج</a>
+                        </li>
                         <li><a href="#products" data-category="skincare" data-ar="عناية" data-fr="Soins">عناية</a></li>
-                        <li><a href="#products" data-category="lenses" data-ar="عدسات" data-fr="Lentilles">عدسات</a></li>
-                        <li><a href="#products" data-category="clothing" data-ar="ملابس" data-fr="Vêtements">ملابس</a></li>
+                        <li><a href="#products" data-category="lenses" data-ar="عدسات" data-fr="Lentilles">عدسات</a>
+                        </li>
+                        <li><a href="#products" data-category="clothing" data-ar="ملابس" data-fr="Vêtements">ملابس</a>
+                        </li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h4 data-ar="تابعينا" data-fr="Suivez-nous">تابعينا</h4>
                     <div class="social-media-links">
-                        <a href="https://www.facebook.com/raniashop" target="_blank" class="social-link facebook" title="Facebook">
+                        <a href="https://www.facebook.com/raniashop" target="_blank" class="social-link facebook"
+                            title="Facebook">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="https://www.instagram.com/raniashop" target="_blank" class="social-link instagram" title="Instagram">
+                        <a href="https://www.instagram.com/raniashop" target="_blank" class="social-link instagram"
+                            title="Instagram">
                             <i class="fab fa-instagram"></i>
                         </a>
-                        <a href="https://wa.me/213XXXXXXXXX" target="_blank" class="social-link whatsapp" title="WhatsApp">
+                        <a href="https://wa.me/213XXXXXXXXX" target="_blank" class="social-link whatsapp"
+                            title="WhatsApp">
                             <i class="fab fa-whatsapp"></i>
                         </a>
-                        <a href="https://www.tiktok.com/@raniashop" target="_blank" class="social-link tiktok" title="TikTok">
+                        <a href="https://www.tiktok.com/@raniashop" target="_blank" class="social-link tiktok"
+                            title="TikTok">
                             <i class="fab fa-tiktok"></i>
                         </a>
                     </div>
@@ -233,11 +242,12 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="footer-bottom">
                 <div class="footer-divider"></div>
                 <div class="footer-copyright">
-                    <p data-ar="© 2024 رانيا شوب. جميع الحقوق محفوظة." data-fr="© 2024 Rania Shop. Tous droits réservés.">© 2024 رانيا شوب. جميع الحقوق محفوظة.</p>
+                    <p data-ar="© 2024 رانيا شوب. جميع الحقوق محفوظة."
+                        data-fr="© 2024 Rania Shop. Tous droits réservés.">© 2024 رانيا شوب. جميع الحقوق محفوظة.</p>
                     <div class="payment-methods">
                         <span data-ar="الدفع عند الاستلام" data-fr="Paiement à la livraison">الدفع عند الاستلام</span>
                         <i class="fas fa-money-bill-wave"></i>
@@ -351,6 +361,12 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <!-- Scripts -->
+    <script src="admin/firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 
