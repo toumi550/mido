@@ -311,14 +311,20 @@ function initializeApp() {
 
 // Load products from Firebase
 async function loadProductsFromFirebase() {
+    // Always start with sample products to ensure site works
+    products = sampleProducts;
+    displayProducts(products);
+    console.log('Sample products loaded as fallback');
+
     try {
         // Check if Firebase is available
         if (typeof firebase === 'undefined' || !firebase.firestore) {
-            console.log('Firebase not available, using sample products');
-            products = sampleProducts;
-            displayProducts(products);
+            console.log('Firebase not available, keeping sample products');
             return;
         }
+
+        // Wait a bit for Firebase to initialize
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Try to load from Firebase
         const productsSnapshot = await firebase.firestore()
@@ -326,27 +332,24 @@ async function loadProductsFromFirebase() {
             .orderBy('createdAt', 'desc')
             .get();
 
-        if (productsSnapshot.empty) {
-            console.log('No products in Firebase, using sample products');
-            products = sampleProducts;
-        } else {
+        if (!productsSnapshot.empty) {
             products = [];
             productsSnapshot.forEach(doc => {
                 products.push({ id: doc.id, ...doc.data() });
             });
+            displayProducts(products);
             console.log(`Loaded ${products.length} products from Firebase`);
+            
+            // Setup real-time listener for product updates
+            setupProductsListener();
+        } else {
+            console.log('No products in Firebase, keeping sample products');
         }
-
-        displayProducts(products);
-        
-        // Setup real-time listener for product updates
-        setupProductsListener();
 
     } catch (error) {
         console.error('Error loading products from Firebase:', error);
-        console.log('Falling back to sample products');
-        products = sampleProducts;
-        displayProducts(products);
+        console.log('Keeping sample products as fallback');
+        // Products already set to sampleProducts above
     }
 }
 
