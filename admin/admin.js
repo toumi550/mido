@@ -640,35 +640,67 @@ async function handleSocialSettings(e) {
 async function initializeDefaultProducts() {
     const defaultProducts = [
         {
-            name: { ar: "شامبو مغذي", fr: "Shampoing Nourrissant" },
-            price: 1200,
+            name: { ar: "شامبو مغذي للشعر", fr: "Shampooing nourrissant" },
+            price: 2500,
             category: "hair",
-            description: { ar: "شامبو مغذي للشعر الجاف", fr: "Shampoing nourrissant pour cheveux secs" },
-            image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=300&h=300&fit=crop",
+            description: { ar: "شامبو مغذي ومرطب للشعر الجاف والتالف، يحتوي على زيوت طبيعية", fr: "Shampooing nourrissant et hydratant pour cheveux secs et abîmés, contient des huiles naturelles" },
+            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop&crop=center",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         },
         {
-            name: { ar: "أحمر شفاه", fr: "Rouge à Lèvres" },
-            price: 800,
+            name: { ar: "أحمر شفاه مات", fr: "Rouge à lèvres mat" },
+            price: 1800,
             category: "makeup",
-            description: { ar: "أحمر شفاه طويل الأمد", fr: "Rouge à lèvres longue tenue" },
-            image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop",
+            description: { ar: "أحمر شفاه بتركيبة مات طويلة الثبات، متوفر بألوان متعددة", fr: "Rouge à lèvres mat longue tenue, disponible en plusieurs couleurs" },
+            image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&h=300&fit=crop&crop=center",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         },
         {
-            name: { ar: "كريم مرطب", fr: "Crème Hydratante" },
-            price: 1500,
+            name: { ar: "كريم مرطب للوجه", fr: "Crème hydratante visage" },
+            price: 3200,
             category: "skincare",
-            description: { ar: "كريم مرطب للوجه", fr: "Crème hydratante pour le visage" },
-            image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop",
+            description: { ar: "كريم مرطب يومي للوجه، مناسب لجميع أنواع البشرة", fr: "Crème hydratante quotidienne pour le visage, convient à tous types de peau" },
+            image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=300&fit=crop&crop=center",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         },
         {
-            name: { ar: "عدسات زرقاء", fr: "Lentilles Bleues" },
-            price: 2000,
+            name: { ar: "عدسات ملونة زرقاء", fr: "Lentilles colorées bleues" },
+            price: 4500,
             category: "lenses",
-            description: { ar: "عدسات لاصقة زرقاء", fr: "Lentilles de contact bleues" },
-            image: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=300&h=300&fit=crop",
+            description: { ar: "عدسات لاصقة ملونة باللون الأزرق، آمنة ومريحة", fr: "Lentilles de contact colorées bleues, sûres et confortables" },
+            image: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "فستان أنيق وردي", fr: "Robe élégante rose" },
+            price: 8500,
+            category: "clothing",
+            description: { ar: "فستان أنيق ومريح، مناسب للمناسبات الخاصة", fr: "Robe élégante et confortable, parfaite pour les occasions spéciales" },
+            image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "ماسكارا مقاومة للماء", fr: "Mascara waterproof" },
+            price: 2200,
+            category: "makeup",
+            description: { ar: "ماسكارا مقاومة للماء تمنح الرموش كثافة وطولاً طبيعياً", fr: "Mascara waterproof qui donne volume et longueur naturelle aux cils" },
+            image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "زيت الأرغان للشعر", fr: "Huile d'argan cheveux" },
+            price: 3800,
+            category: "hair",
+            description: { ar: "زيت الأرغان الطبيعي لتغذية وترطيب الشعر", fr: "Huile d'argan naturelle pour nourrir et hydrater les cheveux" },
+            image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "سيروم فيتامين سي", fr: "Sérum vitamine C" },
+            price: 4200,
+            category: "skincare",
+            description: { ar: "سيروم فيتامين سي لإشراق البشرة ومحاربة علامات التقدم في السن", fr: "Sérum vitamine C pour éclaircir la peau et lutter contre les signes de l'âge" },
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&h=300&fit=crop&crop=center",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }
     ];
