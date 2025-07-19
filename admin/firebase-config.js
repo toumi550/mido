@@ -2,12 +2,12 @@
 // IMPORTANT: Remplacez ces valeurs par votre configuration Firebase
 const firebaseConfig = {
     // Vous devez remplacer ces valeurs par votre propre configuration Firebase
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyAammDyOIAra8S0I4kSTAbrJKOldPDYPA0",
+    authDomain: "rania-shop.firebaseapp.com",
+    projectId: "rania-shop",
+    storageBucket: "rania-shop.firebasestorage.app",
+    messagingSenderId: "79782603239",
+    appId: "1:79782603239:web:1985a0885dd7fc3968b542"
 };
 
 // Instructions pour obtenir votre configuration Firebase :
@@ -40,6 +40,15 @@ auth.useDeviceLanguage(); // Use device language for auth UI
 // Firestore settings
 db.settings({
     timestampsInSnapshots: true
+});
+
+// Add error handling for auth state changes
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        console.log('User signed in:', user.email);
+    } else {
+        console.log('User signed out');
+    }
 });
 
 console.log('Firebase services initialized:', {

@@ -697,15 +697,17 @@ function showError(message) {
 
 function getErrorMessage(errorCode) {
     const errorMessages = {
-        'auth/user-not-found': 'Utilisateur non trouvé',
-        'auth/wrong-password': 'Mot de passe incorrect',
-        'auth/invalid-email': 'Email invalide',
-        'auth/user-disabled': 'Compte désactivé',
+        'auth/user-not-found': 'Utilisateur non trouvé. Vérifiez votre email.',
+        'auth/wrong-password': 'Mot de passe incorrect.',
+        'auth/invalid-email': 'Format d\'email invalide.',
+        'auth/user-disabled': 'Compte désactivé.',
         'auth/too-many-requests': 'Trop de tentatives. Réessayez plus tard.',
-        'auth/network-request-failed': 'Erreur de connexion réseau'
+        'auth/network-request-failed': 'Erreur de connexion réseau. Vérifiez votre connexion.',
+        'auth/invalid-credential': 'Identifiants invalides.',
+        'auth/configuration-not-found': 'Configuration Firebase manquante.'
     };
     
-    return errorMessages[errorCode] || 'Erreur de connexion';
+    return errorMessages[errorCode] || `Erreur: ${errorCode}`;
 }
 
 function getStatusText(status) {
