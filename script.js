@@ -777,7 +777,7 @@ function changeLanguage(lang) {
     document.documentElement.lang = lang;
 
     // Update language buttons
-    document.querySelectorAll('.language-btn').forEach(btn => {
+    document.querySelectorAll('.lang-btn, .language-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lang === lang);
     });
 
@@ -832,7 +832,7 @@ function updateTranslations() {
 // Setup event listeners
 function setupEventListeners() {
     // Language switchers
-    document.querySelectorAll('.language-btn').forEach(btn => {
+    document.querySelectorAll('.lang-btn, .language-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const lang = e.target.dataset.lang;
             changeLanguage(lang);
