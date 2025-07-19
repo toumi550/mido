@@ -343,13 +343,111 @@ async function loadProductsFromFirebase() {
             // Setup real-time listener for product updates
             setupProductsListener();
         } else {
-            console.log('No products in Firebase, keeping sample products');
+            console.log('No products in Firebase, initializing with default products');
+            await initializeFirebaseWithDefaultProducts();
+            // After initialization, load the products
+            const newSnapshot = await firebase.firestore()
+                .collection('products')
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            if (!newSnapshot.empty) {
+                products = [];
+                newSnapshot.forEach(doc => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+                displayProducts(products);
+                setupProductsListener();
+                console.log(`Initialized and loaded ${products.length} products from Firebase`);
+            }
         }
 
     } catch (error) {
         console.error('Error loading products from Firebase:', error);
         console.log('Keeping sample products as fallback');
         // Products already set to sampleProducts above
+    }
+}
+
+// Initialize Firebase with default products
+async function initializeFirebaseWithDefaultProducts() {
+    const defaultProducts = [
+        {
+            name: { ar: "شامبو مغذي للشعر", fr: "Shampooing nourrissant" },
+            price: 2500,
+            category: "hair",
+            description: { ar: "شامبو مغذي ومرطب للشعر الجاف والتالف، يحتوي على زيوت طبيعية", fr: "Shampooing nourrissant et hydratant pour cheveux secs et abîmés, contient des huiles naturelles" },
+            image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "أحمر شفاه مات", fr: "Rouge à lèvres mat" },
+            price: 1800,
+            category: "makeup",
+            description: { ar: "أحمر شفاه بتركيبة مات طويلة الثبات، متوفر بألوان متعددة", fr: "Rouge à lèvres mat longue tenue, disponible en plusieurs couleurs" },
+            image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "كريم مرطب للوجه", fr: "Crème hydratante visage" },
+            price: 3200,
+            category: "skincare",
+            description: { ar: "كريم مرطب يومي للوجه، مناسب لجميع أنواع البشرة", fr: "Crème hydratante quotidienne pour le visage, convient à tous types de peau" },
+            image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "عدسات ملونة زرقاء", fr: "Lentilles colorées bleues" },
+            price: 4500,
+            category: "lenses",
+            description: { ar: "عدسات لاصقة ملونة باللون الأزرق، آمنة ومريحة", fr: "Lentilles de contact colorées bleues, sûres et confortables" },
+            image: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "فستان أنيق وردي", fr: "Robe élégante rose" },
+            price: 8500,
+            category: "clothing",
+            description: { ar: "فستان أنيق ومريح، مناسب للمناسبات الخاصة", fr: "Robe élégante et confortable, parfaite pour les occasions spéciales" },
+            image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "ماسكارا مقاومة للماء", fr: "Mascara waterproof" },
+            price: 2200,
+            category: "makeup",
+            description: { ar: "ماسكارا مقاومة للماء تمنح الرموش كثافة وطولاً طبيعياً", fr: "Mascara waterproof qui donne volume et longueur naturelle aux cils" },
+            image: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "زيت الأرغان للشعر", fr: "Huile d'argan cheveux" },
+            price: 3800,
+            category: "hair",
+            description: { ar: "زيت الأرغان الطبيعي لتغذية وترطيب الشعر", fr: "Huile d'argan naturelle pour nourrir et hydrater les cheveux" },
+            image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "سيروم فيتامين سي", fr: "Sérum vitamine C" },
+            price: 4200,
+            category: "skincare",
+            description: { ar: "سيروم فيتامين سي لإشراق البشرة ومحاربة علامات التقدم في السن", fr: "Sérum vitamine C pour éclaircir la peau et lutter contre les signes de l'âge" },
+            image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400&h=300&fit=crop&crop=center",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }
+    ];
+
+    try {
+        const batch = firebase.firestore().batch();
+        defaultProducts.forEach(product => {
+            const docRef = firebase.firestore().collection('products').doc();
+            batch.set(docRef, product);
+        });
+        await batch.commit();
+        console.log('Default products initialized in Firebase');
+    } catch (error) {
+        console.error('Error initializing default products:', error);
     }
 }
 
@@ -613,10 +711,16 @@ function filterProducts(category) {
 }
 
 function addToCart(productId, quantity = 1) {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+    // Convert productId to string for Firebase compatibility
+    const id = String(productId);
+    const product = products.find(p => String(p.id) === id);
+    
+    if (!product) {
+        console.error('Product not found:', productId);
+        return;
+    }
 
-    const existingItem = cart.find(item => item.id === productId);
+    const existingItem = cart.find(item => String(item.id) === id);
     
     if (existingItem) {
         existingItem.quantity += quantity;
@@ -633,6 +737,11 @@ function addToCart(productId, quantity = 1) {
     
     // Show success animation
     showAddToCartAnimation();
+    
+    // Show success message
+    const t = translations[currentLanguage];
+    const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
+    showNotification(`${productName} ${t.productAdded}`, 'success');
 }
 
 function removeFromCart(productId) {
@@ -1197,4 +1306,178 @@ document.addEventListener('DOMContentLoaded', () => {
     sections.forEach(section => {
         observer.observe(section);
     });
+});
+// F
+ix product modal function for Firebase compatibility
+function openProductModal(productId) {
+    // Convert productId to string for Firebase compatibility
+    const id = String(productId);
+    const product = products.find(p => String(p.id) === id);
+    
+    if (!product) {
+        console.error('Product not found for modal:', productId);
+        return;
+    }
+
+    currentProduct = product;
+    const modal = document.getElementById('productModal');
+    const t = translations[currentLanguage];
+
+    // Get translated product details
+    const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
+    const productDescription = typeof product.description === 'object' ? product.description[currentLanguage] : product.description;
+
+    document.getElementById('modalProductImage').src = product.image;
+    document.getElementById('modalProductName').textContent = productName;
+    document.getElementById('modalProductPrice').textContent = `${product.price} ${t.currency}`;
+    document.getElementById('modalProductDescription').textContent = productDescription;
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Add notification system
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(n => n.remove());
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Fix cart functions for Firebase compatibility
+function removeFromCart(productId) {
+    const id = String(productId);
+    cart = cart.filter(item => String(item.id) !== id);
+    updateCartDisplay();
+    updateCartCount();
+    saveCartToStorage();
+}
+
+function updateCartItemQuantity(productId, newQuantity) {
+    const id = String(productId);
+    const item = cart.find(item => String(item.id) === id);
+    
+    if (item) {
+        if (newQuantity <= 0) {
+            removeFromCart(id);
+        } else {
+            item.quantity = newQuantity;
+            updateCartDisplay();
+            updateCartCount();
+            saveCartToStorage();
+        }
+    }
+}
+
+// Fix search functions for Firebase compatibility
+function searchProducts(query) {
+    if (!query.trim()) return products;
+    
+    const searchTerm = query.toLowerCase().trim();
+    const t = translations[currentLanguage];
+    
+    return products.filter(product => {
+        const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
+        const productDescription = typeof product.description === 'object' ? product.description[currentLanguage] : product.description;
+        
+        return productName.toLowerCase().includes(searchTerm) ||
+               productDescription.toLowerCase().includes(searchTerm);
+    });
+}
+
+// Ensure all event listeners work with Firebase IDs
+function setupEventListeners() {
+    // Language switchers
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const lang = e.target.dataset.lang;
+            changeLanguage(lang);
+        });
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                handleSearch(e.target.value);
+            }, 300);
+        });
+    }
+
+    // Category filters
+    document.querySelectorAll('.category-filter').forEach(filter => {
+        filter.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = e.target.dataset.category;
+            filterByCategory(category);
+        });
+    });
+
+    // Cart toggle
+    const cartToggle = document.getElementById('cartToggle');
+    if (cartToggle) {
+        cartToggle.addEventListener('click', toggleCart);
+    }
+
+    // Modal close buttons
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+
+    // Checkout form
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', handleCheckoutSubmission);
+    }
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Re-setup event listeners to ensure Firebase compatibility
+    setupEventListeners();
 });
