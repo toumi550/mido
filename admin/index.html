@@ -292,8 +292,16 @@
                     <textarea id="productDescriptionFr" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>URL de l'image</label>
-                    <input type="url" id="productImage" placeholder="https://example.com/image.jpg">
+                    <label>Image du produit</label>
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Glissez-déposez une image ici ou cliquez pour sélectionner</p>
+                            <small>Formats acceptés: JPG, PNG, GIF (max 5MB)</small>
+                        </div>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                        <input type="hidden" id="productImage">
+                    </div>
                     <div class="image-preview" id="imagePreview"></div>
                 </div>
                 <div class="modal-footer">

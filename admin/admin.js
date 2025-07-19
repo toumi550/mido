@@ -63,8 +63,8 @@ function setupEventListeners() {
         btn.addEventListener('click', closeModals);
     });
 
-    // Image preview
-    document.getElementById('productImage').addEventListener('input', previewImage);
+    // Initialize image upload system
+    setupImageUpload();
 
     // Order status filter
     document.getElementById('orderStatusFilter').addEventListener('change', filterOrders);
@@ -262,6 +262,21 @@ async function loadProducts() {
         productsSnapshot.forEach(doc => {
             products.push({ id: doc.id, ...doc.data() });
         });
+
+        // Si aucun produit dans Firebase, ajouter les produits par défaut
+        if (products.length === 0) {
+            await initializeDefaultProducts();
+            // Recharger après avoir ajouté les produits par défaut
+            const newSnapshot = await firebase.firestore()
+                .collection('products')
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            products = [];
+            newSnapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+        }
 
         displayProducts();
 
@@ -621,16 +636,138 @@ async function handleSocialSettings(e) {
     }
 }
 
+// Initialize default products if Firebase collection is empty
+async function initializeDefaultProducts() {
+    const defaultProducts = [
+        {
+            name: { ar: "شامبو مغذي", fr: "Shampoing Nourrissant" },
+            price: 1200,
+            category: "hair",
+            description: { ar: "شامبو مغذي للشعر الجاف", fr: "Shampoing nourrissant pour cheveux secs" },
+            image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=300&h=300&fit=crop",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "أحمر شفاه", fr: "Rouge à Lèvres" },
+            price: 800,
+            category: "makeup",
+            description: { ar: "أحمر شفاه طويل الأمد", fr: "Rouge à lèvres longue tenue" },
+            image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=300&h=300&fit=crop",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "كريم مرطب", fr: "Crème Hydratante" },
+            price: 1500,
+            category: "skincare",
+            description: { ar: "كريم مرطب للوجه", fr: "Crème hydratante pour le visage" },
+            image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=300&h=300&fit=crop",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        },
+        {
+            name: { ar: "عدسات زرقاء", fr: "Lentilles Bleues" },
+            price: 2000,
+            category: "lenses",
+            description: { ar: "عدسات لاصقة زرقاء", fr: "Lentilles de contact bleues" },
+            image: "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=300&h=300&fit=crop",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }
+    ];
+
+    try {
+        const batch = firebase.firestore().batch();
+        defaultProducts.forEach(product => {
+            const docRef = firebase.firestore().collection('products').doc();
+            batch.set(docRef, product);
+        });
+        await batch.commit();
+        console.log('Produits par défaut ajoutés avec succès');
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout des produits par défaut:', error);
+    }
+}
+
+// Image upload functions
+let currentImageFile = null;
+
+function setupImageUpload() {
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+
+    // Click to upload
+    imageUploadArea.addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    // File input change
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleImageFile(file);
+        }
+    });
+
+    // Drag and drop
+    imageUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        imageUploadArea.classList.add('drag-over');
+    });
+
+    imageUploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        imageUploadArea.classList.remove('drag-over');
+    });
+
+    imageUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageUploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                handleImageFile(file);
+            } else {
+                showError('Veuillez sélectionner un fichier image valide');
+            }
+        }
+    });
+}
+
+function handleImageFile(file) {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showError('La taille de l\'image ne doit pas dépasser 5MB');
+        return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showError('Veuillez sélectionner un fichier image valide');
+        return;
+    }
+
+    currentImageFile = file;
+    
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imagePreview = document.getElementById('imagePreview');
+        imagePreview.innerHTML = `
+            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">${file.name}</p>
+        `;
+        
+        // Update the hidden input with base64 data
+        document.getElementById('productImage').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 // Utility Functions
 function previewImage() {
-    const imageUrl = document.getElementById('productImage').value;
-    const preview = document.getElementById('imagePreview');
-    
-    if (imageUrl) {
-        preview.innerHTML = `<img src="${imageUrl}" alt="Preview" onerror="this.style.display='none'">`;
-    } else {
-        preview.innerHTML = '';
-    }
+    // This function is now handled by the new image upload system
+    // Keeping it for backward compatibility
 }
 
 function closeModals() {
