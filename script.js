@@ -613,19 +613,30 @@ function filterProducts(category) {
 }
 
 function addToCart(productId, quantity = 1) {
+    console.log('addToCart appelée avec productId:', productId, 'quantity:', quantity);
+    
     const product = products.find(p => p.id === productId);
-    if (!product) return;
+    if (!product) {
+        console.error('Produit non trouvé avec ID:', productId);
+        return;
+    }
+
+    console.log('Produit trouvé:', product);
 
     const existingItem = cart.find(item => item.id === productId);
     
     if (existingItem) {
         existingItem.quantity += quantity;
+        console.log('Quantité mise à jour pour le produit existant:', existingItem);
     } else {
         cart.push({
             ...product,
             quantity: quantity
         });
+        console.log('Nouveau produit ajouté au panier');
     }
+
+    console.log('Panier actuel:', cart);
 
     updateCartDisplay();
     updateCartCount();
@@ -634,6 +645,19 @@ function addToCart(productId, quantity = 1) {
     // Show success animation
     showAddToCartAnimation();
 }
+
+// Exposer les fonctions dans le scope global pour les attributs onclick
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.updateCartQuantity = updateCartQuantity;
+window.openProductModal = openProductModal;
+window.addToCartFromModal = addToCartFromModal;
+window.changeQuantity = changeQuantity;
+window.showCheckoutForm = showCheckoutForm;
+window.calculateDelivery = calculateDelivery;
+window.closeModal = closeModal;
+window.closeSuccessModal = closeSuccessModal;
+window.selectProduct = selectProduct;
 
 function removeFromCart(productId) {
     cart = cart.filter(item => item.id !== productId);
