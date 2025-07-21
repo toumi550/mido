@@ -71,6 +71,9 @@ function setupEventListeners() {
 
     // Mobile menu toggle
     document.querySelector('.mobile-menu-toggle').addEventListener('click', toggleMobileMenu);
+
+    // Nouvelles fonctionnalités - Event listeners
+    setupNewFeatureListeners();
 }
 
 // Authentication Functions
@@ -477,6 +480,7 @@ function createOrderRow(order) {
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A';
     
     tr.innerHTML = `
+        <td><input type="checkbox" class="order-checkbox" data-order-id="${order.id}" onchange="toggleOrderSelection('${order.id}', this.checked)"></td>
         <td>#${order.orderNumber || order.id.substring(0, 8)}</td>
         <td>${order.customerName || 'N/A'}</td>
         <td>${order.customerPhone || 'N/A'}</td>
@@ -933,3 +937,793 @@ firebase.auth().onAuthStateChanged((user) => {
         setupRealtimeListeners();
     }
 });
+// 
+===== NOUVELLES FONCTIONNALITÉS AVANCÉES =====
+
+// Variables globales pour les nouvelles fonctionnalités
+let selectedOrders = new Set();
+let analyticsData = {};
+
+// ===== GESTION DES COMMANDES AVANCÉE =====
+
+// Fonction pour supprimer une commande
+async function deleteOrder(orderId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ? Cette action est irréversible.')) {
+        return;
+    }
+
+    try {
+        showLoading('Suppression en cours...');
+        await firebase.firestore().collection('orders').doc(orderId).delete();
+        showSuccess('Commande supprimée avec succès !');
+        loadOrders(); // Recharger la liste
+    } catch (error) {
+        showError('Erreur lors de la suppression : ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Fonction pour supprimer plusieurs commandes
+async function deleteSelectedOrders() {
+    if (selectedOrders.size === 0) {
+        showError('Aucune commande sélectionnée');
+        return;
+    }
+
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedOrders.size} commande(s) ? Cette action est irréversible.`)) {
+        return;
+    }
+
+    try {
+        showLoading('Suppression en cours...');
+        const batch = firebase.firestore().batch();
+        
+        selectedOrders.forEach(orderId => {
+            const orderRef = firebase.firestore().collection('orders').doc(orderId);
+            batch.delete(orderRef);
+        });
+
+        await batch.commit();
+        showSuccess(`${selectedOrders.size} commande(s) supprimée(s) avec succès !`);
+        selectedOrders.clear();
+        updateDeleteButton();
+        loadOrders();
+    } catch (error) {
+        showError('Erreur lors de la suppression : ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Fonction pour sélectionner/désélectionner toutes les commandes
+function toggleSelectAllOrders() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    const selectAllBtn = document.getElementById('selectAllOrders');
+    
+    if (selectedOrders.size === checkboxes.length) {
+        // Tout désélectionner
+        selectedOrders.clear();
+        checkboxes.forEach(cb => cb.checked = false);
+        selectAllBtn.innerHTML = '<i class="fas fa-check-square"></i> Tout sélectionner';
+    } else {
+        // Tout sélectionner
+        selectedOrders.clear();
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            selectedOrders.add(cb.dataset.orderId);
+        });
+        selectAllBtn.innerHTML = '<i class="fas fa-square"></i> Tout désélectionner';
+    }
+    
+    updateDeleteButton();
+}
+
+// Fonction pour gérer la sélection d'une commande
+function toggleOrderSelection(orderId, checked) {
+    if (checked) {
+        selectedOrders.add(orderId);
+    } else {
+        selectedOrders.delete(orderId);
+    }
+    updateDeleteButton();
+    updateSelectAllButton();
+}
+
+// Mettre à jour le bouton de suppression
+function updateDeleteButton() {
+    const deleteBtn = document.getElementById('deleteSelectedOrders');
+    deleteBtn.disabled = selectedOrders.size === 0;
+    deleteBtn.textContent = selectedOrders.size > 0 
+        ? `Supprimer (${selectedOrders.size})` 
+        : 'Supprimer sélectionnées';
+}
+
+// Mettre à jour le bouton "Tout sélectionner"
+function updateSelectAllButton() {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    const selectAllBtn = document.getElementById('selectAllOrders');
+    
+    if (selectedOrders.size === checkboxes.length && checkboxes.length > 0) {
+        selectAllBtn.innerHTML = '<i class="fas fa-square"></i> Tout désélectionner';
+    } else {
+        selectAllBtn.innerHTML = '<i class="fas fa-check-square"></i> Tout sélectionner';
+    }
+}
+
+// ===== GESTION DU COMPTE ADMIN =====
+
+// Changer le mot de passe
+async function handleChangePassword(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showError('Les nouveaux mots de passe ne correspondent pas');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showError('Le nouveau mot de passe doit contenir au moins 6 caractères');
+        return;
+    }
+    
+    try {
+        showLoading('Changement du mot de passe...');
+        
+        // Ré-authentifier l'utilisateur
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            currentUser.email,
+            currentPassword
+        );
+        
+        await currentUser.reauthenticateWithCredential(credential);
+        
+        // Changer le mot de passe
+        await currentUser.updatePassword(newPassword);
+        
+        showSuccess('Mot de passe changé avec succès !');
+        document.getElementById('changePasswordForm').reset();
+        
+    } catch (error) {
+        if (error.code === 'auth/wrong-password') {
+            showError('Mot de passe actuel incorrect');
+        } else {
+            showError('Erreur lors du changement de mot de passe : ' + error.message);
+        }
+    } finally {
+        hideLoading();
+    }
+}
+
+// Changer l'email admin
+async function handleChangeEmail(e) {
+    e.preventDefault();
+    
+    const newEmail = document.getElementById('newEmail').value;
+    const password = document.getElementById('passwordConfirm').value;
+    
+    try {
+        showLoading('Changement de l\'email...');
+        
+        // Ré-authentifier l'utilisateur
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            currentUser.email,
+            password
+        );
+        
+        await currentUser.reauthenticateWithCredential(credential);
+        
+        // Changer l'email
+        await currentUser.updateEmail(newEmail);
+        
+        showSuccess('Email changé avec succès !');
+        document.getElementById('currentEmail').value = newEmail;
+        document.getElementById('adminEmail').textContent = newEmail;
+        document.getElementById('changeEmailForm').reset();
+        
+    } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+            showError('Cet email est déjà utilisé');
+        } else if (error.code === 'auth/wrong-password') {
+            showError('Mot de passe incorrect');
+        } else {
+            showError('Erreur lors du changement d\'email : ' + error.message);
+        }
+    } finally {
+        hideLoading();
+    }
+}
+
+// Ajouter un nouvel administrateur
+async function handleAddAdmin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('newAdminEmail').value;
+    const password = document.getElementById('newAdminPassword').value;
+    
+    try {
+        showLoading('Création du compte administrateur...');
+        
+        // Créer le nouvel utilisateur
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        
+        // Ajouter à la collection des admins
+        await firebase.firestore().collection('admins').doc(userCredential.user.uid).set({
+            email: email,
+            role: 'admin',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdBy: currentUser.email
+        });
+        
+        showSuccess('Administrateur ajouté avec succès !');
+        document.getElementById('addAdminForm').reset();
+        loadAdminUsers();
+        
+    } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+            showError('Cet email est déjà utilisé');
+        } else {
+            showError('Erreur lors de la création : ' + error.message);
+        }
+    } finally {
+        hideLoading();
+    }
+}
+
+// Charger la liste des administrateurs
+async function loadAdminUsers() {
+    try {
+        const adminsSnapshot = await firebase.firestore().collection('admins').get();
+        const adminsList = document.getElementById('adminUsersList');
+        
+        adminsList.innerHTML = '';
+        
+        adminsSnapshot.forEach(doc => {
+            const admin = doc.data();
+            const adminElement = document.createElement('div');
+            adminElement.className = 'admin-user-item';
+            adminElement.innerHTML = `
+                <div class="admin-info">
+                    <i class="fas fa-user-shield"></i>
+                    <span>${admin.email}</span>
+                    <small>Créé le ${admin.createdAt ? admin.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A'}</small>
+                </div>
+                <div class="admin-actions">
+                    ${admin.email !== currentUser.email ? 
+                        `<button class="btn btn-danger btn-sm" onclick="removeAdmin('${doc.id}', '${admin.email}')">
+                            <i class="fas fa-trash"></i>
+                        </button>` : 
+                        '<span class="current-user">Vous</span>'
+                    }
+                </div>
+            `;
+            adminsList.appendChild(adminElement);
+        });
+        
+    } catch (error) {
+        showError('Erreur lors du chargement des administrateurs : ' + error.message);
+    }
+}
+
+// Supprimer un administrateur
+async function removeAdmin(adminId, email) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'administrateur ${email} ?`)) {
+        return;
+    }
+    
+    try {
+        showLoading('Suppression en cours...');
+        await firebase.firestore().collection('admins').doc(adminId).delete();
+        showSuccess('Administrateur supprimé avec succès !');
+        loadAdminUsers();
+    } catch (error) {
+        showError('Erreur lors de la suppression : ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// ===== STATISTIQUES AVANCÉES =====
+
+// Charger les statistiques avancées
+async function loadAdvancedAnalytics() {
+    try {
+        showLoading('Chargement des statistiques...');
+        
+        const timeRange = parseInt(document.getElementById('analyticsTimeRange').value);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - timeRange);
+        
+        // Charger les commandes dans la période
+        const ordersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .where('createdAt', '>=', startDate)
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const orders = [];
+        ordersSnapshot.forEach(doc => {
+            orders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Calculer les statistiques
+        calculateAnalytics(orders, timeRange);
+        
+    } catch (error) {
+        showError('Erreur lors du chargement des statistiques : ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Calculer les statistiques
+function calculateAnalytics(orders, timeRange) {
+    // Statistiques mensuelles
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthlyOrders = orders.filter(order => {
+        const orderDate = order.createdAt.toDate();
+        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+    });
+    
+    const monthlyRevenue = monthlyOrders.reduce((sum, order) => {
+        const total = typeof order.total === 'number' ? order.total : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
+        return sum + (total || 0);
+    }, 0);
+    
+    // Mettre à jour l'affichage
+    document.getElementById('monthlyOrders').textContent = monthlyOrders.length;
+    document.getElementById('monthlyRevenue').textContent = monthlyRevenue + ' DA';
+    
+    // Calculer la croissance (comparaison avec le mois précédent)
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    
+    const lastMonthOrders = orders.filter(order => {
+        const orderDate = order.createdAt.toDate();
+        return orderDate.getMonth() === lastMonth.getMonth() && orderDate.getFullYear() === lastMonth.getFullYear();
+    });
+    
+    const growth = lastMonthOrders.length > 0 
+        ? ((monthlyOrders.length - lastMonthOrders.length) / lastMonthOrders.length * 100).toFixed(1)
+        : 0;
+    
+    document.getElementById('growthRate').textContent = `${growth > 0 ? '+' : ''}${growth}%`;
+    document.getElementById('growthRate').className = `stat-value ${growth >= 0 ? 'positive' : 'negative'}`;
+    
+    // Produits les plus vendus
+    calculateTopProducts(orders);
+    
+    // Statistiques par wilaya
+    calculateWilayaStats(orders);
+    
+    // Graphique des ventes (simulation simple)
+    drawSalesChart(orders, timeRange);
+}
+
+// Calculer les produits les plus vendus
+function calculateTopProducts(orders) {
+    const productStats = {};
+    
+    orders.forEach(order => {
+        if (order.items) {
+            order.items.forEach(item => {
+                const productName = typeof item.name === 'object' ? item.name.fr || item.name.ar : item.name;
+                if (!productStats[productName]) {
+                    productStats[productName] = { quantity: 0, revenue: 0 };
+                }
+                productStats[productName].quantity += item.quantity;
+                productStats[productName].revenue += item.price * item.quantity;
+            });
+        }
+    });
+    
+    // Trier par quantité vendue
+    const sortedProducts = Object.entries(productStats)
+        .sort(([,a], [,b]) => b.quantity - a.quantity)
+        .slice(0, 5);
+    
+    const topProductsList = document.getElementById('topProductsList');
+    topProductsList.innerHTML = '';
+    
+    sortedProducts.forEach(([name, stats], index) => {
+        const productElement = document.createElement('div');
+        productElement.className = 'top-product-item';
+        productElement.innerHTML = `
+            <div class="product-rank">${index + 1}</div>
+            <div class="product-info">
+                <div class="product-name">${name}</div>
+                <div class="product-stats">
+                    <span>${stats.quantity} vendus</span>
+                    <span>${stats.revenue} DA</span>
+                </div>
+            </div>
+        `;
+        topProductsList.appendChild(productElement);
+    });
+}
+
+// Calculer les statistiques par wilaya
+function calculateWilayaStats(orders) {
+    const wilayaStats = {};
+    
+    orders.forEach(order => {
+        const wilaya = order.wilaya || 'Non spécifié';
+        if (!wilayaStats[wilaya]) {
+            wilayaStats[wilaya] = { count: 0, revenue: 0 };
+        }
+        wilayaStats[wilaya].count++;
+        
+        const total = typeof order.total === 'number' ? order.total : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
+        wilayaStats[wilaya].revenue += total || 0;
+    });
+    
+    // Trier par nombre de commandes
+    const sortedWilayas = Object.entries(wilayaStats)
+        .sort(([,a], [,b]) => b.count - a.count)
+        .slice(0, 10);
+    
+    const wilayaStatsList = document.getElementById('wilayaStatsList');
+    wilayaStatsList.innerHTML = '';
+    
+    sortedWilayas.forEach(([wilaya, stats]) => {
+        const wilayaElement = document.createElement('div');
+        wilayaElement.className = 'wilaya-stat-item';
+        wilayaElement.innerHTML = `
+            <div class="wilaya-name">${wilaya}</div>
+            <div class="wilaya-stats">
+                <span class="orders-count">${stats.count} commandes</span>
+                <span class="revenue">${stats.revenue} DA</span>
+            </div>
+        `;
+        wilayaStatsList.appendChild(wilayaElement);
+    });
+}
+
+// Dessiner un graphique simple des ventes
+function drawSalesChart(orders, timeRange) {
+    const canvas = document.getElementById('salesChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Effacer le canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Grouper les commandes par jour
+    const dailyStats = {};
+    const today = new Date();
+    
+    // Initialiser tous les jours avec 0
+    for (let i = timeRange - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        dailyStats[dateKey] = 0;
+    }
+    
+    // Compter les commandes par jour
+    orders.forEach(order => {
+        const orderDate = order.createdAt.toDate();
+        const dateKey = orderDate.toISOString().split('T')[0];
+        if (dailyStats.hasOwnProperty(dateKey)) {
+            const total = typeof order.total === 'number' ? order.total : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
+            dailyStats[dateKey] += total || 0;
+        }
+    });
+    
+    // Dessiner le graphique
+    const values = Object.values(dailyStats);
+    const maxValue = Math.max(...values, 1);
+    const padding = 40;
+    const chartWidth = canvas.width - 2 * padding;
+    const chartHeight = canvas.height - 2 * padding;
+    
+    ctx.strokeStyle = '#e91e63';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    values.forEach((value, index) => {
+        const x = padding + (index * chartWidth) / (values.length - 1);
+        const y = padding + chartHeight - (value * chartHeight) / maxValue;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    
+    // Ajouter des points
+    ctx.fillStyle = '#e91e63';
+    values.forEach((value, index) => {
+        const x = padding + (index * chartWidth) / (values.length - 1);
+        const y = padding + chartHeight - (value * chartHeight) / maxValue;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+}
+
+// ===== EXPORT DES DONNÉES =====
+
+// Exporter les commandes en CSV
+function exportOrdersCSV() {
+    try {
+        const csvContent = generateOrdersCSV();
+        downloadCSV(csvContent, 'commandes_' + new Date().toISOString().split('T')[0] + '.csv');
+        showSuccess('Export des commandes terminé !');
+    } catch (error) {
+        showError('Erreur lors de l\'export : ' + error.message);
+    }
+}
+
+// Générer le CSV des commandes
+function generateOrdersCSV() {
+    const headers = ['ID', 'Numéro', 'Client', 'Téléphone', 'Adresse', 'Wilaya', 'Type livraison', 'Total', 'Statut', 'Date', 'Commentaire'];
+    let csvContent = headers.join(',') + '\n';
+    
+    orders.forEach(order => {
+        const row = [
+            order.id,
+            order.orderNumber || '',
+            `"${order.customerName || ''}"`,
+            order.customerPhone || '',
+            `"${order.customerAddress || ''}"`,
+            order.wilaya || '',
+            order.deliveryType || '',
+            order.total || 0,
+            order.status || '',
+            order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : '',
+            `"${order.customerComment || ''}"`
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+    
+    return csvContent;
+}
+
+// Exporter les produits en CSV
+async function exportProductsCSV() {
+    try {
+        showLoading('Export en cours...');
+        const csvContent = await generateProductsCSV();
+        downloadCSV(csvContent, 'produits_' + new Date().toISOString().split('T')[0] + '.csv');
+        showSuccess('Export des produits terminé !');
+    } catch (error) {
+        showError('Erreur lors de l\'export : ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Générer le CSV des produits
+async function generateProductsCSV() {
+    const productsSnapshot = await firebase.firestore().collection('products').get();
+    const headers = ['ID', 'Nom (AR)', 'Nom (FR)', 'Prix', 'Catégorie', 'Description (AR)', 'Description (FR)', 'Image'];
+    let csvContent = headers.join(',') + '\n';
+    
+    productsSnapshot.forEach(doc => {
+        const product = doc.data();
+        const row = [
+            doc.id,
+            `"${product.name?.ar || ''}"`,
+            `"${product.name?.fr || ''}"`,
+            product.price || 0,
+            product.category || '',
+            `"${product.description?.ar || ''}"`,
+            `"${product.description?.fr || ''}"`,
+            product.image || ''
+        ];
+        csvContent += row.join(',') + '\n';
+    });
+    
+    return csvContent;
+}
+
+// Télécharger un fichier CSV
+function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// Exporter un rapport complet
+function exportAnalyticsReport() {
+    try {
+        const reportContent = generateAnalyticsReport();
+        downloadCSV(reportContent, 'rapport_analytics_' + new Date().toISOString().split('T')[0] + '.csv');
+        showSuccess('Rapport d\'analyse exporté !');
+    } catch (error) {
+        showError('Erreur lors de l\'export : ' + error.message);
+    }
+}
+
+// Générer le rapport d'analyse
+function generateAnalyticsReport() {
+    const timeRange = document.getElementById('analyticsTimeRange').value;
+    const monthlyOrders = document.getElementById('monthlyOrders').textContent;
+    const monthlyRevenue = document.getElementById('monthlyRevenue').textContent;
+    const growthRate = document.getElementById('growthRate').textContent;
+    
+    let reportContent = 'RAPPORT D\'ANALYSE - RANIA SHOP\n';
+    reportContent += '=====================================\n';
+    reportContent += `Période: ${timeRange} derniers jours\n`;
+    reportContent += `Date du rapport: ${new Date().toLocaleDateString('fr-FR')}\n\n`;
+    reportContent += 'STATISTIQUES GÉNÉRALES\n';
+    reportContent += '----------------------\n';
+    reportContent += `Commandes ce mois,${monthlyOrders}\n`;
+    reportContent += `Revenus ce mois,${monthlyRevenue}\n`;
+    reportContent += `Taux de croissance,${growthRate}\n\n`;
+    
+    return reportContent;
+}
+
+// Exposer les nouvelles fonctions au scope global
+window.deleteOrder = deleteOrder;
+window.deleteSelectedOrders = deleteSelectedOrders;
+window.toggleSelectAllOrders = toggleSelectAllOrders;
+window.toggleOrderSelection = toggleOrderSelection;
+window.removeAdmin = removeAdmin;
+window.loadAdvancedAnalytics = loadAdvancedAnalytics;
+window.exportOrdersCSV = exportOrdersCSV;
+window.exportProductsCSV = exportProductsCSV;
+window.exportAnalyticsReport = exportAnalyticsReport;/
+/ Fonction pour configurer les event listeners des nouvelles fonctionnalités
+function setupNewFeatureListeners() {
+    // Gestion des commandes - Sélection
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', toggleSelectAllOrders);
+    }
+
+    const selectAllBtn = document.getElementById('selectAllOrders');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', toggleSelectAllOrders);
+    }
+
+    const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', deleteSelectedOrders);
+    }
+
+    const exportOrdersBtn = document.getElementById('exportOrders');
+    if (exportOrdersBtn) {
+        exportOrdersBtn.addEventListener('click', exportOrdersCSV);
+    }
+
+    // Gestion du compte admin
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', handleChangePassword);
+    }
+
+    const changeEmailForm = document.getElementById('changeEmailForm');
+    if (changeEmailForm) {
+        changeEmailForm.addEventListener('submit', handleChangeEmail);
+    }
+
+    const addAdminForm = document.getElementById('addAdminForm');
+    if (addAdminForm) {
+        addAdminForm.addEventListener('submit', handleAddAdmin);
+    }
+
+    // Statistiques avancées
+    const refreshAnalyticsBtn = document.getElementById('refreshAnalytics');
+    if (refreshAnalyticsBtn) {
+        refreshAnalyticsBtn.addEventListener('click', loadAdvancedAnalytics);
+    }
+
+    const analyticsTimeRange = document.getElementById('analyticsTimeRange');
+    if (analyticsTimeRange) {
+        analyticsTimeRange.addEventListener('change', loadAdvancedAnalytics);
+    }
+
+    // Export des données
+    const exportOrdersCSVBtn = document.getElementById('exportOrdersCSV');
+    if (exportOrdersCSVBtn) {
+        exportOrdersCSVBtn.addEventListener('click', exportOrdersCSV);
+    }
+
+    const exportProductsCSVBtn = document.getElementById('exportProductsCSV');
+    if (exportProductsCSVBtn) {
+        exportProductsCSVBtn.addEventListener('click', exportProductsCSV);
+    }
+
+    const exportAnalyticsBtn = document.getElementById('exportAnalyticsReport');
+    if (exportAnalyticsBtn) {
+        exportAnalyticsBtn.addEventListener('click', exportAnalyticsReport);
+    }
+}
+
+// Fonction pour charger les données spécifiques à chaque section
+function loadSectionData(sectionName) {
+    switch(sectionName) {
+        case 'dashboard':
+            loadDashboardData();
+            break;
+        case 'products':
+            loadProducts();
+            break;
+        case 'orders':
+            loadOrders();
+            break;
+        case 'account':
+            loadAccountData();
+            break;
+        case 'analytics':
+            loadAdvancedAnalytics();
+            break;
+        case 'settings':
+            loadSettings();
+            break;
+    }
+}
+
+// Fonction pour charger les données du compte
+function loadAccountData() {
+    // Charger l'email actuel
+    const currentEmailInput = document.getElementById('currentEmail');
+    if (currentEmailInput && currentUser) {
+        currentEmailInput.value = currentUser.email;
+    }
+
+    // Charger la liste des administrateurs
+    loadAdminUsers();
+}
+
+// Mettre à jour la fonction handleNavigation pour inclure les nouvelles sections
+const originalHandleNavigation = handleNavigation;
+handleNavigation = function(e) {
+    e.preventDefault();
+    
+    const sectionName = e.target.getAttribute('data-section');
+    if (!sectionName) return;
+
+    // Update active menu item
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    e.target.classList.add('active');
+
+    // Show corresponding section
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    const sectionElement = document.getElementById(sectionName + 'Section');
+    if (sectionElement) {
+        sectionElement.classList.add('active');
+    }
+
+    // Update page title
+    const titles = {
+        dashboard: 'Dashboard',
+        products: 'Gestion des Produits',
+        orders: 'Gestion des Commandes',
+        account: 'Mon Compte',
+        analytics: 'Statistiques Avancées',
+        settings: 'Paramètres'
+    };
+    document.getElementById('pageTitle').textContent = titles[sectionName] || sectionName;
+
+    // Load section data
+    loadSectionData(sectionName);
+};
+
+console.log('✅ Nouvelles fonctionnalités admin chargées avec succès !');

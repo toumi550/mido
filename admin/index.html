@@ -56,8 +56,14 @@
                 <li><a href="#orders" class="menu-item" data-section="orders">
                     <i class="fas fa-shopping-cart"></i> Commandes
                 </a></li>
+                <li><a href="#account" class="menu-item" data-section="account">
+                    <i class="fas fa-user-cog"></i> Mon Compte
+                </a></li>
                 <li><a href="#settings" class="menu-item" data-section="settings">
                     <i class="fas fa-cog"></i> Paramètres
+                </a></li>
+                <li><a href="#analytics" class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i> Statistiques
                 </a></li>
                 <li><a href="#logout" class="menu-item logout-btn">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
@@ -165,20 +171,34 @@
             <section id="ordersSection" class="content-section">
                 <div class="section-header">
                     <h3>Gestion des Commandes</h3>
-                    <div class="order-filters">
-                        <select id="orderStatusFilter">
-                            <option value="all">Toutes les commandes</option>
-                            <option value="pending">En attente</option>
-                            <option value="processing">En cours</option>
-                            <option value="completed">Terminées</option>
-                            <option value="cancelled">Annulées</option>
-                        </select>
+                    <div class="order-controls">
+                        <div class="order-filters">
+                            <select id="orderStatusFilter">
+                                <option value="all">Toutes les commandes</option>
+                                <option value="pending">En attente</option>
+                                <option value="processing">En cours</option>
+                                <option value="completed">Terminées</option>
+                                <option value="cancelled">Annulées</option>
+                            </select>
+                        </div>
+                        <div class="order-actions">
+                            <button id="selectAllOrders" class="btn btn-secondary">
+                                <i class="fas fa-check-square"></i> Tout sélectionner
+                            </button>
+                            <button id="deleteSelectedOrders" class="btn btn-danger" disabled>
+                                <i class="fas fa-trash"></i> Supprimer sélectionnées
+                            </button>
+                            <button id="exportOrders" class="btn btn-success">
+                                <i class="fas fa-download"></i> Exporter CSV
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="orders-table-container">
                     <table class="orders-table">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" id="selectAllCheckbox"></th>
                                 <th>ID</th>
                                 <th>Client</th>
                                 <th>Téléphone</th>
@@ -193,6 +213,150 @@
                             <!-- Orders will be loaded here -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Account Section -->
+            <section id="accountSection" class="content-section">
+                <div class="section-header">
+                    <h3>Gestion du Compte Admin</h3>
+                </div>
+                <div class="account-content">
+                    <div class="account-card">
+                        <h4><i class="fas fa-key"></i> Changer le mot de passe</h4>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label>Mot de passe actuel</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nouveau mot de passe</label>
+                                <input type="password" id="newPassword" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirmer le nouveau mot de passe</label>
+                                <input type="password" id="confirmPassword" required minlength="6">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Changer le mot de passe
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="account-card">
+                        <h4><i class="fas fa-envelope"></i> Modifier l'email admin</h4>
+                        <form id="changeEmailForm">
+                            <div class="form-group">
+                                <label>Email actuel</label>
+                                <input type="email" id="currentEmail" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Nouvel email</label>
+                                <input type="email" id="newEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Mot de passe pour confirmation</label>
+                                <input type="password" id="passwordConfirm" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Modifier l'email
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="account-card">
+                        <h4><i class="fas fa-users-cog"></i> Gestion des administrateurs</h4>
+                        <div class="admin-users-list" id="adminUsersList">
+                            <!-- Admin users will be loaded here -->
+                        </div>
+                        <form id="addAdminForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email du nouvel admin</label>
+                                    <input type="email" id="newAdminEmail" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mot de passe temporaire</label>
+                                    <input type="password" id="newAdminPassword" required minlength="6">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i> Ajouter un administrateur
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analyticsSection" class="content-section">
+                <div class="section-header">
+                    <h3>Statistiques Avancées</h3>
+                    <div class="analytics-controls">
+                        <select id="analyticsTimeRange">
+                            <option value="7">7 derniers jours</option>
+                            <option value="30" selected>30 derniers jours</option>
+                            <option value="90">3 derniers mois</option>
+                            <option value="365">12 derniers mois</option>
+                        </select>
+                        <button id="refreshAnalytics" class="btn btn-primary">
+                            <i class="fas fa-sync"></i> Actualiser
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4><i class="fas fa-chart-line"></i> Évolution des ventes</h4>
+                        <canvas id="salesChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4><i class="fas fa-trophy"></i> Produits les plus vendus</h4>
+                        <div id="topProductsList" class="top-products-list">
+                            <!-- Top products will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4><i class="fas fa-map-marker-alt"></i> Ventes par wilaya</h4>
+                        <div id="wilayaStatsList" class="wilaya-stats-list">
+                            <!-- Wilaya stats will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4><i class="fas fa-calendar-alt"></i> Statistiques mensuelles</h4>
+                        <div class="monthly-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Commandes ce mois</span>
+                                <span class="stat-value" id="monthlyOrders">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Revenus ce mois</span>
+                                <span class="stat-value" id="monthlyRevenue">0 DA</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Croissance</span>
+                                <span class="stat-value" id="growthRate">+0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="export-section">
+                    <h4><i class="fas fa-download"></i> Exporter les données</h4>
+                    <div class="export-buttons">
+                        <button id="exportOrdersCSV" class="btn btn-success">
+                            <i class="fas fa-file-csv"></i> Commandes (CSV)
+                        </button>
+                        <button id="exportProductsCSV" class="btn btn-success">
+                            <i class="fas fa-file-csv"></i> Produits (CSV)
+                        </button>
+                        <button id="exportAnalyticsReport" class="btn btn-primary">
+                            <i class="fas fa-file-pdf"></i> Rapport complet
+                        </button>
+                    </div>
                 </div>
             </section>
 
