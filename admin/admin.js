@@ -186,7 +186,12 @@ async function loadDashboardData() {
         ordersSnapshot.forEach(doc => {
             const order = doc.data();
             if (order.status === 'completed' && order.total) {
-                totalRevenue += parseFloat(order.total.replace(/[^\d]/g, ''));
+                // Si order.total est un nombre, l'utiliser directement
+                // Si c'est une chaîne avec "DA", extraire le nombre
+                const totalValue = typeof order.total === 'number' 
+                    ? order.total 
+                    : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
+                totalRevenue += totalValue || 0;
             }
         });
         document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString() + ' DA';
