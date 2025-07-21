@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" dir="ltr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
@@ -48,26 +50,26 @@
             </div>
             <ul class="sidebar-menu">
                 <li><a href="#dashboard" class="menu-item active" data-section="dashboard">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a></li>
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a></li>
                 <li><a href="#products" class="menu-item" data-section="products">
-                    <i class="fas fa-box"></i> Produits
-                </a></li>
+                        <i class="fas fa-box"></i> Produits
+                    </a></li>
                 <li><a href="#orders" class="menu-item" data-section="orders">
-                    <i class="fas fa-shopping-cart"></i> Commandes
-                </a></li>
+                        <i class="fas fa-shopping-cart"></i> Commandes
+                    </a></li>
                 <li><a href="#account" class="menu-item" data-section="account">
-                    <i class="fas fa-user-cog"></i> Mon Compte
-                </a></li>
+                        <i class="fas fa-user-cog"></i> Mon Compte
+                    </a></li>
                 <li><a href="#settings" class="menu-item" data-section="settings">
-                    <i class="fas fa-cog"></i> Paramètres
-                </a></li>
+                        <i class="fas fa-cog"></i> Paramètres
+                    </a></li>
                 <li><a href="#analytics" class="menu-item" data-section="analytics">
-                    <i class="fas fa-chart-bar"></i> Statistiques
-                </a></li>
+                        <i class="fas fa-chart-bar"></i> Statistiques
+                    </a></li>
                 <li><a href="#logout" class="menu-item logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </a></li>
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </a></li>
             </ul>
         </nav>
 
@@ -155,7 +157,10 @@
                                 <th>Image</th>
                                 <th>Nom (AR)</th>
                                 <th>Nom (FR)</th>
-                                <th>Prix</th>
+                                <th>Prix d'achat</th>
+                                <th>Prix de vente</th>
+                                <th>Marge</th>
+                                <th>Stock</th>
                                 <th>Catégorie</th>
                                 <th>Actions</th>
                             </tr>
@@ -201,7 +206,6 @@
                                 <th><input type="checkbox" id="selectAllCheckbox"></th>
                                 <th>ID</th>
                                 <th>Client</th>
-                                <th>Téléphone</th>
                                 <th>Wilaya</th>
                                 <th>Total</th>
                                 <th>Statut</th>
@@ -304,27 +308,27 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="analytics-grid">
                     <div class="analytics-card">
                         <h4><i class="fas fa-chart-line"></i> Évolution des ventes</h4>
                         <canvas id="salesChart" width="400" height="200"></canvas>
                     </div>
-                    
+
                     <div class="analytics-card">
                         <h4><i class="fas fa-trophy"></i> Produits les plus vendus</h4>
                         <div id="topProductsList" class="top-products-list">
                             <!-- Top products will be loaded here -->
                         </div>
                     </div>
-                    
+
                     <div class="analytics-card">
                         <h4><i class="fas fa-map-marker-alt"></i> Ventes par wilaya</h4>
                         <div id="wilayaStatsList" class="wilaya-stats-list">
                             <!-- Wilaya stats will be loaded here -->
                         </div>
                     </div>
-                    
+
                     <div class="analytics-card">
                         <h4><i class="fas fa-calendar-alt"></i> Statistiques mensuelles</h4>
                         <div class="monthly-stats">
@@ -343,7 +347,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="export-section">
                     <h4><i class="fas fa-download"></i> Exporter les données</h4>
                     <div class="export-buttons">
@@ -495,9 +499,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    
+
     <!-- Admin Scripts -->
     <script src="firebase-config.js"></script>
-    <script src="admin-simple.js"></script>
+    <script src="admin-complete.js"></script>
 </body>
+
 </html>
