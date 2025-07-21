@@ -937,8 +937,8 @@ firebase.auth().onAuthStateChanged((user) => {
         setupRealtimeListeners();
     }
 });
-// 
-===== NOUVELLES FONCTIONNALITÉS AVANCÉES =====
+
+// ===== NOUVELLES FONCTIONNALITÉS AVANCÉES =====
 
 // Variables globales pour les nouvelles fonctionnalités
 let selectedOrders = new Set();
