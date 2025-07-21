@@ -290,9 +290,8 @@ function initializeApp() {
         }, 500);
     }, 2000);
 
-    // Load products
-    products = sampleProducts;
-    displayProducts(products);
+    // Load products from Firebase or fallback to sample data
+    loadProductsFromFirebase();
     
     // Setup event listeners
     setupEventListeners();
@@ -308,6 +307,68 @@ function initializeApp() {
     
     // Setup smooth scrolling
     setupSmoothScrolling();
+}
+
+// Load products from Firebase
+async function loadProductsFromFirebase() {
+    // Always start with sample products to ensure site works
+    products = [...sampleProducts];
+    displayProducts(products);
+    console.log('Sample products loaded as fallback');
+
+    try {
+        // Check if Firebase is available
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            console.log('Firebase not available, keeping sample products');
+            return;
+        }
+
+        // Wait a bit for Firebase to initialize
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Try to load from Firebase
+        const productsSnapshot = await firebase.firestore()
+            .collection('products')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        if (!productsSnapshot.empty) {
+            products = [];
+            productsSnapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            displayProducts(products);
+            console.log(`Loaded ${products.length} products from Firebase`);
+
+            // Setup real-time listener for product updates
+            setupProductsListener();
+        } else {
+            console.log('No products in Firebase, using sample products');
+        }
+
+    } catch (error) {
+        console.error('Error loading products from Firebase:', error);
+        console.log('Keeping sample products as fallback');
+        // Products already set to sampleProducts above
+    }
+}
+
+// Setup real-time listener for products
+function setupProductsListener() {
+    try {
+        firebase.firestore().collection('products').onSnapshot((snapshot) => {
+            products = [];
+            snapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            displayProducts(products);
+            console.log('Products updated in real-time');
+        }, (error) => {
+            console.error('Error in products listener:', error);
+        });
+    } catch (error) {
+        console.error('Error setting up products listener:', error);
+    }
 }
 
 function setupEventListeners() {
