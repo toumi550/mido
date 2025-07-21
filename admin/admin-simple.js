@@ -1257,9 +1257,7 @@ function filterOrdersByStatus(status) {
     });
 }
 
-console.log('✅ Admin panel complet avec toutes les fonctions initialisé')');
-    const monthlyRevenueElement = document.getElementById('monthlyRevenue');
-    const growthRateElement = document.getElementById('growthRate');
+console.log('✅ Admin panel complet avec toutes les fonctions initialisé');
     
     if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
     if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
