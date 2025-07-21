@@ -203,7 +203,7 @@ async function loadRecentOrders() {
     try {
         const ordersSnapshot = await firebase.firestore()
             .collection('orders')
-            .orderBy('timestamp', 'desc')
+            .orderBy('createdAt', 'desc')
             .limit(5)
             .get();
 
@@ -230,14 +230,14 @@ function createRecentOrderElement(orderId, order) {
     const div = document.createElement('div');
     div.className = 'order-item';
     
-    const date = order.timestamp ? order.timestamp.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
     
     div.innerHTML = `
         <div class="order-info">
-            <h4>Commande #${orderId.substring(0, 8)}</h4>
-            <p><strong>Client:</strong> ${order.name || 'N/A'}</p>
-            <p><strong>Téléphone:</strong> ${order.phone || 'N/A'}</p>
-            <p><strong>Total:</strong> ${order.total || '0 DA'}</p>
+            <h4>Commande #${order.orderNumber || orderId.substring(0, 8)}</h4>
+            <p><strong>Client:</strong> ${order.customerName || 'N/A'}</p>
+            <p><strong>Téléphone:</strong> ${order.customerPhone || 'N/A'}</p>
+            <p><strong>Total:</strong> ${order.total || '0'} DA</p>
             <p><strong>Date:</strong> ${date}</p>
         </div>
         <div class="order-status">
@@ -433,7 +433,7 @@ async function loadOrders() {
         
         const ordersSnapshot = await firebase.firestore()
             .collection('orders')
-            .orderBy('timestamp', 'desc')
+            .orderBy('createdAt', 'desc')
             .get();
 
         orders = [];
@@ -469,14 +469,14 @@ function displayOrders(filteredOrders = null) {
 function createOrderRow(order) {
     const tr = document.createElement('tr');
     
-    const date = order.timestamp ? order.timestamp.toDate().toLocaleDateString('fr-FR') : 'N/A';
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A';
     
     tr.innerHTML = `
-        <td>#${order.id.substring(0, 8)}</td>
-        <td>${order.name || 'N/A'}</td>
-        <td>${order.phone || 'N/A'}</td>
+        <td>#${order.orderNumber || order.id.substring(0, 8)}</td>
+        <td>${order.customerName || 'N/A'}</td>
+        <td>${order.customerPhone || 'N/A'}</td>
         <td>${order.wilaya || 'N/A'}</td>
-        <td>${order.total || '0 DA'}</td>
+        <td>${order.total || '0'} DA</td>
         <td><span class="status-badge status-${order.status || 'pending'}">${getStatusText(order.status)}</span></td>
         <td>${date}</td>
         <td>
@@ -527,7 +527,7 @@ function viewOrder(orderId) {
     if (!order) return;
 
     const orderDetails = document.getElementById('orderDetails');
-    const date = order.timestamp ? order.timestamp.toDate().toLocaleString('fr-FR') : 'N/A';
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleString('fr-FR') : 'N/A';
     
     let cartItemsHtml = '';
     if (order.cart && Array.isArray(order.cart)) {
@@ -544,9 +544,9 @@ function viewOrder(orderId) {
         <div class="order-details">
             <h4>Commande #${order.id.substring(0, 8)}</h4>
             <div style="margin: 20px 0;">
-                <p><strong>Client:</strong> ${order.name || 'N/A'}</p>
-                <p><strong>Téléphone:</strong> ${order.phone || 'N/A'}</p>
-                <p><strong>Adresse:</strong> ${order.address || 'N/A'}</p>
+                <p><strong>Client:</strong> ${order.customerName || 'N/A'}</p>
+                <p><strong>Téléphone:</strong> ${order.customerPhone || 'N/A'}</p>
+                <p><strong>Adresse:</strong> ${order.customerAddress || 'N/A'}</p>
                 <p><strong>Wilaya:</strong> ${order.wilaya || 'N/A'}</p>
                 <p><strong>Type de livraison:</strong> ${order.deliveryType === 'home' ? 'Domicile' : 'StopDesk'}</p>
                 <p><strong>Statut:</strong> <span class="status-badge status-${order.status || 'pending'}">${getStatusText(order.status)}</span></p>
