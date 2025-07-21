@@ -278,6 +278,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    console.log('🚀 Initialisation de l\'application...');
+    
+    // Exposer les fonctions au scope global AVANT tout le reste
+    exposeGlobalFunctions();
+    
     // Load language preference
     const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
     changeLanguage(savedLanguage);
@@ -307,6 +312,8 @@ function initializeApp() {
     
     // Setup smooth scrolling
     setupSmoothScrolling();
+    
+    console.log('✅ Application initialisée avec succès');
 }
 
 // Load products from Firebase
@@ -646,18 +653,22 @@ function addToCart(productId, quantity = 1) {
     showAddToCartAnimation();
 }
 
-// Exposer les fonctions dans le scope global pour les attributs onclick
-window.addToCart = addToCart;
-window.removeFromCart = removeFromCart;
-window.updateCartQuantity = updateCartQuantity;
-window.openProductModal = openProductModal;
-window.addToCartFromModal = addToCartFromModal;
-window.changeQuantity = changeQuantity;
-window.showCheckoutForm = showCheckoutForm;
-window.calculateDelivery = calculateDelivery;
-window.closeModal = closeModal;
-window.closeSuccessModal = closeSuccessModal;
-window.selectProduct = selectProduct;
+// Exposer toutes les fonctions nécessaires dans le scope global
+function exposeGlobalFunctions() {
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+    window.updateCartQuantity = updateCartQuantity;
+    window.openProductModal = openProductModal;
+    window.addToCartFromModal = addToCartFromModal;
+    window.changeQuantity = changeQuantity;
+    window.showCheckoutForm = showCheckoutForm;
+    window.calculateDelivery = calculateDelivery;
+    window.closeModal = closeModal;
+    window.closeSuccessModal = closeSuccessModal;
+    window.selectProduct = selectProduct;
+    
+    console.log('✅ Toutes les fonctions ont été exposées au scope global');
+}
 
 function removeFromCart(productId) {
     cart = cart.filter(item => item.id !== productId);
