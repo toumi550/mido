@@ -156,7 +156,7 @@ const deliveryPrices = {
     'الشلف': { home: 750, stopdesk: 450 }
 };
 
-// Sample Products Data with bilingual support
+// Sample Products Data
 const sampleProducts = [
     {
         id: 1,
@@ -272,402 +272,39 @@ const sampleProducts = [
     }
 ];
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-});
+// ===== FONCTIONS PRINCIPALES =====
 
-function initializeApp() {
-    console.log('🚀 Initialisation de l\'application...');
-    
-    // Exposer les fonctions au scope global AVANT tout le reste
-    exposeGlobalFunctions();
-    
-    // Load language preference
-    const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
-    changeLanguage(savedLanguage);
-    
-    // Hide loading screen
-    setTimeout(() => {
-        document.getElementById('loading-screen').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.display = 'none';
-        }, 500);
-    }, 2000);
-
-    // Load products from Firebase or fallback to sample data
-    loadProductsFromFirebase();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Setup sidebar auto-hide
-    setupSidebarAutoHide();
-    
-    // Populate wilaya dropdown
-    populateWilayaDropdown();
-    
-    // Load cart from localStorage
-    loadCartFromStorage();
-    
-    // Setup smooth scrolling
-    setupSmoothScrolling();
-    
-    console.log('✅ Application initialisée avec succès');
-}
-
-// Load products from Firebase
-async function loadProductsFromFirebase() {
-    // Always start with sample products to ensure site works
-    products = [...sampleProducts];
-    displayProducts(products);
-    console.log('Sample products loaded as fallback');
-
-    try {
-        // Check if Firebase is available
-        if (typeof firebase === 'undefined' || !firebase.firestore) {
-            console.log('Firebase not available, keeping sample products');
-            return;
-        }
-
-        // Wait a bit for Firebase to initialize
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Try to load from Firebase
-        const productsSnapshot = await firebase.firestore()
-            .collection('products')
-            .orderBy('createdAt', 'desc')
-            .get();
-
-        if (!productsSnapshot.empty) {
-            products = [];
-            productsSnapshot.forEach(doc => {
-                products.push({ id: doc.id, ...doc.data() });
-            });
-            displayProducts(products);
-            console.log(`Loaded ${products.length} products from Firebase`);
-
-            // Setup real-time listener for product updates
-            setupProductsListener();
-        } else {
-            console.log('No products in Firebase, using sample products');
-        }
-
-    } catch (error) {
-        console.error('Error loading products from Firebase:', error);
-        console.log('Keeping sample products as fallback');
-        // Products already set to sampleProducts above
-    }
-}
-
-// Setup real-time listener for products
-function setupProductsListener() {
-    try {
-        firebase.firestore().collection('products').onSnapshot((snapshot) => {
-            products = [];
-            snapshot.forEach(doc => {
-                products.push({ id: doc.id, ...doc.data() });
-            });
-            displayProducts(products);
-            console.log('Products updated in real-time');
-        }, (error) => {
-            console.error('Error in products listener:', error);
-        });
-    } catch (error) {
-        console.error('Error setting up products listener:', error);
-    }
-}
-
-function setupEventListeners() {
-    // Language toggle buttons
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const lang = e.target.getAttribute('data-lang');
-            changeLanguage(lang);
-        });
-    });
-
-    // Search functionality
-    setupSearchListeners();
-
-    // Mobile menu toggle
-    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-    const sidebarMenu = document.getElementById('sidebarMenu');
-
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', () => {
-            sidebarMenu.classList.toggle('active');
-        });
-    }
-
-    // Product filter buttons
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-
-            const filter = e.target.getAttribute('data-filter');
-            filterProducts(filter);
-            
-            // Clear search when filtering
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.value = '';
-            hideSearchSuggestions();
-        });
-    });
-
-    // Sidebar navigation
-    const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            const category = e.target.getAttribute('data-category');
-            if (category && category !== 'all') {
-                e.preventDefault();
-                filterProducts(category);
-                scrollToSection('products');
-                
-                // Clear search when using sidebar
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) searchInput.value = '';
-                hideSearchSuggestions();
-            }
-        });
-    });
-
-    // Modal close buttons
-    const closeButtons = document.querySelectorAll('.close-modal');
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', closeModal);
-    });
-
-    // Close modal when clicking outside
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-    });
-
-    // Checkout form submission
-    const checkoutForm = document.getElementById('checkoutForm');
-    if (checkoutForm) {
-        checkoutForm.addEventListener('submit', handleCheckoutSubmission);
-    }
-}
-
-// Search Functions
-function setupSearchListeners() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-
-    searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            handleSearch(e.target.value);
-        }, 300);
-    });
-
-    searchInput.addEventListener('focus', () => {
-        if (searchInput.value.trim()) {
-            showSearchSuggestions(searchInput.value);
-        }
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')) {
-            hideSearchSuggestions();
-        }
-    });
-}
-
-function handleSearch(query) {
-    if (!query.trim()) {
-        displayProducts(products);
-        hideSearchSuggestions();
-        return;
-    }
-
-    const filteredProducts = searchProducts(query);
-    displayProducts(filteredProducts);
-    showSearchSuggestions(query);
-}
-
-function searchProducts(query) {
-    const searchTerm = query.toLowerCase().trim();
-    
-    return products.filter(product => {
-        const productName = typeof product.name === 'object' 
-            ? product.name[currentLanguage].toLowerCase() 
-            : product.name.toLowerCase();
-        
-        const productDescription = typeof product.description === 'object' 
-            ? product.description[currentLanguage].toLowerCase() 
-            : product.description.toLowerCase();
-
-        return productName.includes(searchTerm) || 
-               productDescription.includes(searchTerm) ||
-               product.category.includes(searchTerm);
-    });
-}
-
-function showSearchSuggestions(query) {
-    const suggestionsContainer = document.getElementById('searchSuggestions');
-    if (!suggestionsContainer || !query.trim()) {
-        hideSearchSuggestions();
-        return;
-    }
-
-    const filteredProducts = searchProducts(query);
-    const t = translations[currentLanguage];
-
-    if (filteredProducts.length === 0) {
-        suggestionsContainer.innerHTML = `
-            <div class="suggestion-item">
-                <i class="fas fa-search"></i>
-                ${t.noResults}
-            </div>
-        `;
-    } else {
-        suggestionsContainer.innerHTML = filteredProducts.slice(0, 5).map(product => {
-            const productName = typeof product.name === 'object' 
-                ? product.name[currentLanguage] 
-                : product.name;
-            
-            return `
-                <div class="suggestion-item" onclick="selectProduct(${product.id})">
-                    <i class="fas fa-search"></i>
-                    ${productName} - ${product.price} ${t.currency}
-                </div>
-            `;
-        }).join('');
-    }
-
-    suggestionsContainer.classList.add('show');
-}
-
-function hideSearchSuggestions() {
-    const suggestionsContainer = document.getElementById('searchSuggestions');
-    if (suggestionsContainer) {
-        suggestionsContainer.classList.remove('show');
-    }
-}
-
-function selectProduct(productId) {
-    hideSearchSuggestions();
-    openProductModal(productId);
-}
-
-function displayProducts(productsToShow) {
-    const productsGrid = document.getElementById('productsGrid');
-    if (!productsGrid) return;
-    
-    productsGrid.innerHTML = '';
-
-    productsToShow.forEach(product => {
-        const productCard = createProductCard(product);
-        productsGrid.appendChild(productCard);
-    });
-
-    // Add animation to product cards
-    const cards = productsGrid.querySelectorAll('.product-card');
-    cards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('slide-up');
-    });
-}
-
-function createProductCard(product) {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    const t = translations[currentLanguage];
-    const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
-    const productDescription = typeof product.description === 'object' ? product.description[currentLanguage] : product.description;
-    
-    card.innerHTML = `
-        <div class="product-image">
-            <img src="${product.image}" alt="${productName}">
-            <div class="product-overlay">
-                <button class="quick-view-btn" onclick="openProductModal(${product.id})">
-                    ${t.quickView}
-                </button>
-            </div>
-        </div>
-        <div class="product-info">
-            <h3 class="product-name">${productName}</h3>
-            <p class="product-price">${product.price} ${t.currency}</p>
-            <p class="product-description">${productDescription}</p>
-            <button class="add-to-cart" onclick="addToCart(${product.id})">
-                <i class="fas fa-cart-plus"></i>
-                ${t.addToCart}
-            </button>
-        </div>
-    `;
-    return card;
-}
-
-function filterProducts(category) {
-    let filteredProducts;
-    if (category === 'all') {
-        filteredProducts = products;
-    } else {
-        filteredProducts = products.filter(product => product.category === category);
-    }
-    displayProducts(filteredProducts);
-}
-
+// Fonction d'ajout au panier
 function addToCart(productId, quantity = 1) {
-    console.log('addToCart appelée avec productId:', productId, 'quantity:', quantity);
-    
+    console.log('🛒 addToCart appelée avec productId:', productId, 'quantity:', quantity);
+
     const product = products.find(p => p.id === productId);
     if (!product) {
-        console.error('Produit non trouvé avec ID:', productId);
+        console.error('❌ Produit non trouvé avec ID:', productId);
         return;
     }
 
-    console.log('Produit trouvé:', product);
+    console.log('✅ Produit trouvé:', product);
 
     const existingItem = cart.find(item => item.id === productId);
-    
+
     if (existingItem) {
         existingItem.quantity += quantity;
-        console.log('Quantité mise à jour pour le produit existant:', existingItem);
+        console.log('📈 Quantité mise à jour:', existingItem);
     } else {
         cart.push({
             ...product,
             quantity: quantity
         });
-        console.log('Nouveau produit ajouté au panier');
+        console.log('🆕 Nouveau produit ajouté au panier');
     }
 
-    console.log('Panier actuel:', cart);
+    console.log('🛒 Panier actuel:', cart);
 
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-    
-    // Show success animation
     showAddToCartAnimation();
-}
-
-// Exposer toutes les fonctions nécessaires dans le scope global
-function exposeGlobalFunctions() {
-    window.addToCart = addToCart;
-    window.removeFromCart = removeFromCart;
-    window.updateCartQuantity = updateCartQuantity;
-    window.openProductModal = openProductModal;
-    window.addToCartFromModal = addToCartFromModal;
-    window.changeQuantity = changeQuantity;
-    window.showCheckoutForm = showCheckoutForm;
-    window.calculateDelivery = calculateDelivery;
-    window.closeModal = closeModal;
-    window.closeSuccessModal = closeSuccessModal;
-    window.selectProduct = selectProduct;
-    
-    console.log('✅ Toutes les fonctions ont été exposées au scope global');
 }
 
 function removeFromCart(productId) {
@@ -690,84 +327,6 @@ function updateCartQuantity(productId, newQuantity) {
     }
 }
 
-function updateCartDisplay() {
-    const cartItems = document.getElementById('cartItems');
-    const cartSummary = document.getElementById('cartSummary');
-
-    if (!cartItems || !cartSummary) return;
-
-    const t = translations[currentLanguage];
-
-    if (cart.length === 0) {
-        cartItems.innerHTML = `
-            <div class="empty-cart">
-                <i class="fas fa-shopping-cart"></i>
-                <p>${t.emptyCart}</p>
-            </div>
-        `;
-        cartSummary.style.display = 'none';
-        return;
-    }
-
-    cartItems.innerHTML = '';
-    let subtotal = 0;
-
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
-
-        // Get translated product name
-        const itemName = typeof item.name === 'object' ? item.name[currentLanguage] : item.name;
-
-        const cartItem = document.createElement('div');
-        cartItem.className = 'cart-item';
-        cartItem.innerHTML = `
-            <img src="${item.image}" alt="${itemName}" class="cart-item-image">
-            <div class="cart-item-details">
-                <div class="cart-item-name">${itemName}</div>
-                <div class="cart-item-price">${item.price} ${t.currency}</div>
-            </div>
-            <div class="cart-item-controls">
-                <div class="qty-control">
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
-                    <input type="number" class="qty-input" value="${item.quantity}" 
-                           onchange="updateCartQuantity(${item.id}, parseInt(this.value))" min="1">
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                </div>
-                <button class="remove-item" onclick="removeFromCart(${item.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `;
-        cartItems.appendChild(cartItem);
-    });
-
-    // Update summary
-    const subtotalElement = document.getElementById('subtotal');
-    const totalPriceElement = document.getElementById('totalPrice');
-
-    if (subtotalElement) subtotalElement.textContent = `${subtotal} ${t.currency}`;
-    if (totalPriceElement) totalPriceElement.textContent = `${subtotal} ${t.currency}`;
-
-    cartSummary.style.display = 'block';
-}
-
-function updateCartCount() {
-    const cartCount = document.querySelector('.cart-count');
-    if (!cartCount) return;
-    
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = totalItems;
-    
-    if (totalItems > 0) {
-        cartCount.style.display = 'inline-block';
-        cartCount.classList.add('bounce');
-        setTimeout(() => cartCount.classList.remove('bounce'), 500);
-    } else {
-        cartCount.style.display = 'none';
-    }
-}
-
 function openProductModal(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -781,7 +340,6 @@ function openProductModal(productId) {
     const modalProductDescription = document.getElementById('modalProductDescription');
     const modalQuantity = document.getElementById('modalQuantity');
 
-    // Get translated product info
     const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
     const productDescription = typeof product.description === 'object' ? product.description[currentLanguage] : product.description;
 
@@ -797,7 +355,7 @@ function openProductModal(productId) {
 
 function addToCartFromModal() {
     if (!currentProduct) return;
-    
+
     const modalQuantity = document.getElementById('modalQuantity');
     const quantity = modalQuantity ? parseInt(modalQuantity.value) : 1;
     addToCart(currentProduct.id, quantity);
@@ -807,7 +365,7 @@ function addToCartFromModal() {
 function changeQuantity(change) {
     const quantityInput = document.getElementById('modalQuantity');
     if (!quantityInput) return;
-    
+
     const currentValue = parseInt(quantityInput.value);
     const newValue = Math.max(1, currentValue + change);
     quantityInput.value = newValue;
@@ -815,21 +373,10 @@ function changeQuantity(change) {
 
 function showCheckoutForm() {
     if (cart.length === 0) return;
-    
+
     updateCheckoutSummary();
     const checkoutModal = document.getElementById('checkoutModal');
     if (checkoutModal) checkoutModal.style.display = 'block';
-}
-
-function updateCheckoutSummary() {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const t = translations[currentLanguage];
-
-    const checkoutSubtotal = document.getElementById('checkoutSubtotal');
-    const checkoutTotal = document.getElementById('checkoutTotal');
-
-    if (checkoutSubtotal) checkoutSubtotal.textContent = `${subtotal} ${t.currency}`;
-    if (checkoutTotal) checkoutTotal.textContent = `${subtotal} ${t.currency}`;
 }
 
 function calculateDelivery() {
@@ -859,130 +406,11 @@ function calculateDelivery() {
     updateCheckoutTotal(price);
 }
 
-function updateCheckoutTotal(deliveryPrice) {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const total = subtotal + deliveryPrice;
-    const t = translations[currentLanguage];
-
-    const checkoutTotal = document.getElementById('checkoutTotal');
-    const totalPrice = document.getElementById('totalPrice');
-
-    if (checkoutTotal) checkoutTotal.textContent = `${total} ${t.currency}`;
-    if (totalPrice) totalPrice.textContent = `${total} ${t.currency}`;
-}
-
-function populateWilayaDropdown() {
-    const wilayaSelect = document.getElementById('wilaya');
-    if (!wilayaSelect) return;
-    
-    const wilayas = Object.keys(deliveryPrices).sort();
-    
-    wilayas.forEach(wilaya => {
-        const option = document.createElement('option');
-        option.value = wilaya;
-        option.textContent = wilaya;
-        wilayaSelect.appendChild(option);
+function closeModal() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
     });
-}
-
-async function handleCheckoutSubmission(e) {
-    e.preventDefault();
-    
-    console.log('=== DÉBUT DE LA SOUMISSION DE COMMANDE ===');
-    
-    // Validation des champs requis
-    const customerName = document.getElementById('customerName')?.value?.trim();
-    const customerPhone = document.getElementById('customerPhone')?.value?.trim();
-    const customerAddress = document.getElementById('customerAddress')?.value?.trim();
-    const wilaya = document.getElementById('wilaya')?.value;
-    const deliveryType = document.getElementById('deliveryType')?.value;
-    
-    if (!customerName || !customerPhone || !customerAddress || !wilaya || !deliveryType) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-    }
-    
-    if (cart.length === 0) {
-        alert('Votre panier est vide');
-        return;
-    }
-    
-    // Calculate totals
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const deliveryPrice = (wilaya && deliveryType && deliveryPrices[wilaya]) ? deliveryPrices[wilaya][deliveryType] : 0;
-    const total = subtotal + deliveryPrice;
-    
-    const orderData = {
-        customerName: customerName,
-        customerPhone: customerPhone,
-        customerAddress: customerAddress,
-        wilaya: wilaya,
-        deliveryType: deliveryType,
-        customerComment: document.getElementById('customerComment')?.value?.trim() || '',
-        items: cart.map(item => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-            category: item.category
-        })),
-        subtotal: subtotal,
-        deliveryPrice: deliveryPrice,
-        total: total,
-        status: 'pending',
-        createdAt: new Date(),
-        orderNumber: 'ORD-' + Date.now()
-    };
-
-    console.log('Données de la commande préparées:', orderData);
-    
-    // Vérifier la disponibilité de Firebase
-    console.log('Vérification de Firebase...');
-    console.log('- typeof firebase:', typeof firebase);
-    console.log('- firebase.firestore disponible:', !!(firebase && firebase.firestore));
-    
-    let orderSavedSuccessfully = false;
-    
-    try {
-        // Save order to Firebase if available
-        if (typeof firebase !== 'undefined' && firebase.firestore) {
-            console.log('Tentative de sauvegarde dans Firebase...');
-            
-            const docRef = await firebase.firestore().collection('orders').add({
-                ...orderData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            console.log('✅ Commande sauvegardée avec succès dans Firebase avec ID:', docRef.id);
-            orderSavedSuccessfully = true;
-            
-        } else {
-            console.warn('⚠️ Firebase non disponible, commande non sauvegardée en base');
-        }
-    } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
-        console.error('Détails de l\'erreur:', error.message);
-        console.error('Code d\'erreur:', error.code);
-        
-        // Afficher une alerte pour informer l'utilisateur
-        alert('Attention: Il y a eu un problème technique lors de l\'enregistrement de votre commande. Veuillez contacter le service client avec votre numéro de commande: ' + orderData.orderNumber);
-    }
-    
-    console.log('État de la sauvegarde:', orderSavedSuccessfully ? 'SUCCÈS' : 'ÉCHEC');
-    
-    // Show success modal
-    closeModal();
-    const successModal = document.getElementById('successModal');
-    if (successModal) successModal.style.display = 'block';
-    
-    // Clear cart
-    cart = [];
-    updateCartDisplay();
-    updateCartCount();
-    saveCartToStorage();
-    
-    console.log('=== FIN DE LA SOUMISSION DE COMMANDE ===');
 }
 
 function closeSuccessModal() {
@@ -991,17 +419,15 @@ function closeSuccessModal() {
     scrollToSection('home');
 }
 
-function closeModal() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.style.display = 'none';
-    });
+function selectProduct(productId) {
+    hideSearchSuggestions();
+    openProductModal(productId);
 }
 
 function scrollToSection(sectionId) {
     const section = document.getElementById(sectionId);
     if (section) {
-        const headerOffset = 120; // Account for search bar height
+        const headerOffset = 120;
         const elementPosition = section.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -1012,15 +438,200 @@ function scrollToSection(sectionId) {
     }
 }
 
-function setupSmoothScrolling() {
-    const links = document.querySelectorAll('a[href^="#"]');
-    links.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetId = link.getAttribute('href').substring(1);
-            scrollToSection(targetId);
-        });
+// Exposer toutes les fonctions au scope global pour les attributs onclick
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.updateCartQuantity = updateCartQuantity;
+window.openProductModal = openProductModal;
+window.addToCartFromModal = addToCartFromModal;
+window.changeQuantity = changeQuantity;
+window.showCheckoutForm = showCheckoutForm;
+window.calculateDelivery = calculateDelivery;
+window.closeModal = closeModal;
+window.closeSuccessModal = closeSuccessModal;
+window.selectProduct = selectProduct;
+window.scrollToSection = scrollToSection;
+
+console.log('✅ Toutes les fonctions ont été exposées au scope global');
+
+// Test des fonctions exposées
+console.log('🔍 Test des fonctions exposées:');
+console.log('- addToCart:', typeof window.addToCart);
+console.log('- openProductModal:', typeof window.openProductModal);
+console.log('- showCheckoutForm:', typeof window.showCheckoutForm);
+console.log('- calculateDelivery:', typeof window.calculateDelivery);
+
+// ===== FONCTIONS D'AFFICHAGE ET DE GESTION =====
+
+function updateCartDisplay() {
+    const cartItems = document.getElementById('cartItems');
+    const cartSummary = document.getElementById('cartSummary');
+
+    if (!cartItems || !cartSummary) return;
+
+    const t = translations[currentLanguage];
+
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <p>${t.emptyCart}</p>
+            </div>
+        `;
+        cartSummary.style.display = 'none';
+        return;
+    }
+
+    cartItems.innerHTML = '';
+    let subtotal = 0;
+
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+
+        const itemName = typeof item.name === 'object' ? item.name[currentLanguage] : item.name;
+
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+            <img src="${item.image}" alt="${itemName}" class="cart-item-image">
+            <div class="cart-item-details">
+                <div class="cart-item-name">${itemName}</div>
+                <div class="cart-item-price">${item.price} ${t.currency}</div>
+            </div>
+            <div class="cart-item-controls">
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                    <input type="number" class="qty-input" value="${item.quantity}" 
+                           onchange="updateCartQuantity(${item.id}, parseInt(this.value))" min="1">
+                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                </div>
+                <button class="remove-item" onclick="removeFromCart(${item.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        cartItems.appendChild(cartItem);
     });
+
+    const subtotalElement = document.getElementById('subtotal');
+    const totalPriceElement = document.getElementById('totalPrice');
+
+    if (subtotalElement) subtotalElement.textContent = `${subtotal} ${t.currency}`;
+    if (totalPriceElement) totalPriceElement.textContent = `${subtotal} ${t.currency}`;
+
+    cartSummary.style.display = 'block';
+}
+
+function updateCartCount() {
+    const cartCount = document.querySelector('.cart-count');
+    if (!cartCount) return;
+
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCount.textContent = totalItems;
+
+    if (totalItems > 0) {
+        cartCount.style.display = 'inline-block';
+        cartCount.classList.add('bounce');
+        setTimeout(() => cartCount.classList.remove('bounce'), 500);
+    } else {
+        cartCount.style.display = 'none';
+    }
+}
+
+function displayProducts(productsToShow) {
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+
+    productsGrid.innerHTML = '';
+
+    productsToShow.forEach(product => {
+        const productCard = createProductCard(product);
+        productsGrid.appendChild(productCard);
+    });
+
+    const cards = productsGrid.querySelectorAll('.product-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('slide-up');
+    });
+}
+
+function createProductCard(product) {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    const t = translations[currentLanguage];
+    const productName = typeof product.name === 'object' ? product.name[currentLanguage] : product.name;
+    const productDescription = typeof product.description === 'object' ? product.description[currentLanguage] : product.description;
+
+    card.innerHTML = `
+        <div class="product-image">
+            <img src="${product.image}" alt="${productName}">
+            <div class="product-overlay">
+                <button class="quick-view-btn" data-product-id="${product.id}">
+                    ${t.quickView}
+                </button>
+            </div>
+        </div>
+        <div class="product-info">
+            <h3 class="product-name">${productName}</h3>
+            <p class="product-price">${product.price} ${t.currency}</p>
+            <p class="product-description">${productDescription}</p>
+            <button class="add-to-cart" data-product-id="${product.id}">
+                <i class="fas fa-cart-plus"></i>
+                ${t.addToCart}
+            </button>
+        </div>
+    `;
+
+    // Ajouter les event listeners directement
+    const quickViewBtn = card.querySelector('.quick-view-btn');
+    const addToCartBtn = card.querySelector('.add-to-cart');
+
+    quickViewBtn.addEventListener('click', () => {
+        console.log('🔍 Bouton aperçu rapide cliqué pour le produit:', product.id);
+        openProductModal(product.id);
+    });
+
+    addToCartBtn.addEventListener('click', () => {
+        console.log('🛒 Bouton ajouter au panier cliqué pour le produit:', product.id);
+        addToCart(product.id);
+    });
+
+    return card;
+}
+
+function filterProducts(category) {
+    let filteredProducts;
+    if (category === 'all') {
+        filteredProducts = products;
+    } else {
+        filteredProducts = products.filter(product => product.category === category);
+    }
+    displayProducts(filteredProducts);
+}
+
+function updateCheckoutSummary() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const t = translations[currentLanguage];
+
+    const checkoutSubtotal = document.getElementById('checkoutSubtotal');
+    const checkoutTotal = document.getElementById('checkoutTotal');
+
+    if (checkoutSubtotal) checkoutSubtotal.textContent = `${subtotal} ${t.currency}`;
+    if (checkoutTotal) checkoutTotal.textContent = `${subtotal} ${t.currency}`;
+}
+
+function updateCheckoutTotal(deliveryPrice) {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal + deliveryPrice;
+    const t = translations[currentLanguage];
+
+    const checkoutTotal = document.getElementById('checkoutTotal');
+    const totalPrice = document.getElementById('totalPrice');
+
+    if (checkoutTotal) checkoutTotal.textContent = `${total} ${t.currency}`;
+    if (totalPrice) totalPrice.textContent = `${total} ${t.currency}`;
 }
 
 function showAddToCartAnimation() {
@@ -1039,9 +650,9 @@ function showAddToCartAnimation() {
         font-weight: 600;
         animation: fadeInOut 2s ease;
     `;
-    
+
     document.body.appendChild(message);
-    
+
     setTimeout(() => {
         if (document.body.contains(message)) {
             document.body.removeChild(message);
@@ -1067,44 +678,231 @@ function loadCartFromStorage() {
     }
 }
 
-// Language Functions
+// ===== FONCTIONS DE RECHERCHE =====
+
+function setupSearchListeners() {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            handleSearch(e.target.value);
+        }, 300);
+    });
+
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim()) {
+            showSearchSuggestions(searchInput.value);
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+            hideSearchSuggestions();
+        }
+    });
+}
+
+function handleSearch(query) {
+    if (!query.trim()) {
+        displayProducts(products);
+        hideSearchSuggestions();
+        return;
+    }
+
+    const filteredProducts = searchProducts(query);
+    displayProducts(filteredProducts);
+    showSearchSuggestions(query);
+}
+
+function searchProducts(query) {
+    const searchTerm = query.toLowerCase().trim();
+
+    return products.filter(product => {
+        const productName = typeof product.name === 'object'
+            ? product.name[currentLanguage].toLowerCase()
+            : product.name.toLowerCase();
+
+        const productDescription = typeof product.description === 'object'
+            ? product.description[currentLanguage].toLowerCase()
+            : product.description.toLowerCase();
+
+        return productName.includes(searchTerm) ||
+            productDescription.includes(searchTerm) ||
+            product.category.includes(searchTerm);
+    });
+}
+
+function showSearchSuggestions(query) {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer || !query.trim()) {
+        hideSearchSuggestions();
+        return;
+    }
+
+    const filteredProducts = searchProducts(query);
+    const t = translations[currentLanguage];
+
+    if (filteredProducts.length === 0) {
+        suggestionsContainer.innerHTML = `
+            <div class="suggestion-item">
+                <i class="fas fa-search"></i>
+                ${t.noResults}
+            </div>
+        `;
+    } else {
+        suggestionsContainer.innerHTML = filteredProducts.slice(0, 5).map(product => {
+            const productName = typeof product.name === 'object'
+                ? product.name[currentLanguage]
+                : product.name;
+
+            return `
+                <div class="suggestion-item" onclick="selectProduct(${product.id})">
+                    <i class="fas fa-search"></i>
+                    ${productName} - ${product.price} ${t.currency}
+                </div>
+            `;
+        }).join('');
+    }
+
+    suggestionsContainer.classList.add('show');
+}
+
+function hideSearchSuggestions() {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.classList.remove('show');
+    }
+}
+
+// ===== GESTION DES COMMANDES =====
+
+async function handleCheckoutSubmission(e) {
+    e.preventDefault();
+
+    console.log('=== DÉBUT DE LA SOUMISSION DE COMMANDE ===');
+
+    const customerName = document.getElementById('customerName')?.value?.trim();
+    const customerPhone = document.getElementById('customerPhone')?.value?.trim();
+    const customerAddress = document.getElementById('customerAddress')?.value?.trim();
+    const wilaya = document.getElementById('wilaya')?.value;
+    const deliveryType = document.getElementById('deliveryType')?.value;
+
+    if (!customerName || !customerPhone || !customerAddress || !wilaya || !deliveryType) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+
+    if (cart.length === 0) {
+        alert('Votre panier est vide');
+        return;
+    }
+
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryPrice = (wilaya && deliveryType && deliveryPrices[wilaya]) ? deliveryPrices[wilaya][deliveryType] : 0;
+    const total = subtotal + deliveryPrice;
+
+    const orderData = {
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: customerAddress,
+        wilaya: wilaya,
+        deliveryType: deliveryType,
+        customerComment: document.getElementById('customerComment')?.value?.trim() || '',
+        items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+            category: item.category
+        })),
+        subtotal: subtotal,
+        deliveryPrice: deliveryPrice,
+        total: total,
+        status: 'pending',
+        createdAt: new Date(),
+        orderNumber: 'ORD-' + Date.now()
+    };
+
+    console.log('Données de la commande préparées:', orderData);
+
+    console.log('Vérification de Firebase...');
+    console.log('- typeof firebase:', typeof firebase);
+    console.log('- firebase.firestore disponible:', !!(firebase && firebase.firestore));
+
+    let orderSavedSuccessfully = false;
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            console.log('Tentative de sauvegarde dans Firebase...');
+
+            const docRef = await firebase.firestore().collection('orders').add({
+                ...orderData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            console.log('✅ Commande sauvegardée avec succès dans Firebase avec ID:', docRef.id);
+            orderSavedSuccessfully = true;
+
+        } else {
+            console.warn('⚠️ Firebase non disponible, commande non sauvegardée en base');
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
+        console.error('Détails de l\'erreur:', error.message);
+        console.error('Code d\'erreur:', error.code);
+
+        alert('Attention: Il y a eu un problème technique lors de l\'enregistrement de votre commande. Veuillez contacter le service client avec votre numéro de commande: ' + orderData.orderNumber);
+    }
+
+    console.log('État de la sauvegarde:', orderSavedSuccessfully ? 'SUCCÈS' : 'ÉCHEC');
+
+    closeModal();
+    const successModal = document.getElementById('successModal');
+    if (successModal) successModal.style.display = 'block';
+
+    cart = [];
+    updateCartDisplay();
+    updateCartCount();
+    saveCartToStorage();
+
+    console.log('=== FIN DE LA SOUMISSION DE COMMANDE ===');
+}
+
+// ===== GESTION DES LANGUES =====
+
 function changeLanguage(lang) {
     currentLanguage = lang;
-    
-    // Update language buttons
+
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.getAttribute('data-lang') === lang) {
             btn.classList.add('active');
         }
     });
-    
-    // Update HTML direction and lang attribute
+
     document.documentElement.setAttribute('lang', lang);
     document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
-    
-    // Update all translatable elements
+
     updateTranslations();
-    
-    // Save language preference
+
     localStorage.setItem('raniaShopLanguage', lang);
 }
 
 function updateTranslations() {
     const t = translations[currentLanguage];
 
-    // Update search placeholder
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.placeholder = t.searchPlaceholder;
     }
 
-    // Update elements with data attributes
     document.querySelectorAll('[data-ar][data-fr]').forEach(element => {
         element.textContent = element.getAttribute(`data-${currentLanguage}`);
     });
 
-    // Update filter buttons
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
         const filter = btn.getAttribute('data-filter');
@@ -1116,35 +914,24 @@ function updateTranslations() {
         else if (filter === 'clothing') btn.textContent = t.clothing;
     });
 
-    // Update section titles
     const sectionTitle = document.querySelector('#products .section-title');
     if (sectionTitle) sectionTitle.textContent = t.ourProducts;
 
     const sectionSubtitle = document.querySelector('#products .section-subtitle');
     if (sectionSubtitle) sectionSubtitle.textContent = t.chooseFromCollection;
 
-    // Update cart section
     const cartSectionTitle = document.querySelector('#cart .section-title');
     if (cartSectionTitle) cartSectionTitle.textContent = t.shoppingCart;
 
-    // Update cart summary labels
     updateCartSummaryLabels(t);
-
-    // Update form labels
     updateFormLabels(t);
-
-    // Update modal buttons
     updateModalButtons(t);
 
-    // Refresh product display to update translations
     displayProducts(products);
-
-    // Update cart display to refresh translations
     updateCartDisplay();
 }
 
 function updateCartSummaryLabels(t) {
-    // Update cart summary labels
     const summaryItems = document.querySelectorAll('.summary-item');
     summaryItems.forEach(item => {
         const spans = item.querySelectorAll('span');
@@ -1160,13 +947,11 @@ function updateCartSummaryLabels(t) {
         }
     });
 
-    // Update checkout button
     const checkoutBtn = document.querySelector('.checkout-btn span');
     if (checkoutBtn) checkoutBtn.textContent = t.checkout;
 }
 
 function updateFormLabels(t) {
-    // Checkout form labels
     const labels = {
         'customerName': t.fullName,
         'customerPhone': t.phone,
@@ -1175,64 +960,210 @@ function updateFormLabels(t) {
         'deliveryType': t.deliveryType,
         'customerComment': t.comments
     };
-    
+
     Object.keys(labels).forEach(id => {
         const label = document.querySelector(`label[for="${id}"]`);
         if (label) label.textContent = labels[id];
     });
-    
-    // Update select options
+
     const wilayaSelect = document.getElementById('wilaya');
     if (wilayaSelect && wilayaSelect.options[0]) {
         wilayaSelect.options[0].textContent = t.selectWilaya;
     }
-    
+
     const deliverySelect = document.getElementById('deliveryType');
     if (deliverySelect) {
         if (deliverySelect.options[0]) deliverySelect.options[0].textContent = t.selectDeliveryType;
         if (deliverySelect.options[1]) deliverySelect.options[1].textContent = t.homeDelivery;
         if (deliverySelect.options[2]) deliverySelect.options[2].textContent = t.stopdesk;
     }
-    
-    // Update submit button
+
     const submitBtn = document.querySelector('.submit-order-btn');
     if (submitBtn) {
         submitBtn.innerHTML = `<i class="fas fa-check"></i> ${t.confirmOrder}`;
     }
-    
-    // Update success modal
+
     const successTitle = document.querySelector('#successModal h3');
     if (successTitle) successTitle.textContent = t.orderSuccess;
-    
+
     const successText = document.querySelector('#successModal p');
     if (successText) successText.textContent = t.contactSoon;
-    
+
     const successBtn = document.querySelector('.success-btn');
     if (successBtn) successBtn.textContent = t.ok;
 }
 
 function updateModalButtons(t) {
-    // Update modal add to cart button
     const modalAddBtn = document.querySelector('.add-to-cart-btn');
     if (modalAddBtn) {
         modalAddBtn.innerHTML = `<i class="fas fa-cart-plus"></i> ${t.addToCart}`;
     }
 }
 
-// Auto-hide sidebar when footer is visible
+// ===== GESTION DES PRODUITS ET FIREBASE =====
+
+async function loadProductsFromFirebase() {
+    products = [...sampleProducts];
+    displayProducts(products);
+    console.log('Sample products loaded as fallback');
+
+    try {
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            console.log('Firebase not available, keeping sample products');
+            return;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const productsSnapshot = await firebase.firestore()
+            .collection('products')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        if (!productsSnapshot.empty) {
+            products = [];
+            productsSnapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            displayProducts(products);
+            console.log(`Loaded ${products.length} products from Firebase`);
+
+            setupProductsListener();
+        } else {
+            console.log('No products in Firebase, using sample products');
+        }
+
+    } catch (error) {
+        console.error('Error loading products from Firebase:', error);
+        console.log('Keeping sample products as fallback');
+    }
+}
+
+function setupProductsListener() {
+    try {
+        firebase.firestore().collection('products').onSnapshot((snapshot) => {
+            products = [];
+            snapshot.forEach(doc => {
+                products.push({ id: doc.id, ...doc.data() });
+            });
+            displayProducts(products);
+            console.log('Products updated in real-time');
+        }, (error) => {
+            console.error('Error in products listener:', error);
+        });
+    } catch (error) {
+        console.error('Error setting up products listener:', error);
+    }
+}
+
+function populateWilayaDropdown() {
+    const wilayaSelect = document.getElementById('wilaya');
+    if (!wilayaSelect) return;
+
+    const wilayas = Object.keys(deliveryPrices).sort();
+
+    wilayas.forEach(wilaya => {
+        const option = document.createElement('option');
+        option.value = wilaya;
+        option.textContent = wilaya;
+        wilayaSelect.appendChild(option);
+    });
+}
+
+// ===== GESTION DES ÉVÉNEMENTS =====
+
+function setupEventListeners() {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const lang = e.target.getAttribute('data-lang');
+            changeLanguage(lang);
+        });
+    });
+
+    setupSearchListeners();
+
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebarMenu = document.getElementById('sidebarMenu');
+
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebarMenu.classList.toggle('active');
+        });
+    }
+
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+
+            const filter = e.target.getAttribute('data-filter');
+            filterProducts(filter);
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
+            hideSearchSuggestions();
+        });
+    });
+
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const category = e.target.getAttribute('data-category');
+            if (category && category !== 'all') {
+                e.preventDefault();
+                filterProducts(category);
+                scrollToSection('products');
+
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = '';
+                hideSearchSuggestions();
+            }
+        });
+    });
+
+    const closeButtons = document.querySelectorAll('.close-modal');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    });
+
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', handleCheckoutSubmission);
+    }
+}
+
+function setupSmoothScrolling() {
+    const links = document.querySelectorAll('a[href^="#"]');
+    links.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            scrollToSection(targetId);
+        });
+    });
+}
+
 function setupSidebarAutoHide() {
     const sidebar = document.querySelector('.sidebar-menu');
     const footer = document.querySelector('.footer');
-    
+
     if (!sidebar || !footer) return;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Footer is visible, hide sidebar
                 sidebar.classList.add('hide-on-footer');
             } else {
-                // Footer is not visible, show sidebar
                 sidebar.classList.remove('hide-on-footer');
             }
         });
@@ -1243,6 +1174,39 @@ function setupSidebarAutoHide() {
 
     observer.observe(footer);
 }
+
+// ===== INITIALISATION =====
+
+function initializeApp() {
+    console.log('🚀 Initialisation de l\'application...');
+
+    const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
+    changeLanguage(savedLanguage);
+
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+    }, 2000);
+
+    loadProductsFromFirebase();
+    setupEventListeners();
+    setupSidebarAutoHide();
+    populateWilayaDropdown();
+    loadCartFromStorage();
+    setupSmoothScrolling();
+
+    console.log('✅ Application initialisée avec succès');
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', function () {
+    initializeApp();
+});
 
 // Add CSS for fadeInOut animation
 const style = document.createElement('style');
@@ -1262,7 +1226,7 @@ const observerOptions = {
     rootMargin: '0px 0px -50px 0px'
 };
 
-const observer = new IntersectionObserver((entries) => {
+const scrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('fade-in');
@@ -1274,6 +1238,6 @@ const observer = new IntersectionObserver((entries) => {
 document.addEventListener('DOMContentLoaded', () => {
     const sections = document.querySelectorAll('section');
     sections.forEach(section => {
-        observer.observe(section);
+        scrollObserver.observe(section);
     });
 });
