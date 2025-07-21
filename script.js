@@ -850,21 +850,91 @@ function populateWilayaDropdown() {
     });
 }
 
-function handleCheckoutSubmission(e) {
+async function handleCheckoutSubmission(e) {
     e.preventDefault();
     
-    const formData = {
-        name: document.getElementById('customerName')?.value,
-        phone: document.getElementById('customerPhone')?.value,
-        address: document.getElementById('customerAddress')?.value,
-        wilaya: document.getElementById('wilaya')?.value,
-        deliveryType: document.getElementById('deliveryType')?.value,
-        comment: document.getElementById('customerComment')?.value,
-        cart: cart,
-        total: document.getElementById('checkoutTotal')?.textContent
+    console.log('=== DÉBUT DE LA SOUMISSION DE COMMANDE ===');
+    
+    // Validation des champs requis
+    const customerName = document.getElementById('customerName')?.value?.trim();
+    const customerPhone = document.getElementById('customerPhone')?.value?.trim();
+    const customerAddress = document.getElementById('customerAddress')?.value?.trim();
+    const wilaya = document.getElementById('wilaya')?.value;
+    const deliveryType = document.getElementById('deliveryType')?.value;
+    
+    if (!customerName || !customerPhone || !customerAddress || !wilaya || !deliveryType) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+    
+    if (cart.length === 0) {
+        alert('Votre panier est vide');
+        return;
+    }
+    
+    // Calculate totals
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryPrice = (wilaya && deliveryType && deliveryPrices[wilaya]) ? deliveryPrices[wilaya][deliveryType] : 0;
+    const total = subtotal + deliveryPrice;
+    
+    const orderData = {
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerAddress: customerAddress,
+        wilaya: wilaya,
+        deliveryType: deliveryType,
+        customerComment: document.getElementById('customerComment')?.value?.trim() || '',
+        items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image,
+            category: item.category
+        })),
+        subtotal: subtotal,
+        deliveryPrice: deliveryPrice,
+        total: total,
+        status: 'pending',
+        createdAt: new Date(),
+        orderNumber: 'ORD-' + Date.now()
     };
 
-    console.log('Order submitted:', formData);
+    console.log('Données de la commande préparées:', orderData);
+    
+    // Vérifier la disponibilité de Firebase
+    console.log('Vérification de Firebase...');
+    console.log('- typeof firebase:', typeof firebase);
+    console.log('- firebase.firestore disponible:', !!(firebase && firebase.firestore));
+    
+    let orderSavedSuccessfully = false;
+    
+    try {
+        // Save order to Firebase if available
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            console.log('Tentative de sauvegarde dans Firebase...');
+            
+            const docRef = await firebase.firestore().collection('orders').add({
+                ...orderData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            console.log('✅ Commande sauvegardée avec succès dans Firebase avec ID:', docRef.id);
+            orderSavedSuccessfully = true;
+            
+        } else {
+            console.warn('⚠️ Firebase non disponible, commande non sauvegardée en base');
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
+        console.error('Détails de l\'erreur:', error.message);
+        console.error('Code d\'erreur:', error.code);
+        
+        // Afficher une alerte pour informer l'utilisateur
+        alert('Attention: Il y a eu un problème technique lors de l\'enregistrement de votre commande. Veuillez contacter le service client avec votre numéro de commande: ' + orderData.orderNumber);
+    }
+    
+    console.log('État de la sauvegarde:', orderSavedSuccessfully ? 'SUCCÈS' : 'ÉCHEC');
     
     // Show success modal
     closeModal();
@@ -876,6 +946,8 @@ function handleCheckoutSubmission(e) {
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
+    
+    console.log('=== FIN DE LA SOUMISSION DE COMMANDE ===');
 }
 
 function closeSuccessModal() {
