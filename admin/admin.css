@@ -790,6 +790,481 @@ body {
     background: #d1ecf1;
     color: #0c5460;
     border-color: #bee5eb;
+}
+
+/* Styles pour l'organisation améliorée des commandes */
+.customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.customer-info div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.customer-info i {
+    color: var(--primary-color);
+    width: 14px;
+}
+
+.order-details {
+    text-align: center;
+}
+
+.total-amount {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+}
+
+.date-info {
+    text-align: center;
+}
+
+.date-info div {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.date-info small {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    padding: 6px 8px;
+    min-width: auto;
+}
+
+/* Styles pour les détails de commande dans le modal */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.order-header h4 {
+    color: var(--primary-color);
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.order-customer,
+.order-items,
+.order-summary,
+.order-meta {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+.order-customer h5,
+.order-items h5 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.order-customer p {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.order-item-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--white);
+    margin-bottom: 8px;
+    border-radius: 6px;
+}
+
+.order-item-detail:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-info strong {
+    display: block;
+    color: var(--text-color);
+    margin-bottom: 4px;
+}
+
+.item-price {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.item-total {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-row.total {
+    font-size: 1.1rem;
+    padding-top: 15px;
+    border-top: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.order-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    padding: 20px;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+}
+
+.order-actions select {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.order-actions button {
+    white-space: nowrap;
+}
+
+/* Styles pour les commandes récentes dans le dashboard */
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 15px;
+    transition: var(--transition);
+}
+
+.order-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.order-info h4 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.order-info p {
+    margin: 4px 0;
+    color: #666;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.order-info i {
+    color: var(--primary-color);
+    width: 14px;
+}
+
+.order-summary {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.order-total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.order-status {
+    margin-bottom: 10px;
+}
+
+/* Amélioration des tableaux */
+.products-table th,
+.orders-table th {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.orders-table tbody tr:hover {
+    background: var(--background-color);
+}
+
+/* Responsive amélioré */
+@media (max-width: 768px) {
+    .order-item {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .order-summary {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .customer-info {
+        align-items: center;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .order-actions select,
+    .order-actions button {
+        width: 100%;
+    }
+}
+
+/* Styles pour la gestion comptable des produits */
+.purchase-price {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.sale-price {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.margin {
+    text-align: center;
+}
+
+.margin-value {
+    display: block;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.margin-amount {
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+.high-margin .margin-value {
+    color: #28a745;
+}
+
+.medium-margin .margin-value {
+    color: #ffc107;
+}
+
+.low-margin .margin-value {
+    color: #dc3545;
+}
+
+.stock-info {
+    text-align: center;
+}
+
+.stock-count {
+    display: block;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #28a745;
+}
+
+.stock-count.low-stock {
+    color: #ffc107;
+}
+
+.stock-count.critical-stock {
+    color: #dc3545;
+}
+
+.category-badge {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Amélioration du tableau des produits */
+.products-table {
+    font-size: 0.9rem;
+}
+
+.products-table th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.products-table td {
+    vertical-align: middle;
+}
+
+.product-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+/* Styles pour les analytics améliorés */
+.analytics-card {
+    min-height: 300px;
+}
+
+.top-product-item,
+.wilaya-stat-item {
+    transition: var(--transition);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.top-product-item:hover,
+.wilaya-stat-item:hover {
+    background: var(--background-color);
+    transform: translateX(5px);
+}
+
+.product-rank {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    box-shadow: 0 2px 8px rgba(255, 20, 147, 0.3);
+}
+
+/* Amélioration des modals */
+.modal-content {
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Styles pour les boutons d'action améliorés */
+.action-buttons .btn {
+    margin: 0 2px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: scale(1.1);
+}
+
+.btn-info:hover {
+    background: #138496;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+}
+
+.btn-danger:hover {
+    background: #bd2130;
+}
+
+/* Indicateurs visuels améliorés */
+.high-margin {
+    background: linear-gradient(90deg, transparent, rgba(40, 167, 69, 0.1));
+}
+
+.medium-margin {
+    background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.1));
+}
+
+.low-margin {
+    background: linear-gradient(90deg, transparent, rgba(220, 53, 69, 0.1));
+}
+
+/* Responsive pour les nouveaux éléments */
+@media (max-width: 1200px) {
+    .products-table {
+        font-size: 0.8rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .action-buttons .btn {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .margin-value,
+    .stock-count {
+        font-size: 1rem;
+    }
+    
+    .margin-amount {
+        font-size: 0.7rem;
+    }
+    
+    .category-badge {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+    }
 }/*
  ===== STYLES POUR LES NOUVELLES FONCTIONNALITÉS ===== */
 

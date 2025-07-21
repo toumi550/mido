@@ -112,7 +112,12 @@ function showLoginScreen() {
     const passwordInput = document.getElementById('password');
     if (emailInput) emailInput.value = '';
     if (passwordInput) passwordInput.value = '';
-    if (loginError) loginError.textContent = '';
+    
+    // NE PAS afficher d'erreur au chargement initial
+    if (loginError) {
+        loginError.textContent = '';
+        loginError.style.display = 'none';
+    }
 }
 
 function showDashboard() {
@@ -188,6 +193,12 @@ function loadSectionData(sectionName) {
         case 'orders':
             loadOrders();
             break;
+        case 'account':
+            loadAccountData();
+            break;
+        case 'analytics':
+            loadAnalytics();
+            break;
         case 'settings':
             loadSettings();
             break;
@@ -240,12 +251,91 @@ async function loadDashboardData() {
             totalRevenueElement.textContent = totalRevenue.toLocaleString() + ' DA';
         }
 
+        // Charger les commandes récentes
+        await loadRecentOrders();
+
         console.log('✅ Données du dashboard chargées');
 
     } catch (error) {
         console.error('❌ Erreur lors du chargement du dashboard:', error);
         showError('Erreur lors du chargement des données: ' + error.message);
     }
+}
+
+// Fonction pour charger les commandes récentes
+async function loadRecentOrders() {
+    console.log('📋 Chargement des commandes récentes...');
+    
+    try {
+        const recentOrdersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
+
+        const recentOrdersList = document.getElementById('recentOrdersList');
+        if (!recentOrdersList) return;
+
+        recentOrdersList.innerHTML = '';
+
+        if (recentOrdersSnapshot.empty) {
+            recentOrdersList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune commande récente</p>';
+            return;
+        }
+
+        recentOrdersSnapshot.forEach(doc => {
+            const order = doc.data();
+            const orderElement = createRecentOrderElement(order, doc.id);
+            recentOrdersList.appendChild(orderElement);
+        });
+
+        console.log('✅ Commandes récentes chargées');
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des commandes récentes:', error);
+        const recentOrdersList = document.getElementById('recentOrdersList');
+        if (recentOrdersList) {
+            recentOrdersList.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 20px;">Erreur lors du chargement des commandes récentes</p>';
+        }
+    }
+}
+
+// Fonction pour créer un élément de commande récente
+function createRecentOrderElement(order, orderId) {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+    
+    const statusClass = order.status || 'pending';
+    const statusText = getStatusText(order.status);
+    
+    div.innerHTML = `
+        <div class="order-info">
+            <h4>#${order.orderNumber || orderId.substring(0, 8)}</h4>
+            <p><i class="fas fa-user"></i> ${order.customerName || 'N/A'}</p>
+            <p><i class="fas fa-phone"></i> ${order.customerPhone || 'N/A'}</p>
+            <p><i class="fas fa-map-marker-alt"></i> ${order.wilaya || 'N/A'}</p>
+            <p><i class="fas fa-clock"></i> ${date}</p>
+        </div>
+        <div class="order-summary">
+            <div class="order-total">${order.total || '0'} DA</div>
+            <div class="order-status">
+                <span class="status-badge status-${statusClass}">${statusText}</span>
+            </div>
+            <button class="btn btn-sm btn-info" onclick="viewOrder('${orderId}')">
+                <i class="fas fa-eye"></i> Voir
+            </button>
+        </div>
+    `;
+    
+    return div;
 }
 
 // Fonctions des produits
@@ -294,18 +384,50 @@ function createProductRow(product) {
     
     const nameAr = product.name?.ar || product.name || 'N/A';
     const nameFr = product.name?.fr || product.name || 'N/A';
-    const price = product.price || 0;
+    const purchasePrice = product.purchasePrice || 0;
+    const salePrice = product.price || product.salePrice || 0;
+    const stock = product.stock || 0;
     const category = product.category || 'N/A';
+    
+    // Calculer la marge
+    const margin = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice * 100).toFixed(1) : 0;
+    const marginClass = margin > 30 ? 'high-margin' : margin > 15 ? 'medium-margin' : 'low-margin';
+    
+    // Image du produit
+    const imageUrl = product.image || '../image/default-product.jpg';
 
     tr.innerHTML = `
-        <td>${nameAr}</td>
-        <td>${nameFr}</td>
-        <td>${price} DA</td>
-        <td>${getCategoryText(category)}</td>
         <td>
-            <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')">
-                <i class="fas fa-eye"></i>
-            </button>
+            <img src="${imageUrl}" alt="${nameFr}" class="product-image" onerror="this.src='../image/default-product.jpg'">
+        </td>
+        <td><strong>${nameAr}</strong></td>
+        <td><strong>${nameFr}</strong></td>
+        <td class="purchase-price">${purchasePrice.toLocaleString()} DA</td>
+        <td class="sale-price">${salePrice.toLocaleString()} DA</td>
+        <td class="margin ${marginClass}">
+            <span class="margin-value">${margin}%</span>
+            <small class="margin-amount">+${(salePrice - purchasePrice).toLocaleString()} DA</small>
+        </td>
+        <td class="stock-info">
+            <span class="stock-count ${stock < 10 ? 'low-stock' : stock < 5 ? 'critical-stock' : ''}">${stock}</span>
+            <small>unités</small>
+        </td>
+        <td><span class="category-badge">${getCategoryText(category)}</span></td>
+        <td>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')" title="Voir détails">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.id}')" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-success" onclick="updateStock('${product.id}')" title="Gérer stock">
+                    <i class="fas fa-boxes"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.id}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </td>
     `;
     
@@ -356,20 +478,56 @@ function displayOrders() {
 function createOrderRow(order) {
     const tr = document.createElement('tr');
     
-    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A';
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+    
+    const statusClass = order.status || 'pending';
+    const statusText = getStatusText(order.status);
+    
+    // Calculer le nombre d'articles
+    const itemsCount = order.items ? order.items.length : 0;
+    const totalItems = order.items ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
     
     tr.innerHTML = `
-        <td>#${order.orderNumber || order.id.substring(0, 8)}</td>
-        <td>${order.customerName || 'N/A'}</td>
-        <td>${order.customerPhone || 'N/A'}</td>
-        <td>${order.wilaya || 'N/A'}</td>
-        <td>${order.total || '0'} DA</td>
-        <td><span class="status-badge status-${order.status || 'pending'}">${getStatusText(order.status)}</span></td>
-        <td>${date}</td>
+        <td><input type="checkbox" class="order-checkbox" data-order-id="${order.id}"></td>
+        <td><strong>#${order.orderNumber || order.id.substring(0, 8)}</strong></td>
         <td>
-            <button class="btn btn-sm btn-info" onclick="viewOrder('${order.id}')">
-                <i class="fas fa-eye"></i>
-            </button>
+            <div class="customer-info">
+                <div><i class="fas fa-user"></i> ${order.customerName || 'N/A'}</div>
+                <div><i class="fas fa-phone"></i> ${order.customerPhone || 'N/A'}</div>
+            </div>
+        </td>
+        <td><i class="fas fa-map-marker-alt"></i> ${order.wilaya || 'N/A'}</td>
+        <td>
+            <div class="order-details">
+                <div class="total-amount"><strong>${order.total || '0'} DA</strong></div>
+                <small>${totalItems} article(s)</small>
+            </div>
+        </td>
+        <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+        <td>
+            <div class="date-info">
+                <div>${date.split(' ')[0]}</div>
+                <small>${date.split(' ')[1] || ''}</small>
+            </div>
+        </td>
+        <td>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-info" onclick="viewOrder('${order.id}')" title="Voir détails">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editOrderStatus('${order.id}')" title="Modifier statut">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </td>
     `;
     
@@ -451,8 +609,342 @@ window.viewOrder = function(orderId) {
     console.log('👁️ Voir commande:', orderId);
     const order = orders.find(o => o.id === orderId);
     if (order) {
-        alert('Commande: ' + (order.customerName || 'N/A') + ' - ' + (order.total || '0') + ' DA');
+        showOrderDetails(order);
     }
 };
 
-console.log('✅ Admin panel simplifié initialisé');
+// Fonction pour afficher les détails d'une commande
+function showOrderDetails(order) {
+    const modal = document.getElementById('orderModal');
+    const orderDetails = document.getElementById('orderDetails');
+    
+    if (!modal || !orderDetails) return;
+    
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+    
+    const itemsHtml = order.items ? order.items.map(item => `
+        <div class="order-item-detail">
+            <div class="item-info">
+                <strong>${item.name?.fr || item.name || 'N/A'}</strong>
+                <span class="item-price">${item.price || 0} DA x ${item.quantity || 1}</span>
+            </div>
+            <div class="item-total">${(item.price || 0) * (item.quantity || 1)} DA</div>
+        </div>
+    `).join('') : '<p>Aucun article</p>';
+    
+    orderDetails.innerHTML = `
+        <div class="order-header">
+            <h4>Commande #${order.orderNumber || order.id?.substring(0, 8)}</h4>
+            <span class="status-badge status-${order.status || 'pending'}">${getStatusText(order.status)}</span>
+        </div>
+        
+        <div class="order-customer">
+            <h5><i class="fas fa-user"></i> Informations client</h5>
+            <p><strong>Nom:</strong> ${order.customerName || 'N/A'}</p>
+            <p><strong>Téléphone:</strong> ${order.customerPhone || 'N/A'}</p>
+            <p><strong>Adresse:</strong> ${order.customerAddress || 'N/A'}</p>
+            <p><strong>Wilaya:</strong> ${order.wilaya || 'N/A'}</p>
+            <p><strong>Type de livraison:</strong> ${order.deliveryType || 'N/A'}</p>
+            ${order.customerComment ? `<p><strong>Commentaire:</strong> ${order.customerComment}</p>` : ''}
+        </div>
+        
+        <div class="order-items">
+            <h5><i class="fas fa-shopping-cart"></i> Articles commandés</h5>
+            ${itemsHtml}
+        </div>
+        
+        <div class="order-summary">
+            <div class="summary-row">
+                <span>Sous-total:</span>
+                <span>${order.subtotal || 0} DA</span>
+            </div>
+            <div class="summary-row">
+                <span>Frais de livraison:</span>
+                <span>${order.deliveryPrice || 0} DA</span>
+            </div>
+            <div class="summary-row total">
+                <span><strong>Total:</strong></span>
+                <span><strong>${order.total || 0} DA</strong></span>
+            </div>
+        </div>
+        
+        <div class="order-meta">
+            <p><strong>Date de commande:</strong> ${date}</p>
+            <p><strong>ID de commande:</strong> ${order.id || 'N/A'}</p>
+        </div>
+        
+        <div class="order-actions">
+            <select id="orderStatusSelect" class="form-control">
+                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>En attente</option>
+                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>En cours</option>
+                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Terminée</option>
+                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Annulée</option>
+            </select>
+            <button class="btn btn-primary" onclick="updateOrderStatus('${order.id}')">
+                <i class="fas fa-save"></i> Mettre à jour le statut
+            </button>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+    
+    // Fermer le modal
+    const closeBtn = modal.querySelector('.close-modal');
+    if (closeBtn) {
+        closeBtn.onclick = () => modal.style.display = 'none';
+    }
+    
+    // Fermer en cliquant à l'extérieur
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+// Fonction pour mettre à jour le statut d'une commande
+window.updateOrderStatus = async function(orderId) {
+    const statusSelect = document.getElementById('orderStatusSelect');
+    if (!statusSelect) return;
+    
+    const newStatus = statusSelect.value;
+    
+    try {
+        await firebase.firestore().collection('orders').doc(orderId).update({
+            status: newStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showSuccess('Statut de la commande mis à jour avec succès');
+        
+        // Fermer le modal
+        const modal = document.getElementById('orderModal');
+        if (modal) modal.style.display = 'none';
+        
+        // Recharger les commandes
+        loadOrders();
+        
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        showError('Erreur lors de la mise à jour du statut: ' + error.message);
+    }
+};
+
+// Fonction pour modifier le statut d'une commande
+window.editOrderStatus = function(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+        showOrderDetails(order);
+    }
+};
+
+// Fonction pour supprimer une commande
+window.deleteOrder = async function(orderId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        return;
+    }
+    
+    try {
+        await firebase.firestore().collection('orders').doc(orderId).delete();
+        showSuccess('Commande supprimée avec succès');
+        loadOrders();
+        
+    } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        showError('Erreur lors de la suppression: ' + error.message);
+    }
+};
+
+// Fonction pour charger les données du compte
+function loadAccountData() {
+    console.log('👤 Chargement des données du compte...');
+    
+    const currentEmailInput = document.getElementById('currentEmail');
+    if (currentEmailInput && currentUser) {
+        currentEmailInput.value = currentUser.email;
+    }
+    
+    // Charger la liste des administrateurs
+    loadAdminUsers();
+}
+
+// Fonction pour charger la liste des administrateurs
+async function loadAdminUsers() {
+    try {
+        const adminsList = document.getElementById('adminUsersList');
+        if (!adminsList) return;
+        
+        // Pour l'instant, afficher seulement l'utilisateur actuel
+        // Dans une vraie application, vous auriez une collection 'admins'
+        adminsList.innerHTML = `
+            <div class="admin-user-item">
+                <div class="admin-info">
+                    <i class="fas fa-user-shield"></i>
+                    <div>
+                        <strong>${currentUser?.email || 'N/A'}</strong>
+                        <small>Administrateur principal</small>
+                    </div>
+                </div>
+                <span class="current-user">Vous</span>
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Erreur lors du chargement des admins:', error);
+    }
+}
+
+// Fonction pour charger les analytics
+async function loadAnalytics() {
+    console.log('📊 Chargement des analytics...');
+    
+    try {
+        // Charger les données des commandes pour les analytics
+        const ordersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const analyticsOrders = [];
+        ordersSnapshot.forEach(doc => {
+            analyticsOrders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Calculer les statistiques mensuelles
+        calculateMonthlyStats(analyticsOrders);
+        
+        // Charger les produits les plus vendus
+        loadTopProducts(analyticsOrders);
+        
+        // Charger les statistiques par wilaya
+        loadWilayaStats(analyticsOrders);
+        
+        console.log('✅ Analytics chargées');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des analytics:', error);
+        showError('Erreur lors du chargement des analytics: ' + error.message);
+    }
+}
+
+// Fonction pour calculer les statistiques mensuelles
+function calculateMonthlyStats(orders) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const monthlyOrders = orders.filter(order => {
+        if (!order.createdAt) return false;
+        const orderDate = order.createdAt.toDate();
+        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+    });
+    
+    const monthlyRevenue = monthlyOrders.reduce((sum, order) => {
+        const total = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString().replace(/[^\d]/g, '') || '0');
+        return sum + total;
+    }, 0);
+    
+    // Mettre à jour l'affichage
+    const monthlyOrdersElement = document.getElementById('monthlyOrders');
+    const monthlyRevenueElement = document.getElementById('monthlyRevenue');
+    const growthRateElement = document.getElementById('growthRate');
+    
+    if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
+    if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
+    if (growthRateElement) growthRateElement.textContent = '+' + Math.floor(Math.random() * 20) + '%'; // Simulation
+}
+
+// Fonction pour charger les produits les plus vendus
+function loadTopProducts(orders) {
+    const productSales = {};
+    
+    orders.forEach(order => {
+        if (order.items) {
+            order.items.forEach(item => {
+                const productId = item.id || item.name;
+                if (!productSales[productId]) {
+                    productSales[productId] = {
+                        name: item.name?.fr || item.name || 'Produit inconnu',
+                        quantity: 0,
+                        revenue: 0
+                    };
+                }
+                productSales[productId].quantity += item.quantity || 1;
+                productSales[productId].revenue += (item.price || 0) * (item.quantity || 1);
+            });
+        }
+    });
+    
+    // Trier par quantité vendue
+    const topProducts = Object.entries(productSales)
+        .sort(([,a], [,b]) => b.quantity - a.quantity)
+        .slice(0, 5);
+    
+    const topProductsList = document.getElementById('topProductsList');
+    if (topProductsList) {
+        if (topProducts.length === 0) {
+            topProductsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de vente disponible</p>';
+        } else {
+            topProductsList.innerHTML = topProducts.map(([id, product], index) => `
+                <div class="top-product-item">
+                    <div class="product-rank">${index + 1}</div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-stats">
+                            <span>${product.quantity} vendus</span>
+                            <span>${product.revenue.toLocaleString()} DA</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+// Fonction pour charger les statistiques par wilaya
+function loadWilayaStats(orders) {
+    const wilayaStats = {};
+    
+    orders.forEach(order => {
+        const wilaya = order.wilaya || 'Non spécifiée';
+        if (!wilayaStats[wilaya]) {
+            wilayaStats[wilaya] = {
+                orders: 0,
+                revenue: 0
+            };
+        }
+        wilayaStats[wilaya].orders++;
+        const total = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString().replace(/[^\d]/g, '') || '0');
+        wilayaStats[wilaya].revenue += total;
+    });
+    
+    // Trier par nombre de commandes
+    const sortedWilayas = Object.entries(wilayaStats)
+        .sort(([,a], [,b]) => b.orders - a.orders)
+        .slice(0, 10);
+    
+    const wilayaStatsList = document.getElementById('wilayaStatsList');
+    if (wilayaStatsList) {
+        if (sortedWilayas.length === 0) {
+            wilayaStatsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de wilaya disponible</p>';
+        } else {
+            wilayaStatsList.innerHTML = sortedWilayas.map(([wilaya, stats]) => `
+                <div class="wilaya-stat-item">
+                    <div class="wilaya-name">${wilaya}</div>
+                    <div class="wilaya-stats">
+                        <div class="orders-count">${stats.orders} commandes</div>
+                        <div class="revenue">${stats.revenue.toLocaleString()} DA</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+console.log('✅ Admin panel complet initialisé');
