@@ -1473,15 +1473,15 @@ function generateOrdersCSV() {
         const row = [
             order.id,
             order.orderNumber || '',
-            `"${order.customerName || ''}"`,
+            '"' + (order.customerName || '').replace(/"/g, '""') + '"',
             order.customerPhone || '',
-            `"${order.customerAddress || ''}"`,
+            '"' + (order.customerAddress || '').replace(/"/g, '""') + '"',
             order.wilaya || '',
             order.deliveryType || '',
             order.total || 0,
             order.status || '',
             order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : '',
-            `"${order.customerComment || ''}"`
+            '"' + (order.customerComment || '').replace(/"/g, '""') + '"'
         ];
         csvContent += row.join(',') + '\n';
     });
@@ -1513,12 +1513,12 @@ async function generateProductsCSV() {
         const product = doc.data();
         const row = [
             doc.id,
-            `"${product.name?.ar || ''}"`,
-            `"${product.name?.fr || ''}"`,
+            '"' + (product.name?.ar || '').replace(/"/g, '""') + '"',
+            '"' + (product.name?.fr || '').replace(/"/g, '""') + '"',
             product.price || 0,
             product.category || '',
-            `"${product.description?.ar || ''}"`,
-            `"${product.description?.fr || ''}"`,
+            '"' + (product.description?.ar || '').replace(/"/g, '""') + '"',
+            '"' + (product.description?.fr || '').replace(/"/g, '""') + '"',
             product.image || ''
         ];
         csvContent += row.join(',') + '\n';
