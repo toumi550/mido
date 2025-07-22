@@ -645,6 +645,8 @@ window.deleteOrder = async function(orderId) {
 
 // ===== ANALYTICS =====
 async function loadAnalytics() {
+    console.log('📊 Chargement des analytics...');
+    
     try {
         // Charger les commandes pour analytics
         const ordersSnapshot = await firebase.firestore()
@@ -657,6 +659,8 @@ async function loadAnalytics() {
             analyticsOrders.push({ id: doc.id, ...doc.data() });
         });
         
+        console.log(`📊 ${analyticsOrders.length} commandes chargées pour analytics`);
+        
         // Statistiques mensuelles
         calculateMonthlyStats(analyticsOrders);
         
@@ -666,9 +670,11 @@ async function loadAnalytics() {
         // Stats par wilaya
         loadWilayaStats(analyticsOrders);
         
+        console.log('✅ Analytics chargées avec succès');
+        
     } catch (error) {
-        console.error('Erreur analytics:', error);
-        showError('Erreur lors du chargement des analytics');
+        console.error('❌ Erreur analytics:', error);
+        showError('Erreur lors du chargement des analytics: ' + error.message);
     }
 }
 
