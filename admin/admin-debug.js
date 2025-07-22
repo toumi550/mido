@@ -555,6 +555,194 @@ function getStatusText(status) {
     return statuses[status] || status;
 }
 
+// ===== FONCTIONS POUR LA GESTION DES PRODUITS =====
+
+// Fonction pour afficher le modal d'ajout de produit
+window.showAddProductModal = function() {
+    console.log('➕ Ouverture du modal d\'ajout de produit');
+    const modal = document.getElementById('productModal');
+    const title = document.getElementById('productModalTitle');
+    
+    if (modal && title) {
+        title.textContent = 'Ajouter un produit';
+        modal.style.display = 'block';
+        
+        // Réinitialiser le formulaire
+        const form = document.getElementById('productForm');
+        if (form) form.reset();
+        
+        // Masquer le calcul de rentabilité
+        const profitCalculation = document.getElementById('profitCalculation');
+        if (profitCalculation) {
+            profitCalculation.style.display = 'none';
+        }
+        
+        // Configurer les event listeners pour le calcul automatique
+        setupProfitCalculation();
+        
+        // Fermer le modal
+        const closeBtn = modal.querySelector('.close-modal');
+        if (closeBtn) {
+            closeBtn.onclick = () => modal.style.display = 'none';
+        }
+        
+        // Fermer en cliquant à l'extérieur
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+};
+
+// Fonction pour fermer le modal de produit
+window.closeProductModal = function() {
+    const modal = document.getElementById('productModal');
+    if (modal) modal.style.display = 'none';
+};
+
+// Fonction pour configurer le calcul automatique de rentabilité
+function setupProfitCalculation() {
+    console.log('🧮 Configuration du calcul de rentabilité...');
+    
+    const purchasePriceInput = document.getElementById('productPurchasePrice');
+    const salePriceInput = document.getElementById('productPrice');
+    
+    if (purchasePriceInput && salePriceInput) {
+        // Event listeners pour calculer en temps réel
+        purchasePriceInput.addEventListener('input', calculateProfit);
+        salePriceInput.addEventListener('input', calculateProfit);
+        
+        console.log('✅ Event listeners pour calcul de rentabilité configurés');
+    }
+}
+
+// Fonction pour calculer la rentabilité
+function calculateProfit() {
+    console.log('🧮 Calcul de la rentabilité...');
+    
+    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
+    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
+    
+    console.log('💰 Prix d\'achat:', purchasePrice, 'DA');
+    console.log('💰 Prix de vente:', salePrice, 'DA');
+    
+    const profitCalculation = document.getElementById('profitCalculation');
+    const profitMargin = document.getElementById('profitMargin');
+    const profitPercentage = document.getElementById('profitPercentage');
+    const profitStatus = document.getElementById('profitStatus');
+    
+    if (!profitCalculation || !profitMargin || !profitPercentage || !profitStatus) {
+        console.error('❌ Éléments de calcul de rentabilité non trouvés');
+        return;
+    }
+    
+    // Si les deux prix sont saisis
+    if (purchasePrice > 0 && salePrice > 0) {
+        // Afficher la section de calcul
+        profitCalculation.style.display = 'block';
+        profitCalculation.classList.add('show');
+        
+        // Calculer la marge bénéficiaire
+        const margin = salePrice - purchasePrice;
+        const marginPercentage = (margin / purchasePrice * 100).toFixed(1);
+        
+        console.log('📊 Marge:', margin, 'DA');
+        console.log('📊 Pourcentage:', marginPercentage, '%');
+        
+        // Mettre à jour l'affichage
+        profitMargin.textContent = margin.toLocaleString() + ' DA';
+        profitPercentage.textContent = marginPercentage + '%';
+        
+        // Déterminer le statut de rentabilité
+        let status = '';
+        let statusClass = '';
+        
+        if (margin < 0) {
+            status = 'PERTE';
+            statusClass = 'loss';
+            profitPercentage.className = 'profit-percentage low';
+        } else if (marginPercentage < 15) {
+            status = 'FAIBLE';
+            statusClass = 'low';
+            profitPercentage.className = 'profit-percentage low';
+        } else if (marginPercentage < 30) {
+            status = 'CORRECTE';
+            statusClass = 'good';
+            profitPercentage.className = 'profit-percentage medium';
+        } else {
+            status = 'EXCELLENTE';
+            statusClass = 'excellent';
+            profitPercentage.className = 'profit-percentage high';
+        }
+        
+        profitStatus.textContent = status;
+        profitStatus.className = 'profit-status ' + statusClass;
+        
+        console.log('✅ Rentabilité calculée:', status);
+        
+    } else {
+        // Masquer la section de calcul si les prix ne sont pas complets
+        profitCalculation.style.display = 'none';
+        console.log('ℹ️ Calcul masqué - prix incomplets');
+    }
+}
+
+// Fonction pour sauvegarder un produit
+window.saveProduct = async function(e) {
+    e.preventDefault();
+    console.log('💾 Sauvegarde du produit...');
+    
+    const nameAr = document.getElementById('productNameAr').value;
+    const nameFr = document.getElementById('productNameFr').value;
+    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
+    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
+    const stock = parseInt(document.getElementById('productStock').value) || 0;
+    const category = document.getElementById('productCategory').value;
+    const descriptionAr = document.getElementById('productDescriptionAr').value;
+    const descriptionFr = document.getElementById('productDescriptionFr').value;
+    
+    if (!nameAr || !nameFr || !purchasePrice || !salePrice || !category) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+    
+    const productData = {
+        name: {
+            ar: nameAr,
+            fr: nameFr
+        },
+        purchasePrice: purchasePrice,
+        price: salePrice, // Prix de vente
+        salePrice: salePrice,
+        stock: stock,
+        category: category,
+        description: {
+            ar: descriptionAr,
+            fr: descriptionFr
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+    };
+    
+    console.log('📦 Données du produit:', productData);
+    
+    try {
+        const docRef = await firebase.firestore().collection('products').add(productData);
+        console.log('✅ Produit sauvegardé avec ID:', docRef.id);
+        
+        alert('Produit ajouté avec succès !');
+        closeProductModal();
+        
+        // Recharger les produits si on est sur la page produits
+        // loadProducts(); // À implémenter plus tard
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        alert('Erreur lors de la sauvegarde: ' + error.message);
+    }
+};
+
 // Fonctions exposées globalement
 window.viewOrder = function(orderId) {
     console.log('👁️ Voir commande:', orderId);
