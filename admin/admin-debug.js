@@ -580,6 +580,16 @@ window.showAddProductModal = function() {
         // Configurer les event listeners pour le calcul automatique
         setupProfitCalculation();
         
+        // Configurer l'upload d'image
+        setupImageUpload();
+        
+        // Configurer le formulaire de produit
+        const productForm = document.getElementById('productForm');
+        if (productForm) {
+            productForm.onsubmit = saveProduct;
+            productForm.removeAttribute('data-product-id'); // Reset pour nouvel ajout
+        }
+        
         // Fermer le modal
         const closeBtn = modal.querySelector('.close-modal');
         if (closeBtn) {
@@ -688,6 +698,91 @@ function calculateProfit() {
     }
 }
 
+// Fonction pour gérer l'upload d'image
+function setupImageUpload() {
+    console.log('🖼️ Configuration de l\'upload d\'image...');
+    
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (!imageUploadArea || !imageInput || !imagePreview) {
+        console.error('❌ Éléments d\'upload d\'image non trouvés');
+        return;
+    }
+    
+    // Clic sur la zone d'upload
+    imageUploadArea.addEventListener('click', () => {
+        imageInput.click();
+    });
+    
+    // Drag & Drop
+    imageUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        imageUploadArea.classList.add('drag-over');
+    });
+    
+    imageUploadArea.addEventListener('dragleave', () => {
+        imageUploadArea.classList.remove('drag-over');
+    });
+    
+    imageUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        imageUploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleImageFile(files[0]);
+        }
+    });
+    
+    // Sélection de fichier
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+    
+    console.log('✅ Upload d\'image configuré');
+}
+
+// Fonction pour traiter le fichier image
+function handleImageFile(file) {
+    console.log('🖼️ Traitement du fichier image:', file.name);
+    
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+        alert('Veuillez sélectionner un fichier image valide');
+        return;
+    }
+    
+    // Vérifier la taille (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux. Taille maximum : 5MB');
+        return;
+    }
+    
+    // Créer un aperçu
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imagePreview = document.getElementById('imagePreview');
+        const imageInput = document.getElementById('productImage');
+        
+        if (imagePreview && imageInput) {
+            imagePreview.innerHTML = `
+                <img src="${e.target.result}" alt="Aperçu du produit" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                <p>Image sélectionnée: ${file.name}</p>
+            `;
+            
+            // Stocker l'image en base64 pour la sauvegarde
+            imageInput.value = e.target.result;
+            console.log('✅ Image préparée pour la sauvegarde');
+        }
+    };
+    
+    reader.readAsDataURL(file);
+}
+
 // Fonction pour sauvegarder un produit
 window.saveProduct = async function(e) {
     e.preventDefault();
@@ -701,11 +796,17 @@ window.saveProduct = async function(e) {
     const category = document.getElementById('productCategory').value;
     const descriptionAr = document.getElementById('productDescriptionAr').value;
     const descriptionFr = document.getElementById('productDescriptionFr').value;
+    const image = document.getElementById('productImage').value;
     
     if (!nameAr || !nameFr || !purchasePrice || !salePrice || !category) {
         alert('Veuillez remplir tous les champs obligatoires');
         return;
     }
+    
+    // Vérifier si c'est une modification ou un ajout
+    const form = document.getElementById('productForm');
+    const productId = form ? form.getAttribute('data-product-id') : null;
+    const isEdit = !!productId;
     
     const productData = {
         name: {
@@ -713,7 +814,7 @@ window.saveProduct = async function(e) {
             fr: nameFr
         },
         purchasePrice: purchasePrice,
-        price: salePrice, // Prix de vente
+        price: salePrice, // Prix de vente pour compatibilité avec le site principal
         salePrice: salePrice,
         stock: stock,
         category: category,
@@ -721,8 +822,287 @@ window.saveProduct = async function(e) {
             ar: descriptionAr,
             fr: descriptionFr
         },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        image: image || '', // Image en base64 ou URL
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    // Ajouter createdAt seulement pour les nouveaux produits
+    if (!isEdit) {
+        productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    
+    console.log('📦 Données du produit:', productData);
+    console.log('🔄 Mode:', isEdit ? 'Modification' : 'Ajout');
+    
+    try {
+        let docRef;
+        
+        if (isEdit) {
+            // Mise à jour du produit existant
+            await firebase.firestore().collection('products').doc(productId).update(productData);
+            console.log('✅ Produit mis à jour avec ID:', productId);
+            alert('Produit modifié avec succès !');
+        } else {
+            // Ajout d'un nouveau produit
+            docRef = await firebase.firestore().collection('products').add(productData);
+            console.log('✅ Produit sauvegardé avec ID:', docRef.id);
+            alert('Produit ajouté avec succès !');
+        }
+        
+        closeProductModal();
+        
+        // Recharger les produits
+        loadProducts();
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        alert('Erreur lors de la sauvegarde: ' + error.message);
+    }
+};
+
+// Fonction pour charger tous les produits
+async function loadProducts() {
+    console.log('📦 Chargement des produits...');
+    
+    try {
+        const productsSnapshot = await firebase.firestore()
+            .collection('products')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        products = [];
+        productsSnapshot.forEach(doc => {
+            products.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log('📊 Nombre total de produits:', products.length);
+        displayProducts();
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des produits:', error);
+        showError('Erreur lors du chargement des produits: ' + error.message);
+    }
+}
+
+// Fonction pour afficher les produits
+function displayProducts() {
+    console.log('📋 Affichage des produits...');
+    const tbody = document.getElementById('productsTableBody');
+    if (!tbody) {
+        console.error('❌ Élément productsTableBody non trouvé');
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Aucun produit trouvé</td></tr>';
+        console.log('ℹ️ Aucun produit à afficher');
+        return;
+    }
+
+    console.log('📝 Affichage de', products.length, 'produits');
+    products.forEach((product, index) => {
+        console.log(`📦 Produit ${index + 1}:`, product);
+        const row = createProductRow(product);
+        tbody.appendChild(row);
+    });
+}
+
+// Fonction pour créer une ligne de produit
+function createProductRow(product) {
+    const tr = document.createElement('tr');
+    
+    const nameAr = product.name?.ar || product.name || 'N/A';
+    const nameFr = product.name?.fr || product.name || 'N/A';
+    const purchasePrice = product.purchasePrice || 0;
+    const salePrice = product.price || product.salePrice || 0;
+    const stock = product.stock || 0;
+    const category = product.category || 'N/A';
+    
+    // Calculer la marge
+    const margin = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice * 100).toFixed(1) : 0;
+    const marginClass = margin > 30 ? 'high-margin' : margin > 15 ? 'medium-margin' : 'low-margin';
+    
+    // Image du produit
+    const imageUrl = product.image || '../image/default-product.jpg';
+
+    tr.innerHTML = `
+        <td>
+            <img src="${imageUrl}" alt="${nameFr}" class="product-image" onerror="this.src='../image/default-product.jpg'">
+        </td>
+        <td><strong>${nameAr}</strong></td>
+        <td><strong>${nameFr}</strong></td>
+        <td class="purchase-price">${purchasePrice.toLocaleString()} DA</td>
+        <td class="sale-price">${salePrice.toLocaleString()} DA</td>
+        <td class="margin ${marginClass}">
+            <span class="margin-value">${margin}%</span>
+            <small class="margin-amount">+${(salePrice - purchasePrice).toLocaleString()} DA</small>
+        </td>
+        <td class="stock-info">
+            <span class="stock-count ${stock < 10 ? 'low-stock' : stock < 5 ? 'critical-stock' : ''}">${stock}</span>
+            <small>unités</small>
+        </td>
+        <td><span class="category-badge">${getCategoryText(category)}</span></td>
+        <td>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')" title="Voir détails">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.id}')" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-success" onclick="updateStock('${product.id}')" title="Gérer stock">
+                    <i class="fas fa-boxes"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.id}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    return tr;
+}
+
+// Fonction pour obtenir le texte de la catégorie
+function getCategoryText(category) {
+    const categories = {
+        hair: 'Cheveux',
+        makeup: 'Maquillage',
+        skincare: 'Soins',
+        lenses: 'Lentilles',
+        clothing: 'Vêtements'
+    };
+    return categories[category] || category;
+}
+
+// Fonction pour voir un produit
+window.viewProduct = function(productId) {
+    console.log('👁️ Voir produit:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        console.log('📦 Détails du produit:', product);
+        alert(`Produit: ${product.name?.fr || product.name || 'N/A'}\nPrix d'achat: ${product.purchasePrice || 0} DA\nPrix de vente: ${product.price || 0} DA\nStock: ${product.stock || 0} unités`);
+    }
+};
+
+// Fonction pour modifier un produit
+window.editProduct = function(productId) {
+    console.log('✏️ Modifier produit:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        showAddProductModal();
+        
+        // Remplir le formulaire avec les données du produit
+        const title = document.getElementById('productModalTitle');
+        if (title) title.textContent = 'Modifier le produit';
+        
+        // Remplir tous les champs
+        const nameAr = document.getElementById('productNameAr');
+        const nameFr = document.getElementById('productNameFr');
+        const purchasePrice = document.getElementById('productPurchasePrice');
+        const salePrice = document.getElementById('productPrice');
+        const stock = document.getElementById('productStock');
+        const category = document.getElementById('productCategory');
+        const descriptionAr = document.getElementById('productDescriptionAr');
+        const descriptionFr = document.getElementById('productDescriptionFr');
+        
+        if (nameAr) nameAr.value = product.name?.ar || product.name || '';
+        if (nameFr) nameFr.value = product.name?.fr || product.name || '';
+        if (purchasePrice) purchasePrice.value = product.purchasePrice || 0;
+        if (salePrice) salePrice.value = product.price || product.salePrice || 0;
+        if (stock) stock.value = product.stock || 0;
+        if (category) category.value = product.category || '';
+        if (descriptionAr) descriptionAr.value = product.description?.ar || '';
+        if (descriptionFr) descriptionFr.value = product.description?.fr || '';
+        
+        // Afficher l'image si elle existe
+        if (product.image) {
+            const imagePreview = document.getElementById('imagePreview');
+            const imageInput = document.getElementById('productImage');
+            if (imagePreview && imageInput) {
+                imagePreview.innerHTML = `
+                    <img src="${product.image}" alt="Image actuelle" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                    <p>Image actuelle</p>
+                `;
+                imageInput.value = product.image;
+            }
+        }
+        
+        // Stocker l'ID du produit pour la mise à jour
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.setAttribute('data-product-id', productId);
+        }
+        
+        // Calculer la rentabilité
+        calculateProfit();
+        
+        console.log('✅ Formulaire rempli pour modification');
+    }
+};
+
+// Fonction pour mettre à jour le stock
+window.updateStock = async function(productId) {
+    console.log('📦 Gérer stock:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        const currentStock = product.stock || 0;
+        const newStock = prompt(`Stock actuel: ${currentStock} unités\nNouveau stock pour "${product.name?.fr || product.name || 'ce produit'}":`, currentStock);
+        
+        if (newStock !== null && !isNaN(newStock) && parseInt(newStock) >= 0) {
+            try {
+                await firebase.firestore().collection('products').doc(productId).update({
+                    stock: parseInt(newStock),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                console.log('✅ Stock mis à jour:', newStock);
+                alert(`Stock mis à jour: ${newStock} unités`);
+                
+                // Recharger les produits pour afficher la mise à jour
+                loadProducts();
+                
+            } catch (error) {
+                console.error('❌ Erreur lors de la mise à jour du stock:', error);
+                alert('Erreur lors de la mise à jour du stock: ' + error.message);
+            }
+        }
+    }
+};
+
+// Fonction pour supprimer un produit
+window.deleteProduct = async function(productId) {
+    console.log('🗑️ Supprimer produit:', productId);
+    const product = products.find(p => p.id === productId);
+    
+    if (product && confirm(`Êtes-vous sûr de vouloir supprimer le produit "${product.name?.fr || product.name || 'ce produit'}" ?`)) {
+        try {
+            await firebase.firestore().collection('products').doc(productId).delete();
+            console.log('✅ Produit supprimé');
+            alert('Produit supprimé avec succès');
+            
+            // Recharger les produits
+            loadProducts();
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la suppression:', error);
+            alert('Erreur lors de la suppression: ' + error.message);
+        }
+    }
+};e,
+        price: salePrice, // Prix de vente pour compatibilité avec le site principal
+        salePrice: salePrice,
+        stock: stock,
+        category: category,
+        description: {
+            ar: descriptionAr,
+            fr: descriptionFr
+        },
+        image: image || '', // Image en base64 ou URL
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
     console.log('📦 Données du produit:', productData);
@@ -734,12 +1114,245 @@ window.saveProduct = async function(e) {
         alert('Produit ajouté avec succès !');
         closeProductModal();
         
-        // Recharger les produits si on est sur la page produits
-        // loadProducts(); // À implémenter plus tard
+        // Recharger les produits
+        loadProducts();
         
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde:', error);
         alert('Erreur lors de la sauvegarde: ' + error.message);
+    }
+};
+
+// Fonction pour charger tous les produits
+async function loadProducts() {
+    console.log('📦 Chargement des produits...');
+    
+    try {
+        const productsSnapshot = await firebase.firestore()
+            .collection('products')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        products = [];
+        productsSnapshot.forEach(doc => {
+            products.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log('📊 Nombre total de produits:', products.length);
+        displayProducts();
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des produits:', error);
+        showError('Erreur lors du chargement des produits: ' + error.message);
+    }
+}
+
+// Fonction pour afficher les produits
+function displayProducts() {
+    console.log('📋 Affichage des produits...');
+    const tbody = document.getElementById('productsTableBody');
+    if (!tbody) {
+        console.error('❌ Élément productsTableBody non trouvé');
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Aucun produit trouvé</td></tr>';
+        console.log('ℹ️ Aucun produit à afficher');
+        return;
+    }
+
+    console.log('📝 Affichage de', products.length, 'produits');
+    products.forEach((product, index) => {
+        console.log(`📦 Produit ${index + 1}:`, product);
+        const row = createProductRow(product);
+        tbody.appendChild(row);
+    });
+}
+
+// Fonction pour créer une ligne de produit
+function createProductRow(product) {
+    const tr = document.createElement('tr');
+    
+    const nameAr = product.name?.ar || product.name || 'N/A';
+    const nameFr = product.name?.fr || product.name || 'N/A';
+    const purchasePrice = product.purchasePrice || 0;
+    const salePrice = product.price || product.salePrice || 0;
+    const stock = product.stock || 0;
+    const category = product.category || 'N/A';
+    
+    // Calculer la marge
+    const margin = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice * 100).toFixed(1) : 0;
+    const marginClass = margin > 30 ? 'high-margin' : margin > 15 ? 'medium-margin' : 'low-margin';
+    
+    // Image du produit
+    const imageUrl = product.image || '../image/default-product.jpg';
+
+    tr.innerHTML = `
+        <td>
+            <img src="${imageUrl}" alt="${nameFr}" class="product-image" onerror="this.src='../image/default-product.jpg'">
+        </td>
+        <td><strong>${nameAr}</strong></td>
+        <td><strong>${nameFr}</strong></td>
+        <td class="purchase-price">${purchasePrice.toLocaleString()} DA</td>
+        <td class="sale-price">${salePrice.toLocaleString()} DA</td>
+        <td class="margin ${marginClass}">
+            <span class="margin-value">${margin}%</span>
+            <small class="margin-amount">+${(salePrice - purchasePrice).toLocaleString()} DA</small>
+        </td>
+        <td class="stock-info">
+            <span class="stock-count ${stock < 10 ? 'low-stock' : stock < 5 ? 'critical-stock' : ''}">${stock}</span>
+            <small>unités</small>
+        </td>
+        <td><span class="category-badge">${getCategoryText(category)}</span></td>
+        <td>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')" title="Voir détails">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.id}')" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-success" onclick="updateStock('${product.id}')" title="Gérer stock">
+                    <i class="fas fa-boxes"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.id}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    return tr;
+}
+
+// Fonction pour obtenir le texte de la catégorie
+function getCategoryText(category) {
+    const categories = {
+        hair: 'Cheveux',
+        makeup: 'Maquillage',
+        skincare: 'Soins',
+        lenses: 'Lentilles',
+        clothing: 'Vêtements'
+    };
+    return categories[category] || category;
+}
+
+// Fonction pour voir un produit
+window.viewProduct = function(productId) {
+    console.log('👁️ Voir produit:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        console.log('📦 Détails du produit:', product);
+        alert(`Produit: ${product.name?.fr || product.name || 'N/A'}\nPrix d'achat: ${product.purchasePrice || 0} DA\nPrix de vente: ${product.price || 0} DA\nStock: ${product.stock || 0} unités`);
+    }
+};
+
+// Fonction pour modifier un produit
+window.editProduct = function(productId) {
+    console.log('✏️ Modifier produit:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        showAddProductModal();
+        
+        // Remplir le formulaire avec les données du produit
+        const title = document.getElementById('productModalTitle');
+        if (title) title.textContent = 'Modifier le produit';
+        
+        // Remplir tous les champs
+        const nameAr = document.getElementById('productNameAr');
+        const nameFr = document.getElementById('productNameFr');
+        const purchasePrice = document.getElementById('productPurchasePrice');
+        const salePrice = document.getElementById('productPrice');
+        const stock = document.getElementById('productStock');
+        const category = document.getElementById('productCategory');
+        const descriptionAr = document.getElementById('productDescriptionAr');
+        const descriptionFr = document.getElementById('productDescriptionFr');
+        
+        if (nameAr) nameAr.value = product.name?.ar || product.name || '';
+        if (nameFr) nameFr.value = product.name?.fr || product.name || '';
+        if (purchasePrice) purchasePrice.value = product.purchasePrice || 0;
+        if (salePrice) salePrice.value = product.price || product.salePrice || 0;
+        if (stock) stock.value = product.stock || 0;
+        if (category) category.value = product.category || '';
+        if (descriptionAr) descriptionAr.value = product.description?.ar || '';
+        if (descriptionFr) descriptionFr.value = product.description?.fr || '';
+        
+        // Afficher l'image si elle existe
+        if (product.image) {
+            const imagePreview = document.getElementById('imagePreview');
+            const imageInput = document.getElementById('productImage');
+            if (imagePreview && imageInput) {
+                imagePreview.innerHTML = `
+                    <img src="${product.image}" alt="Image actuelle" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                    <p>Image actuelle</p>
+                `;
+                imageInput.value = product.image;
+            }
+        }
+        
+        // Stocker l'ID du produit pour la mise à jour
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.setAttribute('data-product-id', productId);
+        }
+        
+        // Calculer la rentabilité
+        calculateProfit();
+        
+        console.log('✅ Formulaire rempli pour modification');
+    }
+};
+
+// Fonction pour mettre à jour le stock
+window.updateStock = async function(productId) {
+    console.log('📦 Gérer stock:', productId);
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        const currentStock = product.stock || 0;
+        const newStock = prompt(`Stock actuel: ${currentStock} unités\nNouveau stock pour "${product.name?.fr || product.name || 'ce produit'}":`, currentStock);
+        
+        if (newStock !== null && !isNaN(newStock) && parseInt(newStock) >= 0) {
+            try {
+                await firebase.firestore().collection('products').doc(productId).update({
+                    stock: parseInt(newStock),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                console.log('✅ Stock mis à jour:', newStock);
+                alert(`Stock mis à jour: ${newStock} unités`);
+                
+                // Recharger les produits pour afficher la mise à jour
+                loadProducts();
+                
+            } catch (error) {
+                console.error('❌ Erreur lors de la mise à jour du stock:', error);
+                alert('Erreur lors de la mise à jour du stock: ' + error.message);
+            }
+        }
+    }
+};
+
+// Fonction pour supprimer un produit
+window.deleteProduct = async function(productId) {
+    console.log('🗑️ Supprimer produit:', productId);
+    const product = products.find(p => p.id === productId);
+    
+    if (product && confirm(`Êtes-vous sûr de vouloir supprimer le produit "${product.name?.fr || product.name || 'ce produit'}" ?`)) {
+        try {
+            await firebase.firestore().collection('products').doc(productId).delete();
+            console.log('✅ Produit supprimé');
+            alert('Produit supprimé avec succès');
+            
+            // Recharger les produits
+            loadProducts();
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la suppression:', error);
+            alert('Erreur lors de la suppression: ' + error.message);
+        }
     }
 };
 
