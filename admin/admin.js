@@ -434,13 +434,13 @@ window.showAddProductModal = function () {
                 modal.style.display = 'none';
             }
         };
-        
+
         // Configurer le formulaire pour la soumission
         const form = document.getElementById('productForm');
         if (form) {
             form.onsubmit = handleProductForm;
         }
-        
+
         // Configurer l'upload d'image
         setupImageUpload();
     }
@@ -453,9 +453,9 @@ window.closeProductModal = function () {
 };
 
 // Fonction pour gérer la soumission du formulaire de produit
-window.handleProductForm = async function(e) {
+window.handleProductForm = async function (e) {
     e.preventDefault();
-    
+
     const nameAr = document.getElementById('productNameAr').value;
     const nameFr = document.getElementById('productNameFr').value;
     const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
@@ -464,12 +464,12 @@ window.handleProductForm = async function(e) {
     const category = document.getElementById('productCategory').value;
     const descriptionAr = document.getElementById('productDescriptionAr').value;
     const descriptionFr = document.getElementById('productDescriptionFr').value;
-    
+
     if (!nameAr || !nameFr || !salePrice || !category) {
         alert('Veuillez remplir tous les champs obligatoires');
         return;
     }
-    
+
     try {
         const productData = {
             name: {
@@ -487,13 +487,13 @@ window.handleProductForm = async function(e) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
+
         await firebase.firestore().collection('products').add(productData);
-        
+
         alert('Produit ajouté avec succès !');
         closeProductModal();
         loadProducts(); // Recharger la liste des produits
-        
+
     } catch (error) {
         console.error('Erreur lors de l\'ajout du produit:', error);
         alert('Erreur lors de l\'ajout du produit: ' + error.message);
@@ -844,10 +844,10 @@ function loadWilayaStats(orders) {
 }
 
 console.log('✅ Admin panel propre initialisé'); 
-                       </div>
-                    </div>
-                </div>
-            `).join('');
+                       </div >
+                    </div >
+                </div >
+    `).join('');
         }
     }
 }
@@ -912,11 +912,11 @@ function handleImageFile(file) {
         const imagePreview = document.getElementById('imagePreview');
         if (imagePreview) {
             imagePreview.innerHTML = `
-                <div style="position: relative; display: inline-block;">
-                    <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
-                    <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
-                </div>
-            `;
+    < div style = "position: relative; display: inline-block;" >
+        <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
+            <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
+        </div>
+`;
         }
         
         // Stocker l'image en base64 pour l'envoi
