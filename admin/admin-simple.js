@@ -12,7 +12,7 @@ const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 
 // Initialisation
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🚀 Initialisation du panneau admin...');
     initializeAdmin();
 });
@@ -66,24 +66,24 @@ function setupEventListeners() {
 async function handleLogin(e) {
     e.preventDefault();
     console.log('🔑 Tentative de connexion...');
-    
+
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    
+
     if (!email || !password) {
         showLoginError('Veuillez remplir tous les champs');
         return;
     }
-    
+
     try {
         showLoading('Connexion en cours...');
         console.log('📧 Email:', email);
-        
+
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
         console.log('✅ Connexion réussie:', userCredential.user.email);
-        
+
         hideLoading();
-        
+
     } catch (error) {
         console.error('❌ Erreur de connexion:', error);
         hideLoading();
@@ -106,13 +106,13 @@ function showLoginScreen() {
     console.log('📱 Affichage écran de connexion');
     if (loginScreen) loginScreen.style.display = 'flex';
     if (adminDashboard) adminDashboard.style.display = 'none';
-    
+
     // Réinitialiser le formulaire
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     if (emailInput) emailInput.value = '';
     if (passwordInput) passwordInput.value = '';
-    
+
     // NE PAS afficher d'erreur au chargement initial
     if (loginError) {
         loginError.textContent = '';
@@ -124,7 +124,7 @@ function showDashboard() {
     console.log('📊 Affichage dashboard');
     if (loginScreen) loginScreen.style.display = 'none';
     if (adminDashboard) adminDashboard.style.display = 'flex';
-    
+
     // Afficher l'email de l'admin
     const adminEmailElement = document.getElementById('adminEmail');
     if (adminEmailElement && currentUser) {
@@ -143,7 +143,7 @@ function showLoginError(message) {
 // Navigation
 function handleNavigation(e) {
     e.preventDefault();
-    
+
     const sectionName = e.target.getAttribute('data-section');
     if (!sectionName) return;
 
@@ -159,7 +159,7 @@ function handleNavigation(e) {
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
-    
+
     const sectionElement = document.getElementById(sectionName + 'Section');
     if (sectionElement) {
         sectionElement.classList.add('active');
@@ -172,7 +172,7 @@ function handleNavigation(e) {
         orders: 'Gestion des Commandes',
         settings: 'Paramètres'
     };
-    
+
     const pageTitleElement = document.getElementById('pageTitle');
     if (pageTitleElement) {
         pageTitleElement.textContent = titles[sectionName] || sectionName;
@@ -183,7 +183,7 @@ function handleNavigation(e) {
 }
 
 function loadSectionData(sectionName) {
-    switch(sectionName) {
+    switch (sectionName) {
         case 'dashboard':
             loadDashboardData();
             break;
@@ -208,7 +208,7 @@ function loadSectionData(sectionName) {
 // Fonctions du dashboard
 async function loadDashboardData() {
     console.log('📊 Chargement des données du dashboard...');
-    
+
     try {
         // Charger le nombre de produits
         const productsSnapshot = await firebase.firestore().collection('products').get();
@@ -239,13 +239,13 @@ async function loadDashboardData() {
         ordersSnapshot.forEach(doc => {
             const order = doc.data();
             if (order.status === 'completed' && order.total) {
-                const totalValue = typeof order.total === 'number' 
-                    ? order.total 
+                const totalValue = typeof order.total === 'number'
+                    ? order.total
                     : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
                 totalRevenue += totalValue || 0;
             }
         });
-        
+
         const totalRevenueElement = document.getElementById('totalRevenue');
         if (totalRevenueElement) {
             totalRevenueElement.textContent = totalRevenue.toLocaleString() + ' DA';
@@ -265,7 +265,7 @@ async function loadDashboardData() {
 // Fonction pour charger les commandes récentes
 async function loadRecentOrders() {
     console.log('📋 Chargement des commandes récentes...');
-    
+
     try {
         const recentOrdersSnapshot = await firebase.firestore()
             .collection('orders')
@@ -304,7 +304,7 @@ async function loadRecentOrders() {
 function createRecentOrderElement(order, orderId) {
     const div = document.createElement('div');
     div.className = 'order-item';
-    
+
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
@@ -312,10 +312,10 @@ function createRecentOrderElement(order, orderId) {
         hour: '2-digit',
         minute: '2-digit'
     }) : 'N/A';
-    
+
     const statusClass = order.status || 'pending';
     const statusText = getStatusText(order.status);
-    
+
     div.innerHTML = `
         <div class="order-info">
             <h4>#${order.orderNumber || orderId.substring(0, 8)}</h4>
@@ -334,14 +334,14 @@ function createRecentOrderElement(order, orderId) {
             </button>
         </div>
     `;
-    
+
     return div;
 }
 
 // Fonctions des produits
 async function loadProducts() {
     console.log('📦 Chargement des produits...');
-    
+
     try {
         const productsSnapshot = await firebase.firestore()
             .collection('products')
@@ -381,18 +381,18 @@ function displayProducts() {
 
 function createProductRow(product) {
     const tr = document.createElement('tr');
-    
+
     const nameAr = product.name?.ar || product.name || 'N/A';
     const nameFr = product.name?.fr || product.name || 'N/A';
     const purchasePrice = product.purchasePrice || 0;
     const salePrice = product.price || product.salePrice || 0;
     const stock = product.stock || 0;
     const category = product.category || 'N/A';
-    
+
     // Calculer la marge
     const margin = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice * 100).toFixed(1) : 0;
     const marginClass = margin > 30 ? 'high-margin' : margin > 15 ? 'medium-margin' : 'low-margin';
-    
+
     // Image du produit
     const imageUrl = product.image || '../image/default-product.jpg';
 
@@ -430,14 +430,14 @@ function createProductRow(product) {
             </div>
         </td>
     `;
-    
+
     return tr;
 }
 
 // Fonctions des commandes
 async function loadOrders() {
     console.log('🛒 Chargement des commandes...');
-    
+
     try {
         const ordersSnapshot = await firebase.firestore()
             .collection('orders')
@@ -477,7 +477,7 @@ function displayOrders() {
 
 function createOrderRow(order) {
     const tr = document.createElement('tr');
-    
+
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
@@ -485,13 +485,13 @@ function createOrderRow(order) {
         hour: '2-digit',
         minute: '2-digit'
     }) : 'N/A';
-    
+
     const statusClass = order.status || 'pending';
     const statusText = getStatusText(order.status);
-    
+
     // Calculer le nombre d'articles
     const totalItems = order.items ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
-    
+
     // CORRECTION: Ordre des colonnes selon le HTML
     // Colonnes: Checkbox, ID, Client, Wilaya, Total, Statut, Date, Actions
     tr.innerHTML = `
@@ -531,7 +531,7 @@ function createOrderRow(order) {
             </div>
         </td>
     `;
-    
+
     return tr;
 }
 
@@ -598,7 +598,7 @@ function hideLoading() {
 }
 
 // Fonctions exposées globalement
-window.viewProduct = function(productId) {
+window.viewProduct = function (productId) {
     console.log('👁️ Voir produit:', productId);
     const product = products.find(p => p.id === productId);
     if (product) {
@@ -606,7 +606,7 @@ window.viewProduct = function(productId) {
     }
 };
 
-window.viewOrder = function(orderId) {
+window.viewOrder = function (orderId) {
     console.log('👁️ Voir commande:', orderId);
     const order = orders.find(o => o.id === orderId);
     if (order) {
@@ -618,9 +618,9 @@ window.viewOrder = function(orderId) {
 function showOrderDetails(order) {
     const modal = document.getElementById('orderModal');
     const orderDetails = document.getElementById('orderDetails');
-    
+
     if (!modal || !orderDetails) return;
-    
+
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: '2-digit',
@@ -628,7 +628,7 @@ function showOrderDetails(order) {
         hour: '2-digit',
         minute: '2-digit'
     }) : 'N/A';
-    
+
     const itemsHtml = order.items ? order.items.map(item => `
         <div class="order-item-detail">
             <div class="item-info">
@@ -638,7 +638,7 @@ function showOrderDetails(order) {
             <div class="item-total">${(item.price || 0) * (item.quantity || 1)} DA</div>
         </div>
     `).join('') : '<p>Aucun article</p>';
-    
+
     orderDetails.innerHTML = `
         <div class="order-header">
             <h4>Commande #${order.orderNumber || order.id?.substring(0, 8)}</h4>
@@ -692,15 +692,15 @@ function showOrderDetails(order) {
             </button>
         </div>
     `;
-    
+
     modal.style.display = 'block';
-    
+
     // Fermer le modal
     const closeBtn = modal.querySelector('.close-modal');
     if (closeBtn) {
         closeBtn.onclick = () => modal.style.display = 'none';
     }
-    
+
     // Fermer en cliquant à l'extérieur
     modal.onclick = (e) => {
         if (e.target === modal) {
@@ -710,27 +710,27 @@ function showOrderDetails(order) {
 }
 
 // Fonction pour mettre à jour le statut d'une commande
-window.updateOrderStatus = async function(orderId) {
+window.updateOrderStatus = async function (orderId) {
     const statusSelect = document.getElementById('orderStatusSelect');
     if (!statusSelect) return;
-    
+
     const newStatus = statusSelect.value;
-    
+
     try {
         await firebase.firestore().collection('orders').doc(orderId).update({
             status: newStatus,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
+
         showSuccess('Statut de la commande mis à jour avec succès');
-        
+
         // Fermer le modal
         const modal = document.getElementById('orderModal');
         if (modal) modal.style.display = 'none';
-        
+
         // Recharger les commandes
         loadOrders();
-        
+
     } catch (error) {
         console.error('Erreur lors de la mise à jour du statut:', error);
         showError('Erreur lors de la mise à jour du statut: ' + error.message);
@@ -738,7 +738,7 @@ window.updateOrderStatus = async function(orderId) {
 };
 
 // Fonction pour modifier le statut d'une commande
-window.editOrderStatus = function(orderId) {
+window.editOrderStatus = function (orderId) {
     const order = orders.find(o => o.id === orderId);
     if (order) {
         showOrderDetails(order);
@@ -746,16 +746,16 @@ window.editOrderStatus = function(orderId) {
 };
 
 // Fonction pour supprimer une commande
-window.deleteOrder = async function(orderId) {
+window.deleteOrder = async function (orderId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
         return;
     }
-    
+
     try {
         await firebase.firestore().collection('orders').doc(orderId).delete();
         showSuccess('Commande supprimée avec succès');
         loadOrders();
-        
+
     } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         showError('Erreur lors de la suppression: ' + error.message);
@@ -765,12 +765,12 @@ window.deleteOrder = async function(orderId) {
 // Fonction pour charger les données du compte
 function loadAccountData() {
     console.log('👤 Chargement des données du compte...');
-    
+
     const currentEmailInput = document.getElementById('currentEmail');
     if (currentEmailInput && currentUser) {
         currentEmailInput.value = currentUser.email;
     }
-    
+
     // Charger la liste des administrateurs
     loadAdminUsers();
 }
@@ -780,7 +780,7 @@ async function loadAdminUsers() {
     try {
         const adminsList = document.getElementById('adminUsersList');
         if (!adminsList) return;
-        
+
         // Pour l'instant, afficher seulement l'utilisateur actuel
         // Dans une vraie application, vous auriez une collection 'admins'
         adminsList.innerHTML = `
@@ -795,7 +795,7 @@ async function loadAdminUsers() {
                 <span class="current-user">Vous</span>
             </div>
         `;
-        
+
     } catch (error) {
         console.error('Erreur lors du chargement des admins:', error);
     }
@@ -804,30 +804,30 @@ async function loadAdminUsers() {
 // Fonction pour charger les analytics
 async function loadAnalytics() {
     console.log('📊 Chargement des analytics...');
-    
+
     try {
         // Charger les données des commandes pour les analytics
         const ordersSnapshot = await firebase.firestore()
             .collection('orders')
             .orderBy('createdAt', 'desc')
             .get();
-        
+
         const analyticsOrders = [];
         ordersSnapshot.forEach(doc => {
             analyticsOrders.push({ id: doc.id, ...doc.data() });
         });
-        
+
         // Calculer les statistiques mensuelles
         calculateMonthlyStats(analyticsOrders);
-        
+
         // Charger les produits les plus vendus
         loadTopProducts(analyticsOrders);
-        
+
         // Charger les statistiques par wilaya
         loadWilayaStats(analyticsOrders);
-        
+
         console.log('✅ Analytics chargées');
-        
+
     } catch (error) {
         console.error('❌ Erreur lors du chargement des analytics:', error);
         showError('Erreur lors du chargement des analytics: ' + error.message);
@@ -839,23 +839,23 @@ function calculateMonthlyStats(orders) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     const monthlyOrders = orders.filter(order => {
         if (!order.createdAt) return false;
         const orderDate = order.createdAt.toDate();
         return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
     });
-    
+
     const monthlyRevenue = monthlyOrders.reduce((sum, order) => {
         const total = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString().replace(/[^\d]/g, '') || '0');
         return sum + total;
     }, 0);
-    
+
     // Mettre à jour l'affichage
     const monthlyOrdersElement = document.getElementById('monthlyOrders');
     const monthlyRevenueElement = document.getElementById('monthlyRevenue');
     const growthRateElement = document.getElementById('growthRate');
-    
+
     if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
     if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
     if (growthRateElement) growthRateElement.textContent = '+' + Math.floor(Math.random() * 20) + '%'; // Simulation
@@ -864,7 +864,7 @@ function calculateMonthlyStats(orders) {
 // Fonction pour charger les produits les plus vendus
 function loadTopProducts(orders) {
     const productSales = {};
-    
+
     orders.forEach(order => {
         if (order.items) {
             order.items.forEach(item => {
@@ -881,12 +881,12 @@ function loadTopProducts(orders) {
             });
         }
     });
-    
+
     // Trier par quantité vendue
     const topProducts = Object.entries(productSales)
-        .sort(([,a], [,b]) => b.quantity - a.quantity)
+        .sort(([, a], [, b]) => b.quantity - a.quantity)
         .slice(0, 5);
-    
+
     const topProductsList = document.getElementById('topProductsList');
     if (topProductsList) {
         if (topProducts.length === 0) {
@@ -911,7 +911,7 @@ function loadTopProducts(orders) {
 // Fonction pour charger les statistiques par wilaya
 function loadWilayaStats(orders) {
     const wilayaStats = {};
-    
+
     orders.forEach(order => {
         const wilaya = order.wilaya || 'Non spécifiée';
         if (!wilayaStats[wilaya]) {
@@ -924,12 +924,12 @@ function loadWilayaStats(orders) {
         const total = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString().replace(/[^\d]/g, '') || '0');
         wilayaStats[wilaya].revenue += total;
     });
-    
+
     // Trier par nombre de commandes
     const sortedWilayas = Object.entries(wilayaStats)
-        .sort(([,a], [,b]) => b.orders - a.orders)
+        .sort(([, a], [, b]) => b.orders - a.orders)
         .slice(0, 10);
-    
+
     const wilayaStatsList = document.getElementById('wilayaStatsList');
     if (wilayaStatsList) {
         if (sortedWilayas.length === 0) {
@@ -951,25 +951,25 @@ function loadWilayaStats(orders) {
 // ===== FONCTIONS MANQUANTES POUR LES BOUTONS =====
 
 // Fonction pour afficher le modal d'ajout de produit
-window.showAddProductModal = function() {
+window.showAddProductModal = function () {
     console.log('➕ Ouverture du modal d\'ajout de produit');
     const modal = document.getElementById('productModal');
     const title = document.getElementById('productModalTitle');
-    
+
     if (modal && title) {
         title.textContent = 'Ajouter un produit';
         modal.style.display = 'block';
-        
+
         // Réinitialiser le formulaire
         const form = document.getElementById('productForm');
         if (form) form.reset();
-        
+
         // Fermer le modal
         const closeBtn = modal.querySelector('.close-modal');
         if (closeBtn) {
             closeBtn.onclick = () => modal.style.display = 'none';
         }
-        
+
         // Fermer en cliquant à l'extérieur
         modal.onclick = (e) => {
             if (e.target === modal) {
@@ -980,13 +980,13 @@ window.showAddProductModal = function() {
 };
 
 // Fonction pour fermer le modal de produit
-window.closeProductModal = function() {
+window.closeProductModal = function () {
     const modal = document.getElementById('productModal');
     if (modal) modal.style.display = 'none';
 };
 
 // Fonction pour modifier un produit
-window.editProduct = function(productId) {
+window.editProduct = function (productId) {
     console.log('✏️ Modifier produit:', productId);
     const product = products.find(p => p.id === productId);
     if (product) {
@@ -994,13 +994,13 @@ window.editProduct = function(productId) {
         // Remplir le formulaire avec les données du produit
         const title = document.getElementById('productModalTitle');
         if (title) title.textContent = 'Modifier le produit';
-        
+
         // Remplir les champs
         const nameAr = document.getElementById('productNameAr');
         const nameFr = document.getElementById('productNameFr');
         const price = document.getElementById('productPrice');
         const category = document.getElementById('productCategory');
-        
+
         if (nameAr) nameAr.value = product.name?.ar || product.name || '';
         if (nameFr) nameFr.value = product.name?.fr || product.name || '';
         if (price) price.value = product.price || 0;
@@ -1009,7 +1009,7 @@ window.editProduct = function(productId) {
 };
 
 // Fonction pour mettre à jour le stock
-window.updateStock = function(productId) {
+window.updateStock = function (productId) {
     console.log('📦 Gérer stock:', productId);
     const product = products.find(p => p.id === productId);
     if (product) {
@@ -1022,16 +1022,16 @@ window.updateStock = function(productId) {
 };
 
 // Fonction pour supprimer un produit
-window.deleteProduct = async function(productId) {
+window.deleteProduct = async function (productId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
         return;
     }
-    
+
     try {
         await firebase.firestore().collection('products').doc(productId).delete();
         showSuccess('Produit supprimé avec succès');
         loadProducts();
-        
+
     } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         showError('Erreur lors de la suppression: ' + error.message);
@@ -1041,24 +1041,24 @@ window.deleteProduct = async function(productId) {
 // ===== FONCTIONS POUR LES BOUTONS DE COMMANDES =====
 
 // Fonction pour sélectionner toutes les commandes
-window.selectAllOrders = function() {
+window.selectAllOrders = function () {
     const checkboxes = document.querySelectorAll('.order-checkbox');
     const selectAllBtn = document.getElementById('selectAllOrders');
     const deleteBtn = document.getElementById('deleteSelectedOrders');
-    
+
     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    
+
     checkboxes.forEach(cb => {
         cb.checked = !allChecked;
     });
-    
+
     // Mettre à jour le texte du bouton
     if (selectAllBtn) {
-        selectAllBtn.innerHTML = allChecked 
+        selectAllBtn.innerHTML = allChecked
             ? '<i class="fas fa-check-square"></i> Tout sélectionner'
             : '<i class="fas fa-square"></i> Tout désélectionner';
     }
-    
+
     // Activer/désactiver le bouton de suppression
     if (deleteBtn) {
         deleteBtn.disabled = allChecked;
@@ -1066,28 +1066,28 @@ window.selectAllOrders = function() {
 };
 
 // Fonction pour supprimer les commandes sélectionnées
-window.deleteSelectedOrders = async function() {
+window.deleteSelectedOrders = async function () {
     const selectedCheckboxes = document.querySelectorAll('.order-checkbox:checked');
-    
+
     if (selectedCheckboxes.length === 0) {
         showError('Aucune commande sélectionnée');
         return;
     }
-    
+
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedCheckboxes.length} commande(s) ?`)) {
         return;
     }
-    
+
     try {
         const deletePromises = Array.from(selectedCheckboxes).map(cb => {
             const orderId = cb.getAttribute('data-order-id');
             return firebase.firestore().collection('orders').doc(orderId).delete();
         });
-        
+
         await Promise.all(deletePromises);
         showSuccess(`${selectedCheckboxes.length} commande(s) supprimée(s) avec succès`);
         loadOrders();
-        
+
     } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         showError('Erreur lors de la suppression: ' + error.message);
@@ -1095,14 +1095,14 @@ window.deleteSelectedOrders = async function() {
 };
 
 // Fonction pour exporter les commandes en CSV
-window.exportOrdersCSV = function() {
+window.exportOrdersCSV = function () {
     console.log('📥 Export commandes CSV');
-    
+
     if (orders.length === 0) {
         showError('Aucune commande à exporter');
         return;
     }
-    
+
     const headers = ['ID', 'Numéro', 'Client', 'Téléphone', 'Wilaya', 'Total', 'Statut', 'Date'];
     const csvContent = [
         headers.join(','),
@@ -1117,20 +1117,20 @@ window.exportOrdersCSV = function() {
             order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : ''
         ].join(','))
     ].join('\n');
-    
+
     downloadCSV(csvContent, 'commandes.csv');
     showSuccess('Export CSV des commandes terminé');
 };
 
 // Fonction pour exporter les produits en CSV
-window.exportProductsCSV = function() {
+window.exportProductsCSV = function () {
     console.log('📥 Export produits CSV');
-    
+
     if (products.length === 0) {
         showError('Aucun produit à exporter');
         return;
     }
-    
+
     const headers = ['ID', 'Nom (AR)', 'Nom (FR)', 'Prix d\'achat', 'Prix de vente', 'Stock', 'Catégorie'];
     const csvContent = [
         headers.join(','),
@@ -1144,7 +1144,7 @@ window.exportProductsCSV = function() {
             getCategoryText(product.category)
         ].join(','))
     ].join('\n');
-    
+
     downloadCSV(csvContent, 'produits.csv');
     showSuccess('Export CSV des produits terminé');
 };
@@ -1163,14 +1163,14 @@ function downloadCSV(content, filename) {
 }
 
 // Fonction pour actualiser les analytics
-window.refreshAnalytics = function() {
+window.refreshAnalytics = function () {
     console.log('🔄 Actualisation des analytics');
     loadAnalytics();
     showSuccess('Analytics actualisées');
 };
 
 // Fonction pour exporter le rapport complet
-window.exportAnalyticsReport = function() {
+window.exportAnalyticsReport = function () {
     console.log('📊 Export rapport complet');
     showSuccess('Fonctionnalité d\'export de rapport en développement');
 };
@@ -1178,7 +1178,7 @@ window.exportAnalyticsReport = function() {
 // ===== CONFIGURATION DES EVENT LISTENERS POUR LES BOUTONS =====
 
 // Ajouter les event listeners quand le DOM est chargé
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Event listeners pour les boutons de commandes
     const selectAllBtn = document.getElementById('selectAllOrders');
     const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
@@ -1187,51 +1187,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportOrdersCSVBtn = document.getElementById('exportOrdersCSV');
     const exportProductsCSVBtn = document.getElementById('exportProductsCSV');
     const exportAnalyticsBtn = document.getElementById('exportAnalyticsReport');
-    
+
     if (selectAllBtn) {
         selectAllBtn.addEventListener('click', selectAllOrders);
     }
-    
+
     if (deleteSelectedBtn) {
         deleteSelectedBtn.addEventListener('click', deleteSelectedOrders);
     }
-    
+
     if (exportOrdersBtn) {
         exportOrdersBtn.addEventListener('click', exportOrdersCSV);
     }
-    
+
     if (refreshAnalyticsBtn) {
         refreshAnalyticsBtn.addEventListener('click', refreshAnalytics);
     }
-    
+
     if (exportOrdersCSVBtn) {
         exportOrdersCSVBtn.addEventListener('click', exportOrdersCSV);
     }
-    
+
     if (exportProductsCSVBtn) {
         exportProductsCSVBtn.addEventListener('click', exportProductsCSV);
     }
-    
+
     if (exportAnalyticsBtn) {
         exportAnalyticsBtn.addEventListener('click', exportAnalyticsReport);
     }
-    
+
     // Event listener pour les checkboxes de commandes
-    document.addEventListener('change', function(e) {
+    document.addEventListener('change', function (e) {
         if (e.target.classList.contains('order-checkbox')) {
             const deleteBtn = document.getElementById('deleteSelectedOrders');
             const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
-            
+
             if (deleteBtn) {
                 deleteBtn.disabled = checkedBoxes.length === 0;
             }
         }
     });
-    
+
     // Event listener pour le filtre de statut des commandes
     const statusFilter = document.getElementById('orderStatusFilter');
     if (statusFilter) {
-        statusFilter.addEventListener('change', function() {
+        statusFilter.addEventListener('change', function () {
             filterOrdersByStatus(this.value);
         });
     }
@@ -1241,9 +1241,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function filterOrdersByStatus(status) {
     const tbody = document.getElementById('ordersTableBody');
     if (!tbody) return;
-    
+
     const rows = tbody.querySelectorAll('tr');
-    
+
     rows.forEach(row => {
         if (status === 'all') {
             row.style.display = '';
@@ -1258,16 +1258,9 @@ function filterOrdersByStatus(status) {
 }
 
 console.log('✅ Admin panel complet avec toutes les fonctions initialisé');
-    
-    if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
-    if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
-    if (growthRateElement) growthRateElement.textContent = '+' + Math.floor(Math.random() * 20) + '%'; // Simulation
-}
-
-// Fonction pour charger les produits les plus vendus
 function loadTopProducts(orders) {
     const productSales = {};
-    
+
     orders.forEach(order => {
         if (order.items) {
             order.items.forEach(item => {
@@ -1284,12 +1277,12 @@ function loadTopProducts(orders) {
             });
         }
     });
-    
+
     // Trier par quantité vendue
     const topProducts = Object.entries(productSales)
-        .sort(([,a], [,b]) => b.quantity - a.quantity)
+        .sort(([, a], [, b]) => b.quantity - a.quantity)
         .slice(0, 5);
-    
+
     const topProductsList = document.getElementById('topProductsList');
     if (topProductsList) {
         if (topProducts.length === 0) {
@@ -1314,7 +1307,7 @@ function loadTopProducts(orders) {
 // Fonction pour charger les statistiques par wilaya
 function loadWilayaStats(orders) {
     const wilayaStats = {};
-    
+
     orders.forEach(order => {
         const wilaya = order.wilaya || 'Non spécifiée';
         if (!wilayaStats[wilaya]) {
@@ -1327,12 +1320,12 @@ function loadWilayaStats(orders) {
         const total = typeof order.total === 'number' ? order.total : parseFloat(order.total?.toString().replace(/[^\d]/g, '') || '0');
         wilayaStats[wilaya].revenue += total;
     });
-    
+
     // Trier par nombre de commandes
     const sortedWilayas = Object.entries(wilayaStats)
-        .sort(([,a], [,b]) => b.orders - a.orders)
+        .sort(([, a], [, b]) => b.orders - a.orders)
         .slice(0, 10);
-    
+
     const wilayaStatsList = document.getElementById('wilayaStatsList');
     if (wilayaStatsList) {
         if (sortedWilayas.length === 0) {

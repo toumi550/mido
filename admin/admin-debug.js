@@ -270,6 +270,9 @@ function showDashboard() {
         adminEmailElement.textContent = currentUser.email;
         console.log('✅ Email admin affiché:', currentUser.email);
     }
+    
+    // IMPORTANT: Charger les données du dashboard
+    loadDashboardData();
 }
 
 function showLoginError(message) {
@@ -282,6 +285,297 @@ function showLoginError(message) {
         console.error('❌ Élément loginError non trouvé');
     }
 }
+
+// ===== FONCTIONS POUR CHARGER LES DONNÉES FIREBASE =====
+
+// Fonction pour charger les données du dashboard
+async function loadDashboardData() {
+    console.log('📊 Chargement des données du dashboard...');
+    
+    try {
+        // Charger le nombre de produits
+        console.log('📦 Chargement des produits...');
+        const productsSnapshot = await firebase.firestore().collection('products').get();
+        const totalProductsElement = document.getElementById('totalProducts');
+        if (totalProductsElement) {
+            totalProductsElement.textContent = productsSnapshot.size;
+            console.log('✅ Produits chargés:', productsSnapshot.size);
+        }
+
+        // Charger le nombre de commandes
+        console.log('🛒 Chargement des commandes...');
+        const ordersSnapshot = await firebase.firestore().collection('orders').get();
+        const totalOrdersElement = document.getElementById('totalOrders');
+        if (totalOrdersElement) {
+            totalOrdersElement.textContent = ordersSnapshot.size;
+            console.log('✅ Commandes chargées:', ordersSnapshot.size);
+        }
+
+        // Charger les commandes en attente
+        console.log('⏳ Chargement des commandes en attente...');
+        const pendingOrdersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .where('status', '==', 'pending')
+            .get();
+        const pendingOrdersElement = document.getElementById('pendingOrders');
+        if (pendingOrdersElement) {
+            pendingOrdersElement.textContent = pendingOrdersSnapshot.size;
+            console.log('✅ Commandes en attente:', pendingOrdersSnapshot.size);
+        }
+
+        // Calculer le chiffre d'affaires total
+        console.log('💰 Calcul du chiffre d\'affaires...');
+        let totalRevenue = 0;
+        ordersSnapshot.forEach(doc => {
+            const order = doc.data();
+            if (order.status === 'completed' && order.total) {
+                const totalValue = typeof order.total === 'number' 
+                    ? order.total 
+                    : parseFloat(order.total.toString().replace(/[^\d]/g, ''));
+                totalRevenue += totalValue || 0;
+            }
+        });
+        
+        const totalRevenueElement = document.getElementById('totalRevenue');
+        if (totalRevenueElement) {
+            totalRevenueElement.textContent = totalRevenue.toLocaleString() + ' DA';
+            console.log('✅ Chiffre d\'affaires calculé:', totalRevenue);
+        }
+
+        // Charger les commandes récentes
+        await loadRecentOrders();
+
+        console.log('✅ Données du dashboard chargées avec succès');
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement du dashboard:', error);
+        showError('Erreur lors du chargement des données: ' + error.message);
+    }
+}
+
+// Fonction pour charger les commandes récentes
+async function loadRecentOrders() {
+    console.log('📋 Chargement des commandes récentes...');
+    
+    try {
+        const recentOrdersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get();
+
+        const recentOrdersList = document.getElementById('recentOrdersList');
+        if (!recentOrdersList) {
+            console.error('❌ Élément recentOrdersList non trouvé');
+            return;
+        }
+
+        recentOrdersList.innerHTML = '';
+
+        if (recentOrdersSnapshot.empty) {
+            recentOrdersList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune commande récente</p>';
+            console.log('ℹ️ Aucune commande récente trouvée');
+            return;
+        }
+
+        console.log('📝 Nombre de commandes récentes:', recentOrdersSnapshot.size);
+        recentOrdersSnapshot.forEach(doc => {
+            const order = doc.data();
+            console.log('📄 Commande récente:', doc.id, order);
+            const orderElement = createRecentOrderElement(order, doc.id);
+            recentOrdersList.appendChild(orderElement);
+        });
+
+        console.log('✅ Commandes récentes chargées');
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des commandes récentes:', error);
+        const recentOrdersList = document.getElementById('recentOrdersList');
+        if (recentOrdersList) {
+            recentOrdersList.innerHTML = '<p style="text-align: center; color: #dc3545; padding: 20px;">Erreur lors du chargement des commandes récentes</p>';
+        }
+    }
+}
+
+// Fonction pour créer un élément de commande récente
+function createRecentOrderElement(order, orderId) {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+    
+    const statusClass = order.status || 'pending';
+    const statusText = getStatusText(order.status);
+    
+    div.innerHTML = `
+        <div class="order-info">
+            <h4>#${order.orderNumber || orderId.substring(0, 8)}</h4>
+            <p><i class="fas fa-user"></i> ${order.customerName || 'N/A'}</p>
+            <p><i class="fas fa-phone"></i> ${order.customerPhone || 'N/A'}</p>
+            <p><i class="fas fa-map-marker-alt"></i> ${order.wilaya || 'N/A'}</p>
+            <p><i class="fas fa-clock"></i> ${date}</p>
+        </div>
+        <div class="order-summary">
+            <div class="order-total">${order.total || '0'} DA</div>
+            <div class="order-status">
+                <span class="status-badge status-${statusClass}">${statusText}</span>
+            </div>
+            <button class="btn btn-sm btn-info" onclick="viewOrder('${orderId}')">
+                <i class="fas fa-eye"></i> Voir
+            </button>
+        </div>
+    `;
+    
+    return div;
+}
+
+// Fonction pour charger toutes les commandes
+async function loadOrders() {
+    console.log('🛒 Chargement de toutes les commandes...');
+    
+    try {
+        const ordersSnapshot = await firebase.firestore()
+            .collection('orders')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        orders = [];
+        ordersSnapshot.forEach(doc => {
+            orders.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log('📊 Nombre total de commandes:', orders.length);
+        displayOrders();
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des commandes:', error);
+        showError('Erreur lors du chargement des commandes: ' + error.message);
+    }
+}
+
+// Fonction pour afficher les commandes
+function displayOrders() {
+    console.log('📋 Affichage des commandes...');
+    const tbody = document.getElementById('ordersTableBody');
+    if (!tbody) {
+        console.error('❌ Élément ordersTableBody non trouvé');
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Aucune commande trouvée</td></tr>';
+        console.log('ℹ️ Aucune commande à afficher');
+        return;
+    }
+
+    console.log('📝 Affichage de', orders.length, 'commandes');
+    orders.forEach((order, index) => {
+        console.log(`📄 Commande ${index + 1}:`, order);
+        const row = createOrderRow(order);
+        tbody.appendChild(row);
+    });
+}
+
+// Fonction pour créer une ligne de commande
+function createOrderRow(order) {
+    const tr = document.createElement('tr');
+    
+    const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'N/A';
+    
+    const statusClass = order.status || 'pending';
+    const statusText = getStatusText(order.status);
+    
+    // Calculer le nombre d'articles
+    const totalItems = order.items ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
+    
+    // Ordre des colonnes: Checkbox, ID, Client, Wilaya, Total, Statut, Date, Actions
+    tr.innerHTML = `
+        <td><input type="checkbox" class="order-checkbox" data-order-id="${order.id}"></td>
+        <td><strong>#${order.orderNumber || order.id.substring(0, 8)}</strong></td>
+        <td>
+            <div class="customer-info">
+                <div><i class="fas fa-user"></i> ${order.customerName || 'N/A'}</div>
+                <div><i class="fas fa-phone"></i> ${order.customerPhone || 'N/A'}</div>
+            </div>
+        </td>
+        <td><i class="fas fa-map-marker-alt"></i> ${order.wilaya || 'N/A'}</td>
+        <td>
+            <div class="order-details">
+                <div class="total-amount"><strong>${order.total || '0'} DA</strong></div>
+                <small>${totalItems} article(s)</small>
+            </div>
+        </td>
+        <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+        <td>
+            <div class="date-info">
+                <div>${date.split(' ')[0]}</div>
+                <small>${date.split(' ')[1] || ''}</small>
+            </div>
+        </td>
+        <td>
+            <div class="action-buttons">
+                <button class="btn btn-sm btn-info" onclick="viewOrder('${order.id}')" title="Voir détails">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="editOrderStatus('${order.id}')" title="Modifier statut">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')" title="Supprimer">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    return tr;
+}
+
+// Fonctions utilitaires
+function getStatusText(status) {
+    const statuses = {
+        pending: 'En attente',
+        processing: 'En cours',
+        completed: 'Terminée',
+        cancelled: 'Annulée'
+    };
+    return statuses[status] || status;
+}
+
+// Fonctions exposées globalement
+window.viewOrder = function(orderId) {
+    console.log('👁️ Voir commande:', orderId);
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+        console.log('📄 Détails de la commande:', order);
+        alert('Commande: ' + (order.customerName || 'N/A') + ' - ' + (order.total || '0') + ' DA');
+    }
+};
+
+window.editOrderStatus = function(orderId) {
+    console.log('✏️ Modifier statut commande:', orderId);
+    alert('Fonctionnalité de modification du statut en développement');
+};
+
+window.deleteOrder = function(orderId) {
+    console.log('🗑️ Supprimer commande:', orderId);
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        alert('Fonctionnalité de suppression en développement');
+    }
+};
 
 // Navigation basique
 function handleNavigation(e) {
@@ -326,6 +620,37 @@ function handleNavigation(e) {
     if (pageTitleElement) {
         pageTitleElement.textContent = titles[sectionName] || sectionName;
         console.log('✅ Titre mis à jour:', titles[sectionName] || sectionName);
+    }
+
+    // Charger les données de la section
+    loadSectionData(sectionName);
+}
+
+// Fonction pour charger les données selon la section
+function loadSectionData(sectionName) {
+    console.log('📂 Chargement des données pour la section:', sectionName);
+    
+    switch(sectionName) {
+        case 'dashboard':
+            loadDashboardData();
+            break;
+        case 'orders':
+            loadOrders();
+            break;
+        case 'products':
+            console.log('📦 Section produits - fonctionnalité à implémenter');
+            break;
+        case 'analytics':
+            console.log('📊 Section analytics - fonctionnalité à implémenter');
+            break;
+        case 'account':
+            console.log('👤 Section compte - fonctionnalité à implémenter');
+            break;
+        case 'settings':
+            console.log('⚙️ Section paramètres - fonctionnalité à implémenter');
+            break;
+        default:
+            console.log('❓ Section inconnue:', sectionName);
     }
 }
 
