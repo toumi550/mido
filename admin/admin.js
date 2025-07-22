@@ -51,11 +51,18 @@ function setupEventListeners() {
     // Logout
     document.querySelector('.logout-btn')?.addEventListener('click', handleLogout);
 
-    // Boutons spéciaux
+    // Boutons spéciaux - configuration avec retry
     setTimeout(() => {
         const refreshBtn = document.getElementById('refreshAnalytics');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', loadAnalytics);
+            refreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('🔄 Actualisation des analytics...');
+                loadAnalytics();
+            });
+            console.log('✅ Event listener pour actualiser analytics configuré');
+        } else {
+            console.log('❌ Bouton refreshAnalytics non trouvé');
         }
     }, 1000);
 }
@@ -375,6 +382,9 @@ function createProductRow(product) {
                 <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')" title="Voir">
                     <i class="fas fa-eye"></i>
                 </button>
+                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.id}')" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                </button>
                 <button class="btn btn-sm btn-success" onclick="updateStock('${product.id}')" title="Stock">
                     <i class="fas fa-boxes"></i>
                 </button>
@@ -399,11 +409,52 @@ function getCategoryText(category) {
     return categories[category] || category;
 }
 
+// Fonction pour afficher le modal d'ajout de produit
+window.showAddProductModal = function() {
+    const modal = document.getElementById('productModal');
+    const title = document.getElementById('productModalTitle');
+    
+    if (modal && title) {
+        title.textContent = 'Ajouter un produit';
+        modal.style.display = 'block';
+        
+        // Réinitialiser le formulaire
+        const form = document.getElementById('productForm');
+        if (form) form.reset();
+        
+        // Fermer le modal
+        const closeBtn = modal.querySelector('.close-modal');
+        if (closeBtn) {
+            closeBtn.onclick = () => modal.style.display = 'none';
+        }
+        
+        // Fermer en cliquant à l'extérieur
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+};
+
+// Fonction pour fermer le modal de produit
+window.closeProductModal = function() {
+    const modal = document.getElementById('productModal');
+    if (modal) modal.style.display = 'none';
+};
+
 // Fonctions produits globales
 window.viewProduct = function(productId) {
     const product = products.find(p => p.id === productId);
     if (product) {
         alert(`Produit: ${product.name?.fr || product.name || 'N/A'}\nPrix d'achat: ${product.purchasePrice || 0} DA\nPrix de vente: ${product.price || 0} DA\nStock: ${product.stock || 0} unités`);
+    }
+};
+
+window.editProduct = function(productId) {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+        alert('Fonctionnalité de modification en développement.\nUtilisez le bouton "Stock" pour modifier le stock.');
     }
 };
 
