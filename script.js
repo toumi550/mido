@@ -511,12 +511,12 @@ function updateCartDisplay() {
             </div>
             <div class="cart-item-controls">
                 <div class="qty-control">
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                    <button class="qty-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">-</button>
                     <input type="number" class="qty-input" value="${item.quantity}" 
-                           onchange="updateCartQuantity(${item.id}, parseInt(this.value))" min="1">
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                           onchange="updateCartQuantity('${item.id}', parseInt(this.value))" min="1">
+                    <button class="qty-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
                 </div>
-                <button class="remove-item" onclick="removeFromCart(${item.id})">
+                <button class="remove-item" onclick="removeFromCart('${item.id}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
