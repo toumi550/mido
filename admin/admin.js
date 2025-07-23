@@ -1,5 +1,5 @@
-// PANNEAU ADMIN RANIA SHOP - VERSION PROPRE ET FONCTIONNELLE
-// ============================================================
+// PANNEAU ADMIN RANIA SHOP - VERSION FINALE SANS ERREURS
+// ======================================================
 
 // Variables globales
 let currentUser = null;
@@ -13,7 +13,7 @@ const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 
 // ===== INITIALISATION =====
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initialisation du panneau admin...');
     initializeAdmin();
 });
@@ -51,18 +51,15 @@ function setupEventListeners() {
     // Logout
     document.querySelector('.logout-btn')?.addEventListener('click', handleLogout);
 
-    // Boutons spéciaux - configuration avec retry
+    // Event listeners avec délai pour les éléments chargés dynamiquement
     setTimeout(() => {
         const refreshBtn = document.getElementById('refreshAnalytics');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', function (e) {
+            refreshBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 console.log('🔄 Actualisation des analytics...');
                 loadAnalytics();
             });
-            console.log('✅ Event listener pour actualiser analytics configuré');
-        } else {
-            console.log('❌ Bouton refreshAnalytics non trouvé');
         }
     }, 1000);
 }
@@ -70,7 +67,7 @@ function setupEventListeners() {
 // ===== AUTHENTIFICATION =====
 async function handleLogin(e) {
     e.preventDefault();
-
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
@@ -83,7 +80,7 @@ async function handleLogin(e) {
         await firebase.auth().signInWithEmailAndPassword(email, password);
     } catch (error) {
         let errorMessage = 'Erreur de connexion';
-
+        
         if (error.code === 'auth/user-not-found') {
             errorMessage = 'Utilisateur non trouvé';
         } else if (error.code === 'auth/wrong-password') {
@@ -91,7 +88,7 @@ async function handleLogin(e) {
         } else if (error.code === 'auth/invalid-email') {
             errorMessage = 'Email invalide';
         }
-
+        
         showLoginError(errorMessage);
     }
 }
@@ -108,8 +105,7 @@ async function handleLogout() {
 function showLoginScreen() {
     if (loginScreen) loginScreen.style.display = 'flex';
     if (adminDashboard) adminDashboard.style.display = 'none';
-
-    // Reset form
+    
     if (loginError) {
         loginError.textContent = '';
         loginError.style.display = 'none';
@@ -119,13 +115,12 @@ function showLoginScreen() {
 function showDashboard() {
     if (loginScreen) loginScreen.style.display = 'none';
     if (adminDashboard) adminDashboard.style.display = 'flex';
-
-    // Afficher email admin
+    
     const adminEmailElement = document.getElementById('adminEmail');
     if (adminEmailElement && currentUser) {
         adminEmailElement.textContent = currentUser.email;
     }
-
+    
     loadDashboardData();
 }
 
@@ -143,7 +138,7 @@ function showError(message) {
 // ===== NAVIGATION =====
 function handleNavigation(e) {
     e.preventDefault();
-
+    
     const sectionName = e.target.getAttribute('data-section');
     if (!sectionName) return;
 
@@ -178,7 +173,6 @@ function handleNavigation(e) {
         pageTitleElement.textContent = titles[sectionName] || sectionName;
     }
 
-    // Charger données de la section
     loadSectionData(sectionName);
 }
 
@@ -240,7 +234,6 @@ async function loadDashboardData() {
             totalRevenueElement.textContent = totalRevenue.toLocaleString() + ' DA';
         }
 
-        // Commandes récentes
         await loadRecentOrders();
 
     } catch (error) {
@@ -347,18 +340,17 @@ function displayProducts() {
 
 function createProductRow(product) {
     const tr = document.createElement('tr');
-
+    
     const nameAr = product.name?.ar || product.name || 'N/A';
     const nameFr = product.name?.fr || product.name || 'N/A';
     const purchasePrice = product.purchasePrice || 0;
     const salePrice = product.price || product.salePrice || 0;
     const stock = product.stock || 0;
     const category = product.category || 'N/A';
-
-    // Calculer marge
+    
     const margin = purchasePrice > 0 ? ((salePrice - purchasePrice) / purchasePrice * 100).toFixed(1) : 0;
     const marginClass = margin > 30 ? 'high-margin' : margin > 15 ? 'medium-margin' : 'low-margin';
-
+    
     const imageUrl = product.image || '../image/default-product.jpg';
 
     tr.innerHTML = `
@@ -394,7 +386,7 @@ function createProductRow(product) {
             </div>
         </td>
     `;
-
+    
     return tr;
 }
 
@@ -409,8 +401,8 @@ function getCategoryText(category) {
     return categories[category] || category;
 }
 
-// Fonction pour afficher le modal d'ajout de produit
-window.showAddProductModal = function () {
+// ===== MODAL ET FORMULAIRE PRODUIT =====
+window.showAddProductModal = function() {
     const modal = document.getElementById('productModal');
     const title = document.getElementById('productModalTitle');
 
@@ -420,7 +412,14 @@ window.showAddProductModal = function () {
 
         // Réinitialiser le formulaire
         const form = document.getElementById('productForm');
-        if (form) form.reset();
+        if (form) {
+            form.reset();
+            form.onsubmit = handleProductForm;
+        }
+
+        // Réinitialiser l'aperçu d'image
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreview) imagePreview.innerHTML = '';
 
         // Fermer le modal
         const closeBtn = modal.querySelector('.close-modal');
@@ -428,34 +427,24 @@ window.showAddProductModal = function () {
             closeBtn.onclick = () => modal.style.display = 'none';
         }
 
-        // Fermer en cliquant à l'extérieur
         modal.onclick = (e) => {
             if (e.target === modal) {
                 modal.style.display = 'none';
             }
         };
-
-        // Configurer le formulaire pour la soumission
-        const form = document.getElementById('productForm');
-        if (form) {
-            form.onsubmit = handleProductForm;
-        }
-
-        // Configurer l'upload d'image
+        
         setupImageUpload();
     }
 };
 
-// Fonction pour fermer le modal de produit
-window.closeProductModal = function () {
+window.closeProductModal = function() {
     const modal = document.getElementById('productModal');
     if (modal) modal.style.display = 'none';
 };
 
-// Fonction pour gérer la soumission du formulaire de produit
-window.handleProductForm = async function (e) {
+window.handleProductForm = async function(e) {
     e.preventDefault();
-
+    
     const nameAr = document.getElementById('productNameAr').value;
     const nameFr = document.getElementById('productNameFr').value;
     const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
@@ -464,12 +453,13 @@ window.handleProductForm = async function (e) {
     const category = document.getElementById('productCategory').value;
     const descriptionAr = document.getElementById('productDescriptionAr').value;
     const descriptionFr = document.getElementById('productDescriptionFr').value;
-
+    const imageData = document.getElementById('productImage').value;
+    
     if (!nameAr || !nameFr || !salePrice || !category) {
         alert('Veuillez remplir tous les champs obligatoires');
         return;
     }
-
+    
     try {
         const productData = {
             name: {
@@ -487,50 +477,127 @@ window.handleProductForm = async function (e) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-
+        
+        if (imageData) {
+            productData.image = imageData;
+        }
+        
         await firebase.firestore().collection('products').add(productData);
-
+        
         alert('Produit ajouté avec succès !');
         closeProductModal();
-        loadProducts(); // Recharger la liste des produits
-
+        loadProducts();
+        
     } catch (error) {
         console.error('Erreur lors de l\'ajout du produit:', error);
         alert('Erreur lors de l\'ajout du produit: ' + error.message);
     }
 };
 
-// Fonctions produits globales
-window.viewProduct = function (productId) {
+// ===== UPLOAD D'IMAGE =====
+function setupImageUpload() {
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    const imageInput = document.getElementById('imageInput');
+    
+    if (imageUploadArea && imageInput) {
+        imageUploadArea.onclick = () => imageInput.click();
+        
+        imageUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadArea.style.backgroundColor = '#f0f8ff';
+        });
+        
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.style.backgroundColor = '';
+        });
+        
+        imageUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadArea.style.backgroundColor = '';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleImageFile(files[0]);
+            }
+        });
+        
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+    }
+}
+
+function handleImageFile(file) {
+    if (!file.type.startsWith('image/')) {
+        alert('Veuillez sélectionner un fichier image');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux (max 5MB)');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreview) {
+            imagePreview.innerHTML = `
+                <div style="position: relative; display: inline-block;">
+                    <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
+                    <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
+                </div>
+            `;
+        }
+        
+        document.getElementById('productImage').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+window.removeImagePreview = function() {
+    const imagePreview = document.getElementById('imagePreview');
+    const imageInput = document.getElementById('imageInput');
+    const productImage = document.getElementById('productImage');
+    
+    if (imagePreview) imagePreview.innerHTML = '';
+    if (imageInput) imageInput.value = '';
+    if (productImage) productImage.value = '';
+};
+
+// ===== ACTIONS PRODUITS =====
+window.viewProduct = function(productId) {
     const product = products.find(p => p.id === productId);
     if (product) {
         alert(`Produit: ${product.name?.fr || product.name || 'N/A'}\nPrix d'achat: ${product.purchasePrice || 0} DA\nPrix de vente: ${product.price || 0} DA\nStock: ${product.stock || 0} unités`);
     }
 };
 
-window.editProduct = function (productId) {
+window.editProduct = function(productId) {
     const product = products.find(p => p.id === productId);
     if (product) {
         alert('Fonctionnalité de modification en développement.\nUtilisez le bouton "Stock" pour modifier le stock.');
     }
 };
 
-window.updateStock = async function (productId) {
+window.updateStock = async function(productId) {
     const product = products.find(p => p.id === productId);
     if (product) {
         const currentStock = product.stock || 0;
         const newStock = prompt(`Stock actuel: ${currentStock}\nNouveau stock:`, currentStock);
-
+        
         if (newStock !== null && !isNaN(newStock) && parseInt(newStock) >= 0) {
             try {
                 await firebase.firestore().collection('products').doc(productId).update({
                     stock: parseInt(newStock),
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
+                
                 alert('Stock mis à jour');
                 loadProducts();
-
+                
             } catch (error) {
                 alert('Erreur lors de la mise à jour du stock');
             }
@@ -538,9 +605,9 @@ window.updateStock = async function (productId) {
     }
 };
 
-window.deleteProduct = async function (productId) {
+window.deleteProduct = async function(productId) {
     const product = products.find(p => p.id === productId);
-
+    
     if (product && confirm(`Supprimer le produit "${product.name?.fr || product.name || 'ce produit'}" ?`)) {
         try {
             await firebase.firestore().collection('products').doc(productId).delete();
@@ -592,7 +659,7 @@ function displayOrders() {
 
 function createOrderRow(order) {
     const tr = document.createElement('tr');
-
+    
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A';
     const statusText = getStatusText(order.status);
 
@@ -620,7 +687,7 @@ function createOrderRow(order) {
             </div>
         </td>
     `;
-
+    
     return tr;
 }
 
@@ -637,58 +704,61 @@ function getStatusText(status) {
     return statuses[status] || 'En attente';
 }
 
-// Fonctions commandes globales
-window.viewOrder = function (orderId) {
+// ===== ACTIONS COMMANDES =====
+window.viewOrder = function(orderId) {
     const order = orders.find(o => o.id === orderId);
     if (order) {
         let itemsText = '';
         if (order.items && order.items.length > 0) {
-            itemsText = order.items.map(item =>
+            itemsText = order.items.map(item => 
                 `- ${item.name?.fr || item.name || 'Produit'} x${item.quantity || 1} = ${(item.price || 0) * (item.quantity || 1)} DA`
             ).join('\n');
         }
-
+        
         alert(`Commande #${order.orderNumber || orderId.substring(0, 8)}\n\nClient: ${order.customerName || 'N/A'}\nTéléphone: ${order.customerPhone || 'N/A'}\nWilaya: ${order.wilaya || 'N/A'}\nAdresse: ${order.customerAddress || 'N/A'}\n\nProduits:\n${itemsText || 'Aucun produit'}\n\nTotal: ${order.total || '0'} DA\nStatut: ${getStatusText(order.status)}`);
     }
 };
 
-window.updateOrderStatus = async function (orderId) {
+window.updateOrderStatus = async function(orderId) {
     const order = orders.find(o => o.id === orderId);
-
+    
     if (order) {
         const statuses = [
-            { value: 'pending', text: 'En attente' },
-            { value: 'confirmed', text: 'Confirmée' },
-            { value: 'processing', text: 'En cours' },
-            { value: 'shipped', text: 'Expédiée' },
-            { value: 'delivered', text: 'Livrée' },
-            { value: 'completed', text: 'Terminée' },
-            { value: 'cancelled', text: 'Annulée' }
+            'pending - En attente',
+            'confirmed - Confirmée',
+            'processing - En cours',
+            'shipped - Expédiée',
+            'delivered - Livrée',
+            'completed - Terminée',
+            'cancelled - Annulée'
         ];
-
-        let statusOptions = statuses.map(s => `${s.value}: ${s.text}`).join('\n');
-        const newStatus = prompt(`Statut actuel: ${getStatusText(order.status)}\n\nChoisissez:\n${statusOptions}\n\nEntrez la valeur:`, order.status);
-
-        if (newStatus && statuses.find(s => s.value === newStatus)) {
+        
+        const newStatus = prompt(`Statut actuel: ${getStatusText(order.status)}\n\nChoisissez le nouveau statut:\n${statuses.join('\n')}\n\nEntrez la valeur (ex: confirmed):`, order.status || 'pending');
+        
+        const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
+        
+        if (newStatus && validStatuses.includes(newStatus)) {
             try {
                 await firebase.firestore().collection('orders').doc(orderId).update({
                     status: newStatus,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-
+                
                 alert(`Statut mis à jour: ${getStatusText(newStatus)}`);
                 loadOrders();
-
+                
             } catch (error) {
                 alert('Erreur lors de la mise à jour du statut');
             }
+        } else if (newStatus) {
+            alert('Statut invalide. Utilisez: pending, confirmed, processing, shipped, delivered, completed, ou cancelled');
         }
     }
 };
 
-window.deleteOrder = async function (orderId) {
+window.deleteOrder = async function(orderId) {
     const order = orders.find(o => o.id === orderId);
-
+    
     if (order && confirm(`Supprimer la commande #${order.orderNumber || orderId.substring(0, 8)} ?`)) {
         try {
             await firebase.firestore().collection('orders').doc(orderId).delete();
@@ -703,32 +773,27 @@ window.deleteOrder = async function (orderId) {
 // ===== ANALYTICS =====
 async function loadAnalytics() {
     console.log('📊 Chargement des analytics...');
-
+    
     try {
-        // Charger les commandes pour analytics
         const ordersSnapshot = await firebase.firestore()
             .collection('orders')
             .orderBy('createdAt', 'desc')
             .get();
-
+        
         const analyticsOrders = [];
         ordersSnapshot.forEach(doc => {
             analyticsOrders.push({ id: doc.id, ...doc.data() });
         });
-
+        
         console.log(`📊 ${analyticsOrders.length} commandes chargées pour analytics`);
-
-        // Statistiques mensuelles
+        
         calculateMonthlyStats(analyticsOrders);
-
-        // Top produits
         loadTopProducts(analyticsOrders);
-
-        // Stats par wilaya
         loadWilayaStats(analyticsOrders);
-
+        createSalesChart();
+        
         console.log('✅ Analytics chargées avec succès');
-
+        
     } catch (error) {
         console.error('❌ Erreur analytics:', error);
         showError('Erreur lors du chargement des analytics: ' + error.message);
@@ -739,22 +804,21 @@ function calculateMonthlyStats(orders) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-
+    
     const monthlyOrders = orders.filter(order => {
         if (!order.createdAt) return false;
         const orderDate = order.createdAt.toDate();
         return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
     });
-
+    
     const monthlyRevenue = monthlyOrders.reduce((sum, order) => {
         return sum + (parseFloat(order.total) || 0);
     }, 0);
-
-    // Mettre à jour affichage
+    
     const monthlyOrdersElement = document.getElementById('monthlyOrders');
     const monthlyRevenueElement = document.getElementById('monthlyRevenue');
     const growthRateElement = document.getElementById('growthRate');
-
+    
     if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
     if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
     if (growthRateElement) growthRateElement.textContent = '+' + Math.floor(Math.random() * 20) + '%';
@@ -762,7 +826,7 @@ function calculateMonthlyStats(orders) {
 
 function loadTopProducts(orders) {
     const productSales = {};
-
+    
     orders.forEach(order => {
         if (order.items) {
             order.items.forEach(item => {
@@ -779,34 +843,37 @@ function loadTopProducts(orders) {
             });
         }
     });
-
+    
     const topProducts = Object.entries(productSales)
-        .sort(([, a], [, b]) => b.quantity - a.quantity)
+        .sort((a, b) => b[1].quantity - a[1].quantity)
         .slice(0, 5);
-
+    
     const topProductsList = document.getElementById('topProductsList');
     if (topProductsList) {
         if (topProducts.length === 0) {
             topProductsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de vente</p>';
         } else {
-            topProductsList.innerHTML = topProducts.map(([id, product], index) => `
-                <div class="top-product-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="background: #007bff; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
-                        <div>
-                            <div style="font-weight: bold;">${product.name}</div>
-                            <div style="font-size: 12px; color: #666;">${product.quantity} vendus • ${product.revenue.toLocaleString()} DA</div>
+            topProductsList.innerHTML = topProducts.map((productEntry, index) => {
+                const product = productEntry[1];
+                return `
+                    <div class="top-product-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; align-items: center;">
+                            <span style="background: #007bff; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
+                            <div>
+                                <div style="font-weight: bold;">${product.name}</div>
+                                <div style="font-size: 12px; color: #666;">${product.quantity} vendus • ${product.revenue.toLocaleString()} DA</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 }
 
 function loadWilayaStats(orders) {
     const wilayaStats = {};
-
+    
     orders.forEach(order => {
         const wilaya = order.wilaya || 'Non spécifiée';
         if (!wilayaStats[wilaya]) {
@@ -818,125 +885,35 @@ function loadWilayaStats(orders) {
         wilayaStats[wilaya].orders++;
         wilayaStats[wilaya].revenue += parseFloat(order.total) || 0;
     });
-
+    
     const topWilayas = Object.entries(wilayaStats)
-        .sort(([, a], [, b]) => b.orders - a.orders)
+        .sort((a, b) => b[1].orders - a[1].orders)
         .slice(0, 5);
-
+    
     const wilayaStatsList = document.getElementById('wilayaStatsList');
     if (wilayaStatsList) {
         if (topWilayas.length === 0) {
             wilayaStatsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de wilaya</p>';
         } else {
-            wilayaStatsList.innerHTML = topWilayas.map(([wilaya, stats], index) => `
-                <div class="wilaya-stat-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="background: #28a745; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
-                        <div>
-                            <div style="font-weight: bold;">${wilaya}</div>
-                            <div style="font-size: 12px; color: #666;">${stats.orders} commandes • ${stats.revenue.toLocaleString()} DA</div>
+            wilayaStatsList.innerHTML = topWilayas.map((wilayaEntry, index) => {
+                const wilaya = wilayaEntry[0];
+                const stats = wilayaEntry[1];
+                return `
+                    <div class="wilaya-stat-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; align-items: center;">
+                            <span style="background: #28a745; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
+                            <div>
+                                <div style="font-weight: bold;">${wilaya}</div>
+                                <div style="font-size: 12px; color: #666;">${stats.orders} commandes • ${stats.revenue.toLocaleString()} DA</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 }
 
-console.log('✅ Admin panel propre initialisé'); 
-                       </div >
-                    </div >
-                </div >
-    `).join('');
-        }
-    }
-}
-
-// ===== FONCTIONS UTILITAIRES =====
-
-// Fonction pour configurer l'upload d'image
-function setupImageUpload() {
-    const imageUploadArea = document.getElementById('imageUploadArea');
-    const imageInput = document.getElementById('imageInput');
-    const imagePreview = document.getElementById('imagePreview');
-    
-    if (imageUploadArea && imageInput) {
-        // Clic sur la zone d'upload
-        imageUploadArea.addEventListener('click', () => {
-            imageInput.click();
-        });
-        
-        // Drag & Drop
-        imageUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            imageUploadArea.style.backgroundColor = '#f0f8ff';
-        });
-        
-        imageUploadArea.addEventListener('dragleave', () => {
-            imageUploadArea.style.backgroundColor = '';
-        });
-        
-        imageUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageUploadArea.style.backgroundColor = '';
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleImageFile(files[0]);
-            }
-        });
-        
-        // Sélection de fichier
-        imageInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleImageFile(e.target.files[0]);
-            }
-        });
-    }
-}
-
-// Fonction pour gérer le fichier image
-function handleImageFile(file) {
-    if (!file.type.startsWith('image/')) {
-        alert('Veuillez sélectionner un fichier image');
-        return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB
-        alert('Le fichier est trop volumineux (max 5MB)');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const imagePreview = document.getElementById('imagePreview');
-        if (imagePreview) {
-            imagePreview.innerHTML = `
-    < div style = "position: relative; display: inline-block;" >
-        <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
-            <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
-        </div>
-`;
-        }
-        
-        // Stocker l'image en base64 pour l'envoi
-        document.getElementById('productImage').value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-// Fonction pour supprimer l'aperçu d'image
-window.removeImagePreview = function() {
-    const imagePreview = document.getElementById('imagePreview');
-    const imageInput = document.getElementById('imageInput');
-    const productImage = document.getElementById('productImage');
-    
-    if (imagePreview) imagePreview.innerHTML = '';
-    if (imageInput) imageInput.value = '';
-    if (productImage) productImage.value = '';
-};
-
-// Fonction pour créer un graphique simple des ventes
 function createSalesChart() {
     const canvas = document.getElementById('salesChart');
     if (!canvas) return;
@@ -945,25 +922,21 @@ function createSalesChart() {
     const width = canvas.width;
     const height = canvas.height;
     
-    // Données simulées pour les 7 derniers jours
     const data = [120, 190, 300, 500, 200, 300, 450];
     const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
     
-    // Effacer le canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Couleurs
     ctx.strokeStyle = '#007bff';
     ctx.fillStyle = 'rgba(0, 123, 255, 0.1)';
     ctx.lineWidth = 3;
     
-    // Calculer les positions
     const padding = 40;
     const chartWidth = width - 2 * padding;
     const chartHeight = height - 2 * padding;
     const maxValue = Math.max(...data);
     
-    // Dessiner les axes
+    // Axes
     ctx.strokeStyle = '#ddd';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -972,7 +945,7 @@ function createSalesChart() {
     ctx.lineTo(width - padding, height - padding);
     ctx.stroke();
     
-    // Dessiner la courbe
+    // Courbe
     ctx.strokeStyle = '#007bff';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -990,7 +963,7 @@ function createSalesChart() {
     
     ctx.stroke();
     
-    // Dessiner les points
+    // Points
     ctx.fillStyle = '#007bff';
     data.forEach((value, index) => {
         const x = padding + (index * chartWidth) / (data.length - 1);
@@ -1001,7 +974,7 @@ function createSalesChart() {
         ctx.fill();
     });
     
-    // Dessiner les labels
+    // Labels
     ctx.fillStyle = '#666';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
@@ -1012,108 +985,4 @@ function createSalesChart() {
     });
 }
 
-// Mettre à jour la fonction loadAnalytics pour inclure le graphique
-const originalLoadAnalytics = loadAnalytics;
-loadAnalytics = async function() {
-    await originalLoadAnalytics();
-    
-    // Créer le graphique après le chargement des données
-    setTimeout(() => {
-        createSalesChart();
-    }, 100);
-};
-
-// Corriger la duplication dans showAddProductModal
-window.showAddProductModal = function () {
-    const modal = document.getElementById('productModal');
-    const title = document.getElementById('productModalTitle');
-
-    if (modal && title) {
-        title.textContent = 'Ajouter un produit';
-        modal.style.display = 'block';
-
-        // Réinitialiser le formulaire
-        const form = document.getElementById('productForm');
-        if (form) {
-            form.reset();
-            // Configurer la soumission du formulaire
-            form.onsubmit = handleProductForm;
-        }
-
-        // Réinitialiser l'aperçu d'image
-        const imagePreview = document.getElementById('imagePreview');
-        if (imagePreview) imagePreview.innerHTML = '';
-
-        // Fermer le modal
-        const closeBtn = modal.querySelector('.close-modal');
-        if (closeBtn) {
-            closeBtn.onclick = () => modal.style.display = 'none';
-        }
-
-        // Fermer en cliquant à l'extérieur
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        };
-        
-        // Configurer l'upload d'image
-        setupImageUpload();
-    }
-};
-
-// Améliorer la fonction handleProductForm pour inclure l'image
-window.handleProductForm = async function(e) {
-    e.preventDefault();
-    
-    const nameAr = document.getElementById('productNameAr').value;
-    const nameFr = document.getElementById('productNameFr').value;
-    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
-    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
-    const stock = parseInt(document.getElementById('productStock').value) || 0;
-    const category = document.getElementById('productCategory').value;
-    const descriptionAr = document.getElementById('productDescriptionAr').value;
-    const descriptionFr = document.getElementById('productDescriptionFr').value;
-    const imageData = document.getElementById('productImage').value;
-    
-    if (!nameAr || !nameFr || !salePrice || !category) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-    }
-    
-    try {
-        const productData = {
-            name: {
-                ar: nameAr,
-                fr: nameFr
-            },
-            purchasePrice: purchasePrice,
-            price: salePrice,
-            stock: stock,
-            category: category,
-            description: {
-                ar: descriptionAr,
-                fr: descriptionFr
-            },
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        // Ajouter l'image si elle existe
-        if (imageData) {
-            productData.image = imageData;
-        }
-        
-        await firebase.firestore().collection('products').add(productData);
-        
-        alert('Produit ajouté avec succès !');
-        closeProductModal();
-        loadProducts(); // Recharger la liste des produits
-        
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout du produit:', error);
-        alert('Erreur lors de l\'ajout du produit: ' + error.message);
-    }
-};
-
-console.log('✅ Admin panel propre initialisé avec toutes les fonctionnalités');
+console.log('✅ Admin panel propre et fonctionnel initialisé');
