@@ -308,10 +308,12 @@ function addToCart(productId, quantity = 1) {
 }
 
 function removeFromCart(productId) {
+    console.log('🗑️ Suppression du produit du panier:', productId);
     cart = cart.filter(item => item.id !== productId);
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
+    console.log('✅ Produit supprimé du panier');
 }
 
 function updateCartQuantity(productId, newQuantity) {

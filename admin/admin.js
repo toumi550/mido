@@ -578,7 +578,55 @@ window.viewProduct = function(productId) {
 window.editProduct = function(productId) {
     const product = products.find(p => p.id === productId);
     if (product) {
-        alert('Fonctionnalité de modification en développement.\nUtilisez le bouton "Stock" pour modifier le stock.');
+        const modal = document.getElementById('productModal');
+        const title = document.getElementById('productModalTitle');
+
+        if (modal && title) {
+            title.textContent = 'Modifier le produit';
+            modal.style.display = 'block';
+
+            // Pré-remplir le formulaire avec les données existantes
+            document.getElementById('productNameAr').value = product.name?.ar || product.name || '';
+            document.getElementById('productNameFr').value = product.name?.fr || product.name || '';
+            document.getElementById('productPurchasePrice').value = product.purchasePrice || 0;
+            document.getElementById('productPrice').value = product.price || 0;
+            document.getElementById('productStock').value = product.stock || 0;
+            document.getElementById('productCategory').value = product.category || '';
+            document.getElementById('productDescriptionAr').value = product.description?.ar || '';
+            document.getElementById('productDescriptionFr').value = product.description?.fr || '';
+
+            // Afficher l'image existante si elle existe
+            const imagePreview = document.getElementById('imagePreview');
+            if (imagePreview && product.image) {
+                imagePreview.innerHTML = `
+                    <div style="position: relative; display: inline-block;">
+                        <img src="${product.image}" alt="Image actuelle" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
+                        <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
+                    </div>
+                `;
+                document.getElementById('productImage').value = product.image;
+            }
+
+            // Configurer le formulaire pour la modification
+            const form = document.getElementById('productForm');
+            if (form) {
+                form.onsubmit = (e) => handleEditProductForm(e, productId);
+            }
+
+            // Fermer le modal
+            const closeBtn = modal.querySelector('.close-modal');
+            if (closeBtn) {
+                closeBtn.onclick = () => modal.style.display = 'none';
+            }
+
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+            
+            setupImageUpload();
+        }
     }
 };
 
@@ -986,3 +1034,149 @@ function createSalesChart() {
 }
 
 console.log('✅ Admin panel propre et fonctionnel initialisé');
+// F
+onction pour gérer la modification d'un produit
+window.handleEditProductForm = async function(e, productId) {
+    e.preventDefault();
+    
+    const nameAr = document.getElementById('productNameAr').value;
+    const nameFr = document.getElementById('productNameFr').value;
+    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
+    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
+    const stock = parseInt(document.getElementById('productStock').value) || 0;
+    const category = document.getElementById('productCategory').value;
+    const descriptionAr = document.getElementById('productDescriptionAr').value;
+    const descriptionFr = document.getElementById('productDescriptionFr').value;
+    const imageData = document.getElementById('productImage').value;
+    
+    if (!nameAr || !nameFr || !salePrice || !category) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+    }
+    
+    try {
+        const productData = {
+            name: {
+                ar: nameAr,
+                fr: nameFr
+            },
+            purchasePrice: purchasePrice,
+            price: salePrice,
+            stock: stock,
+            category: category,
+            description: {
+                ar: descriptionAr,
+                fr: descriptionFr
+            },
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        if (imageData) {
+            productData.image = imageData;
+        }
+        
+        await firebase.firestore().collection('products').doc(productId).update(productData);
+        
+        alert('Produit modifié avec succès !');
+        closeProductModal();
+        loadProducts();
+        
+    } catch (error) {
+        console.error('Erreur lors de la modification du produit:', error);
+        alert('Erreur lors de la modification du produit: ' + error.message);
+    }
+};
+
+// ===== GESTION SÉLECTION MULTIPLE COMMANDES =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendre que les éléments soient chargés
+    setTimeout(() => {
+        setupOrdersSelectionHandlers();
+    }, 2000);
+});
+
+function setupOrdersSelectionHandlers() {
+    // Gestionnaire pour "Tout sélectionner"
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const orderCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]');
+            orderCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSelectedOrdersButtons();
+        });
+    }
+
+    // Gestionnaire pour les boutons d'action
+    const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', deleteSelectedOrders);
+    }
+
+    const selectAllBtn = document.getElementById('selectAllOrders');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+}
+
+// Fonction appelée après chargement des commandes pour configurer les event listeners
+function setupOrderCheckboxes() {
+    const orderCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]');
+    orderCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedOrdersButtons);
+    });
+}
+
+function updateSelectedOrdersButtons() {
+    const selectedCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]:checked');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
+    
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
+    }
+}
+
+async function deleteSelectedOrders() {
+    const selectedCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Aucune commande sélectionnée');
+        return;
+    }
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedCheckboxes.length} commande(s) ?`)) {
+        try {
+            const deletePromises = Array.from(selectedCheckboxes).map(checkbox => {
+                return firebase.firestore().collection('orders').doc(checkbox.value).delete();
+            });
+            
+            await Promise.all(deletePromises);
+            alert(`${selectedCheckboxes.length} commande(s) supprimée(s) avec succès`);
+            loadOrders();
+            
+        } catch (error) {
+            console.error('Erreur lors de la suppression des commandes:', error);
+            alert('Erreur lors de la suppression des commandes');
+        }
+    }
+}
+
+// Modifier la fonction displayOrders pour inclure les event listeners
+const originalDisplayOrders = displayOrders;
+displayOrders = function() {
+    originalDisplayOrders();
+    // Configurer les event listeners après affichage
+    setTimeout(() => {
+        setupOrderCheckboxes();
+        updateSelectedOrdersButtons();
+    }, 100);
+};
+
+console.log('✅ Admin panel avec toutes les fonctionnalités initialisé');
