@@ -309,11 +309,19 @@ function addToCart(productId, quantity = 1) {
 
 function removeFromCart(productId) {
     console.log('🗑️ Suppression du produit du panier:', productId);
+    console.log('📦 Panier avant suppression:', cart);
+    
+    const initialLength = cart.length;
     cart = cart.filter(item => item.id !== productId);
+    
+    console.log('📦 Panier après suppression:', cart);
+    console.log(`📊 Produits supprimés: ${initialLength - cart.length}`);
+    
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-    console.log('✅ Produit supprimé du panier');
+    
+    console.log('✅ Produit supprimé du panier - Affichage mis à jour');
 }
 
 function updateCartQuantity(productId, newQuantity) {
