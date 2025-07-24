@@ -1,0 +1,3 @@
+Force deployment - Site restoration
+Timestamp: 2025-07-23 13:51
+Reason: Site works locally but not on Vercel after git reset
