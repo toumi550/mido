@@ -788,7 +788,7 @@ window.updateOrderStatus = async function (orderId) {
         if (newStatus && validStatuses.includes(newStatus)) {
             try {
                 const oldStatus = order.status;
-                
+
                 // Mettre à jour le statut de la commande
                 await firebase.firestore().collection('orders').doc(orderId).update({
                     status: newStatus,
@@ -796,8 +796,8 @@ window.updateOrderStatus = async function (orderId) {
                 });
 
                 // Vérifier si on doit mettre à jour le stock
-                const shouldUpdateStock = ['confirmed', 'delivered', 'completed'].includes(newStatus) && 
-                                        !['confirmed', 'delivered', 'completed'].includes(oldStatus);
+                const shouldUpdateStock = ['confirmed', 'delivered', 'completed'].includes(newStatus) &&
+                    !['confirmed', 'delivered', 'completed'].includes(oldStatus);
 
                 if (shouldUpdateStock && order.items) {
                     console.log('📦 Mise à jour du stock pour commande:', orderId);
@@ -806,7 +806,7 @@ window.updateOrderStatus = async function (orderId) {
                 } else {
                     alert(`Statut mis à jour: ${getStatusText(newStatus)}`);
                 }
-                
+
                 loadOrders();
 
             } catch (error) {
@@ -1197,41 +1197,41 @@ console.log('✅ Admin panel avec toutes les fonctionnalités initialisé');
 // ===== FONCTION POUR METTRE À JOUR LE STOCK DEPUIS UNE COMMANDE =====
 async function updateStockFromOrder(orderItems) {
     console.log('📦 Début de la mise à jour du stock pour', orderItems.length, 'produits');
-    
+
     try {
         for (const item of orderItems) {
             console.log(`📦 Traitement du produit ${item.id} - Quantité: ${item.quantity}`);
-            
+
             // Récupérer le produit actuel
             const productRef = firebase.firestore().collection('products').doc(item.id);
             const productDoc = await productRef.get();
-            
+
             if (productDoc.exists) {
                 const currentProduct = productDoc.data();
                 const currentStock = currentProduct.stock || 0;
                 const newStock = Math.max(0, currentStock - item.quantity);
-                
+
                 console.log(`📊 Produit ${item.id}: Stock ${currentStock} → ${newStock}`);
-                
+
                 // Mettre à jour le stock
                 await productRef.update({
                     stock: newStock,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                
+
                 console.log(`✅ Stock mis à jour pour ${item.name?.fr || item.name || 'Produit'}`);
             } else {
                 console.warn(`⚠️ Produit ${item.id} non trouvé dans Firebase`);
             }
         }
-        
+
         console.log('✅ Mise à jour du stock terminée avec succès');
-        
+
         // Recharger les produits pour afficher les nouveaux stocks
         if (typeof loadProducts === 'function') {
             loadProducts();
         }
-        
+
     } catch (error) {
         console.error('❌ Erreur lors de la mise à jour du stock:', error);
         throw error; // Relancer l'erreur pour que l'appelant puisse la gérer
