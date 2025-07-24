@@ -1194,8 +1194,7 @@ displayOrders = function () {
 };
 
 console.log('✅ Admin panel avec toutes les fonctionnalités initialisé');
-// ===== 
-FONCTION POUR METTRE À JOUR LE STOCK DEPUIS UNE COMMANDE =====
+// ===== FONCTION POUR METTRE À JOUR LE STOCK DEPUIS UNE COMMANDE =====
 async function updateStockFromOrder(orderItems) {
     console.log('📦 Début de la mise à jour du stock pour', orderItems.length, 'produits');
     
