@@ -1,5 +1,5 @@
-// PANNEAU ADMIN RANIA SHOP - VERSION FINALE SANS ERREURS
-// ======================================================
+// PANNEAU ADMIN RANIA SHOP - VERSION COMPLÈTE CORRIGÉE
+// =====================================================
 
 // Variables globales
 let currentUser = null;
@@ -24,9 +24,13 @@ function initializeAdmin() {
         return;
     }
 
+    console.log('✅ Firebase détecté');
+
     // Authentification
     firebase.auth().onAuthStateChanged((user) => {
+        console.log('🔐 État d\'authentification:', user ? 'Connecté' : 'Déconnecté');
         if (user) {
+            console.log('👤 Utilisateur:', user.email);
             currentUser = user;
             showDashboard();
         } else {
@@ -35,27 +39,38 @@ function initializeAdmin() {
     });
 
     setupEventListeners();
+    console.log('✅ Initialisation terminée');
 }
 
 function setupEventListeners() {
+    console.log('🎯 Configuration des event listeners...');
+    
     // Login
     if (loginForm) {
         loginForm.addEventListener('submit', handleLogin);
+        console.log('✅ Event listener login configuré');
     }
 
     // Navigation
-    document.querySelectorAll('.menu-item').forEach(item => {
+    const menuItems = document.querySelectorAll('.menu-item');
+    console.log('📋 Menu items trouvés:', menuItems.length);
+    menuItems.forEach(item => {
         item.addEventListener('click', handleNavigation);
     });
 
     // Logout
-    document.querySelector('.logout-btn')?.addEventListener('click', handleLogout);
+    const logoutBtn = document.querySelector('.logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+        console.log('✅ Event listener logout configuré');
+    }
 
     // Menu hamburger mobile
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function () {
-            const sidebar = document.querySelector('.admin-sidebar');
+        mobileMenuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sidebar = document.querySelector('.sidebar');
             if (sidebar) {
                 sidebar.classList.toggle('mobile-open');
             }
@@ -66,8 +81,7 @@ function setupEventListeners() {
     setTimeout(() => {
         const refreshBtn = document.getElementById('refreshAnalytics');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', function (e) {
-                e.preventDefault();
+            refreshBtn.addEventListener('click', function() {
                 console.log('🔄 Actualisation des analytics...');
                 loadAnalytics();
             });
@@ -101,11 +115,14 @@ function setupEventListeners() {
             changeEmailForm.addEventListener('submit', handleChangeEmailSubmit);
         }
     }, 1000);
+
+    console.log('✅ Event listeners configurés');
 }
 
 // ===== AUTHENTIFICATION =====
 async function handleLogin(e) {
     e.preventDefault();
+    console.log('🔐 Tentative de connexion...');
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -116,8 +133,11 @@ async function handleLogin(e) {
     }
 
     try {
+        console.log('📧 Email:', email);
         await firebase.auth().signInWithEmailAndPassword(email, password);
+        console.log('✅ Connexion réussie');
     } catch (error) {
+        console.error('❌ Erreur de connexion:', error);
         let errorMessage = 'Erreur de connexion';
 
         if (error.code === 'auth/user-not-found') {
@@ -135,29 +155,29 @@ async function handleLogin(e) {
 async function handleLogout() {
     try {
         await firebase.auth().signOut();
+        console.log('✅ Déconnexion réussie');
     } catch (error) {
+        console.error('❌ Erreur de déconnexion:', error);
         showError('Erreur de déconnexion');
     }
 }
 
 // ===== AFFICHAGE =====
 function showLoginScreen() {
+    console.log('🔐 Affichage écran de connexion');
     if (loginScreen) loginScreen.style.display = 'flex';
     if (adminDashboard) adminDashboard.style.display = 'none';
-
-    if (loginError) {
-        loginError.textContent = '';
-        loginError.style.display = 'none';
-    }
 }
 
 function showDashboard() {
+    console.log('📊 Affichage dashboard');
     if (loginScreen) loginScreen.style.display = 'none';
     if (adminDashboard) adminDashboard.style.display = 'flex';
 
     const adminEmailElement = document.getElementById('adminEmail');
     if (adminEmailElement && currentUser) {
         adminEmailElement.textContent = currentUser.email;
+        console.log('✅ Email admin affiché:', currentUser.email);
     }
 
     loadDashboardData();
@@ -167,18 +187,37 @@ function showLoginError(message) {
     if (loginError) {
         loginError.textContent = message;
         loginError.style.display = 'block';
+        setTimeout(() => {
+            loginError.style.display = 'none';
+        }, 5000);
     }
 }
 
 function showError(message) {
+    console.error('❌ Erreur:', message);
     alert('Erreur: ' + message);
+}
+
+function showSuccess(message) {
+    console.log('✅ Succès:', message);
+    alert('Succès: ' + message);
+}
+
+function showLoading() {
+    console.log('⏳ Chargement...');
+}
+
+function hideLoading() {
+    console.log('✅ Chargement terminé');
 }
 
 // ===== NAVIGATION =====
 function handleNavigation(e) {
     e.preventDefault();
-
+    console.log('🧭 Navigation cliquée');
+    
     const sectionName = e.target.getAttribute('data-section');
+    console.log('📍 Section:', sectionName);
     if (!sectionName) return;
 
     // Mettre à jour menu actif
@@ -191,10 +230,11 @@ function handleNavigation(e) {
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
-
-    const sectionElement = document.getElementById(sectionName + 'Section');
-    if (sectionElement) {
-        sectionElement.classList.add('active');
+    
+    const targetSection = document.getElementById(sectionName + 'Section');
+    if (targetSection) {
+        targetSection.classList.add('active');
+        console.log('✅ Section affichée:', sectionName);
     }
 
     // Mettre à jour titre
@@ -207,15 +247,17 @@ function handleNavigation(e) {
         settings: 'Paramètres'
     };
 
-    const pageTitleElement = document.getElementById('pageTitle');
-    if (pageTitleElement) {
-        pageTitleElement.textContent = titles[sectionName] || sectionName;
+    const pageTitle = document.getElementById('pageTitle');
+    if (pageTitle && titles[sectionName]) {
+        pageTitle.textContent = titles[sectionName];
+        console.log('✅ Titre mis à jour:', titles[sectionName]);
     }
 
     loadSectionData(sectionName);
 }
 
 function loadSectionData(sectionName) {
+    console.log('📂 Chargement des données pour la section:', sectionName);
     switch (sectionName) {
         case 'dashboard':
             loadDashboardData();
@@ -229,67 +271,70 @@ function loadSectionData(sectionName) {
         case 'analytics':
             loadAnalytics();
             break;
+        case 'account':
+            loadCurrentAdminEmail();
+            break;
         case 'settings':
             loadSiteSettings();
             loadAdmins();
-            break;
-        case 'account':
-            loadCurrentAdminEmail();
             break;
     }
 }
 
 // ===== DASHBOARD =====
 async function loadDashboardData() {
+    console.log('📊 Chargement des données du dashboard...');
+    
     try {
         // Charger produits
+        console.log('📦 Chargement des produits...');
         const productsSnapshot = await firebase.firestore().collection('products').get();
         const totalProductsElement = document.getElementById('totalProducts');
         if (totalProductsElement) {
             totalProductsElement.textContent = productsSnapshot.size;
         }
+        console.log('✅ Produits chargés:', productsSnapshot.size);
 
         // Charger commandes
+        console.log('🛒 Chargement des commandes...');
         const ordersSnapshot = await firebase.firestore().collection('orders').get();
         const totalOrdersElement = document.getElementById('totalOrders');
         if (totalOrdersElement) {
             totalOrdersElement.textContent = ordersSnapshot.size;
         }
+        console.log('✅ Commandes chargées:', ordersSnapshot.size);
 
         // Commandes en attente
+        console.log('⏳ Chargement des commandes en attente...');
         const pendingOrdersSnapshot = await firebase.firestore()
             .collection('orders')
             .where('status', '==', 'pending')
             .get();
+        
         const pendingOrdersElement = document.getElementById('pendingOrders');
         if (pendingOrdersElement) {
             pendingOrdersElement.textContent = pendingOrdersSnapshot.size;
         }
+        console.log('✅ Commandes en attente:', pendingOrdersSnapshot.size);
 
         // Chiffre d'affaires
+        console.log('💰 Calcul du chiffre d\'affaires...');
         let totalRevenue = 0;
         ordersSnapshot.forEach(doc => {
             const order = doc.data();
-            if (order.status === 'completed' && order.total) {
-                totalRevenue += parseFloat(order.total) || 0;
+            if (order.status === 'completed' || order.status === 'delivered') {
+                totalRevenue += order.total || 0;
             }
         });
-
+        
         const totalRevenueElement = document.getElementById('totalRevenue');
         if (totalRevenueElement) {
-            totalRevenueElement.textContent = totalRevenue.toLocaleString() + ' DA';
+            totalRevenueElement.textContent = totalRevenue;
         }
+        console.log('✅ Chiffre d\'affaires calculé:', totalRevenue);
 
-        await loadRecentOrders();
-
-    } catch (error) {
-        console.error('Erreur dashboard:', error);
-        showError('Erreur lors du chargement du dashboard');
-    }
-}
-
-async function loadRecentOrders() {
-    try {
+        // Charger commandes récentes
+        console.log('📋 Chargement des commandes récentes...');
         const recentOrdersSnapshot = await firebase.firestore()
             .collection('orders')
             .orderBy('createdAt', 'desc')
@@ -297,27 +342,32 @@ async function loadRecentOrders() {
             .get();
 
         const recentOrdersList = document.getElementById('recentOrdersList');
-        if (!recentOrdersList) return;
+        if (recentOrdersList) {
+            recentOrdersList.innerHTML = '';
+            
+            if (recentOrdersSnapshot.empty) {
+                recentOrdersList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune commande récente</p>';
+                return;
+            }
 
-        recentOrdersList.innerHTML = '';
-
-        if (recentOrdersSnapshot.empty) {
-            recentOrdersList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune commande récente</p>';
-            return;
+            console.log('📝 Nombre de commandes récentes:', recentOrdersSnapshot.size);
+            recentOrdersSnapshot.forEach(doc => {
+                const order = doc.data();
+                console.log('📄 Commande récente:', doc.id, order);
+                const orderElement = createRecentOrderElement(doc.id, order);
+                recentOrdersList.appendChild(orderElement);
+            });
         }
+        console.log('✅ Commandes récentes chargées');
 
-        recentOrdersSnapshot.forEach(doc => {
-            const order = doc.data();
-            const orderElement = createRecentOrderElement(order, doc.id);
-            recentOrdersList.appendChild(orderElement);
-        });
-
+        console.log('✅ Données du dashboard chargées avec succès');
     } catch (error) {
-        console.error('Erreur commandes récentes:', error);
+        console.error('❌ Erreur lors du chargement du dashboard:', error);
+        showError('Erreur lors du chargement du dashboard');
     }
 }
 
-function createRecentOrderElement(order, orderId) {
+function createRecentOrderElement(orderId, order) {
     const div = document.createElement('div');
     div.className = 'order-item';
 
@@ -348,27 +398,28 @@ function createRecentOrderElement(order, orderId) {
 
 // ===== GESTION DES PRODUITS =====
 async function loadProducts() {
+    console.log('📦 Chargement des produits...');
+    
     try {
-        const productsSnapshot = await firebase.firestore()
-            .collection('products')
-            .orderBy('createdAt', 'desc')
-            .get();
-
+        const db = firebase.firestore();
+        const productsSnapshot = await db.collection('products').get();
+        
         products = [];
         productsSnapshot.forEach(doc => {
             products.push({ id: doc.id, ...doc.data() });
         });
 
+        console.log('✅ Produits chargés:', products.length);
         displayProducts();
-
+        
     } catch (error) {
-        console.error('Erreur produits:', error);
+        console.error('❌ Erreur lors du chargement des produits:', error);
         showError('Erreur lors du chargement des produits');
     }
 }
 
 function displayProducts() {
-    const tbody = document.getElementById('productsTableBody');
+    const tbody = document.querySelector('#productsTable tbody');
     if (!tbody) return;
 
     tbody.innerHTML = '';
@@ -403,349 +454,66 @@ function createProductRow(product) {
         <td>
             <img src="${imageUrl}" alt="${nameFr}" class="product-image" onerror="this.src='../image/default-product.jpg'" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
         </td>
-        <td><strong>${nameAr}</strong></td>
-        <td><strong>${nameFr}</strong></td>
-        <td>${purchasePrice.toLocaleString()} DA</td>
-        <td>${salePrice.toLocaleString()} DA</td>
-        <td class="${marginClass}">
-            <span>${margin}%</span><br>
-            <small>+${(salePrice - purchasePrice).toLocaleString()} DA</small>
-        </td>
+        <td>${nameAr}</td>
+        <td>${nameFr}</td>
+        <td>${purchasePrice} DA</td>
+        <td>${salePrice} DA</td>
+        <td class="${marginClass}">${margin}%</td>
+        <td class="${stock < 10 ? 'low-stock' : ''}">${stock}</td>
+        <td>${category}</td>
         <td>
-            <span class="${stock < 10 ? 'low-stock' : ''}" style="color: ${stock < 5 ? 'red' : stock < 10 ? 'orange' : 'green'}">${stock}</span>
-        </td>
-        <td><span class="category-badge">${getCategoryText(category)}</span></td>
-        <td>
-            <div class="action-buttons">
-                <button class="btn btn-sm btn-info" onclick="viewProduct('${product.id}')" title="Voir">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-sm btn-warning" onclick="editProduct('${product.id}')" title="Modifier">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-success" onclick="updateStock('${product.id}')" title="Stock">
-                    <i class="fas fa-boxes"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.id}')" title="Supprimer">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
+            <button onclick="editProduct('${product.id}')" class="btn btn-sm btn-warning" title="Modifier">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="manageStock('${product.id}')" class="btn btn-sm btn-info" title="Gérer stock">
+                <i class="fas fa-boxes"></i>
+            </button>
+            <button onclick="deleteProduct('${product.id}')" class="btn btn-sm btn-danger" title="Supprimer">
+                <i class="fas fa-trash"></i>
+            </button>
         </td>
     `;
 
     return tr;
 }
 
-function getCategoryText(category) {
-    const categories = {
-        hair: 'Cheveux',
-        makeup: 'Maquillage',
-        skincare: 'Soins',
-        lenses: 'Lentilles',
-        clothing: 'Vêtements'
-    };
-    return categories[category] || category;
-}
-
-// ===== MODAL ET FORMULAIRE PRODUIT =====
-window.showAddProductModal = function () {
-    const modal = document.getElementById('productModal');
-    const title = document.getElementById('productModalTitle');
-
-    if (modal && title) {
-        title.textContent = 'Ajouter un produit';
-        modal.style.display = 'block';
-
-        // Réinitialiser le formulaire
-        const form = document.getElementById('productForm');
-        if (form) {
-            form.reset();
-            form.onsubmit = handleProductForm;
-        }
-
-        // Réinitialiser l'aperçu d'image
-        const imagePreview = document.getElementById('imagePreview');
-        if (imagePreview) imagePreview.innerHTML = '';
-
-        // Fermer le modal
-        const closeBtn = modal.querySelector('.close-modal');
-        if (closeBtn) {
-            closeBtn.onclick = () => modal.style.display = 'none';
-        }
-
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        };
-
-        setupImageUpload();
-    }
-};
-
-window.closeProductModal = function () {
-    const modal = document.getElementById('productModal');
-    if (modal) modal.style.display = 'none';
-};
-
-window.handleProductForm = async function (e) {
-    e.preventDefault();
-
-    const nameAr = document.getElementById('productNameAr').value;
-    const nameFr = document.getElementById('productNameFr').value;
-    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
-    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
-    const stock = parseInt(document.getElementById('productStock').value) || 0;
-    const category = document.getElementById('productCategory').value;
-    const descriptionAr = document.getElementById('productDescriptionAr').value;
-    const descriptionFr = document.getElementById('productDescriptionFr').value;
-    const imageData = document.getElementById('productImage').value;
-
-    if (!nameAr || !nameFr || !salePrice || !category) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-    }
-
-    try {
-        const productData = {
-            name: {
-                ar: nameAr,
-                fr: nameFr
-            },
-            purchasePrice: purchasePrice,
-            price: salePrice,
-            stock: stock,
-            category: category,
-            description: {
-                ar: descriptionAr,
-                fr: descriptionFr
-            },
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if (imageData) {
-            productData.image = imageData;
-        }
-
-        await firebase.firestore().collection('products').add(productData);
-
-        alert('Produit ajouté avec succès !');
-        closeProductModal();
-        loadProducts();
-
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout du produit:', error);
-        alert('Erreur lors de l\'ajout du produit: ' + error.message);
-    }
-};
-
-// ===== UPLOAD D'IMAGE =====
-function setupImageUpload() {
-    const imageUploadArea = document.getElementById('imageUploadArea');
-    const imageInput = document.getElementById('imageInput');
-
-    if (imageUploadArea && imageInput) {
-        imageUploadArea.onclick = () => imageInput.click();
-
-        imageUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            imageUploadArea.style.backgroundColor = '#f0f8ff';
-        });
-
-        imageUploadArea.addEventListener('dragleave', () => {
-            imageUploadArea.style.backgroundColor = '';
-        });
-
-        imageUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageUploadArea.style.backgroundColor = '';
-
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleImageFile(files[0]);
-            }
-        });
-
-        imageInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleImageFile(e.target.files[0]);
-            }
-        });
-    }
-}
-
-function handleImageFile(file) {
-    if (!file.type.startsWith('image/')) {
-        alert('Veuillez sélectionner un fichier image');
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Le fichier est trop volumineux (max 5MB)');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const imagePreview = document.getElementById('imagePreview');
-        if (imagePreview) {
-            imagePreview.innerHTML = `
-                <div style="position: relative; display: inline-block;">
-                    <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
-                    <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
-                </div>
-            `;
-        }
-
-        document.getElementById('productImage').value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-window.removeImagePreview = function () {
-    const imagePreview = document.getElementById('imagePreview');
-    const imageInput = document.getElementById('imageInput');
-    const productImage = document.getElementById('productImage');
-
-    if (imagePreview) imagePreview.innerHTML = '';
-    if (imageInput) imageInput.value = '';
-    if (productImage) productImage.value = '';
-};
-
-// ===== ACTIONS PRODUITS =====
-window.viewProduct = function (productId) {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-        alert(`Produit: ${product.name?.fr || product.name || 'N/A'}\nPrix d'achat: ${product.purchasePrice || 0} DA\nPrix de vente: ${product.price || 0} DA\nStock: ${product.stock || 0} unités`);
-    }
-};
-
-window.editProduct = function (productId) {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-        const modal = document.getElementById('productModal');
-        const title = document.getElementById('productModalTitle');
-
-        if (modal && title) {
-            title.textContent = 'Modifier le produit';
-            modal.style.display = 'block';
-
-            // Pré-remplir le formulaire avec les données existantes
-            document.getElementById('productNameAr').value = product.name?.ar || product.name || '';
-            document.getElementById('productNameFr').value = product.name?.fr || product.name || '';
-            document.getElementById('productPurchasePrice').value = product.purchasePrice || 0;
-            document.getElementById('productPrice').value = product.price || 0;
-            document.getElementById('productStock').value = product.stock || 0;
-            document.getElementById('productCategory').value = product.category || '';
-            document.getElementById('productDescriptionAr').value = product.description?.ar || '';
-            document.getElementById('productDescriptionFr').value = product.description?.fr || '';
-
-            // Afficher l'image existante si elle existe
-            const imagePreview = document.getElementById('imagePreview');
-            if (imagePreview && product.image) {
-                imagePreview.innerHTML = `
-                    <div style="position: relative; display: inline-block;">
-                        <img src="${product.image}" alt="Image actuelle" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
-                        <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
-                    </div>
-                `;
-                document.getElementById('productImage').value = product.image;
-            }
-
-            // Configurer le formulaire pour la modification
-            const form = document.getElementById('productForm');
-            if (form) {
-                form.onsubmit = (e) => handleEditProductForm(e, productId);
-            }
-
-            // Fermer le modal
-            const closeBtn = modal.querySelector('.close-modal');
-            if (closeBtn) {
-                closeBtn.onclick = () => modal.style.display = 'none';
-            }
-
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                }
-            };
-
-            setupImageUpload();
-        }
-    }
-};
-
-window.updateStock = async function (productId) {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-        const currentStock = product.stock || 0;
-        const newStock = prompt(`Stock actuel: ${currentStock}\nNouveau stock:`, currentStock);
-
-        if (newStock !== null && !isNaN(newStock) && parseInt(newStock) >= 0) {
-            try {
-                await firebase.firestore().collection('products').doc(productId).update({
-                    stock: parseInt(newStock),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                alert('Stock mis à jour');
-                loadProducts();
-
-            } catch (error) {
-                alert('Erreur lors de la mise à jour du stock');
-            }
-        }
-    }
-};
-
-window.deleteProduct = async function (productId) {
-    const product = products.find(p => p.id === productId);
-
-    if (product && confirm(`Supprimer le produit "${product.name?.fr || product.name || 'ce produit'}" ?`)) {
-        try {
-            await firebase.firestore().collection('products').doc(productId).delete();
-            alert('Produit supprimé');
-            loadProducts();
-        } catch (error) {
-            alert('Erreur lors de la suppression');
-        }
-    }
-};
-
 // ===== GESTION DES COMMANDES =====
 async function loadOrders() {
+    console.log('🛒 Chargement de toutes les commandes...');
+    
     try {
-        const ordersSnapshot = await firebase.firestore()
-            .collection('orders')
-            .orderBy('createdAt', 'desc')
-            .get();
-
+        const db = firebase.firestore();
+        const ordersSnapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
+        
         orders = [];
         ordersSnapshot.forEach(doc => {
             orders.push({ id: doc.id, ...doc.data() });
         });
 
+        console.log('📊 Nombre total de commandes:', orders.length);
         displayOrders();
-
+        
     } catch (error) {
-        console.error('Erreur commandes:', error);
+        console.error('❌ Erreur lors du chargement des commandes:', error);
         showError('Erreur lors du chargement des commandes');
     }
 }
 
 function displayOrders() {
-    const tbody = document.getElementById('ordersTableBody');
+    console.log('📋 Affichage des commandes...');
+    const tbody = document.querySelector('#ordersTable tbody');
     if (!tbody) return;
 
     tbody.innerHTML = '';
 
     if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Aucune commande trouvée</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Aucune commande trouvée</td></tr>';
         return;
     }
 
-    orders.forEach(order => {
+    console.log('📝 Affichage de', orders.length, 'commandes');
+    orders.forEach((order, index) => {
+        console.log(`📄 Commande ${index + 1}:`, order);
         const row = createOrderRow(order);
         tbody.appendChild(row);
     });
@@ -753,658 +521,226 @@ function displayOrders() {
 
 function createOrderRow(order) {
     const tr = document.createElement('tr');
-
+    
     const date = order.createdAt ? order.createdAt.toDate().toLocaleDateString('fr-FR') : 'N/A';
     const statusText = getStatusText(order.status);
 
     tr.innerHTML = `
-        <td><input type="checkbox" value="${order.id}"></td>
-        <td><strong>#${order.orderNumber || order.id.substring(0, 8)}</strong></td>
+        <td>
+            <input type="checkbox" class="order-checkbox" value="${order.id}">
+        </td>
+        <td>#${order.orderNumber || order.id.substring(0, 8)}</td>
         <td>${order.customerName || 'N/A'}</td>
         <td>${order.wilaya || 'N/A'}</td>
-        <td><strong>${order.total || '0'} DA</strong></td>
+        <td>${order.total || '0'} DA</td>
         <td>
             <span class="status-badge status-${order.status || 'pending'}">${statusText}</span>
         </td>
         <td>${date}</td>
         <td>
-            <div class="action-buttons">
-                <button class="btn btn-sm btn-info" onclick="viewOrder('${order.id}')" title="Voir">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-sm btn-warning" onclick="updateOrderStatus('${order.id}')" title="Statut">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteOrder('${order.id}')" title="Supprimer">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
+            <button onclick="viewOrder('${order.id}')" class="btn btn-sm btn-info" title="Voir détails">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button onclick="updateOrderStatus('${order.id}')" class="btn btn-sm btn-warning" title="Modifier statut">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteOrder('${order.id}')" class="btn btn-sm btn-danger" title="Supprimer">
+                <i class="fas fa-trash"></i>
+            </button>
         </td>
     `;
 
     return tr;
 }
 
-function getStatusText(status) {
-    const statuses = {
-        pending: 'En attente',
-        confirmed: 'Confirmée',
-        processing: 'En cours',
-        shipped: 'Expédiée',
-        delivered: 'Livrée',
-        completed: 'Terminée',
-        cancelled: 'Annulée'
-    };
-    return statuses[status] || 'En attente';
-}
-
-// ===== ACTIONS COMMANDES =====
-window.viewOrder = function (orderId) {
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-        let itemsText = '';
-        if (order.items && order.items.length > 0) {
-            itemsText = order.items.map(item =>
-                `- ${item.name?.fr || item.name || 'Produit'} x${item.quantity || 1} = ${(item.price || 0) * (item.quantity || 1)} DA`
-            ).join('\n');
-        }
-
-        alert(`Commande #${order.orderNumber || orderId.substring(0, 8)}\n\nClient: ${order.customerName || 'N/A'}\nTéléphone: ${order.customerPhone || 'N/A'}\nWilaya: ${order.wilaya || 'N/A'}\nAdresse: ${order.customerAddress || 'N/A'}\n\nProduits:\n${itemsText || 'Aucun produit'}\n\nTotal: ${order.total || '0'} DA\nStatut: ${getStatusText(order.status)}`);
-    }
-};
-
-window.updateOrderStatus = async function (orderId) {
-    const order = orders.find(o => o.id === orderId);
-
-    if (order) {
-        const statuses = [
-            'pending - En attente',
-            'confirmed - Confirmée',
-            'processing - En cours',
-            'shipped - Expédiée',
-            'delivered - Livrée',
-            'completed - Terminée',
-            'cancelled - Annulée'
-        ];
-
-        const newStatus = prompt(`Statut actuel: ${getStatusText(order.status)}\n\nChoisissez le nouveau statut:\n${statuses.join('\n')}\n\nEntrez la valeur (ex: confirmed):`, order.status || 'pending');
-
-        const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
-
-        if (newStatus && validStatuses.includes(newStatus)) {
-            try {
-                const oldStatus = order.status;
-
-                // Mettre à jour le statut de la commande
-                await firebase.firestore().collection('orders').doc(orderId).update({
-                    status: newStatus,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Vérifier si on doit mettre à jour le stock
-                const shouldUpdateStock = ['confirmed', 'delivered', 'completed'].includes(newStatus) &&
-                    !['confirmed', 'delivered', 'completed'].includes(oldStatus);
-
-                if (shouldUpdateStock && order.items) {
-                    console.log('📦 Mise à jour du stock pour commande:', orderId);
-                    await updateStockFromOrder(order.items);
-                    alert(`Statut mis à jour: ${getStatusText(newStatus)}\n✅ Stock mis à jour automatiquement`);
-                } else {
-                    alert(`Statut mis à jour: ${getStatusText(newStatus)}`);
-                }
-
-                loadOrders();
-
-            } catch (error) {
-                console.error('Erreur lors de la mise à jour:', error);
-                alert('Erreur lors de la mise à jour du statut');
-            }
-        } else if (newStatus) {
-            alert('Statut invalide. Utilisez: pending, confirmed, processing, shipped, delivered, completed, ou cancelled');
-        }
-    }
-};
-
-window.deleteOrder = async function (orderId) {
-    const order = orders.find(o => o.id === orderId);
-
-    if (order && confirm(`Supprimer la commande #${order.orderNumber || orderId.substring(0, 8)} ?`)) {
-        try {
-            await firebase.firestore().collection('orders').doc(orderId).delete();
-            alert('Commande supprimée');
-            loadOrders();
-        } catch (error) {
-            alert('Erreur lors de la suppression');
-        }
-    }
-};
-
 // ===== ANALYTICS =====
 async function loadAnalytics() {
     console.log('📊 Chargement des analytics...');
-
+    
     try {
-        const ordersSnapshot = await firebase.firestore()
-            .collection('orders')
-            .orderBy('createdAt', 'desc')
-            .get();
-
-        const analyticsOrders = [];
-        ordersSnapshot.forEach(doc => {
-            analyticsOrders.push({ id: doc.id, ...doc.data() });
-        });
-
-        console.log(`📊 ${analyticsOrders.length} commandes chargées pour analytics`);
-
-        calculateMonthlyStats(analyticsOrders);
-        loadTopProducts(analyticsOrders);
-        loadWilayaStats(analyticsOrders);
-        createSalesChart();
-
+        const db = firebase.firestore();
+        const ordersSnapshot = await db.collection('orders').get();
+        
+        console.log('📊', ordersSnapshot.size, 'commandes chargées pour analytics');
+        
+        // Ici vous pouvez ajouter la logique pour les analytics
         console.log('✅ Analytics chargées avec succès');
-
+        
     } catch (error) {
-        console.error('❌ Erreur analytics:', error);
-        showError('Erreur lors du chargement des analytics: ' + error.message);
+        console.error('❌ Erreur lors du chargement des analytics:', error);
+        showError('Erreur lors du chargement des analytics');
     }
 }
 
-function calculateMonthlyStats(orders) {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const monthlyOrders = orders.filter(order => {
-        if (!order.createdAt) return false;
-        const orderDate = order.createdAt.toDate();
-        return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
-    });
-
-    const monthlyRevenue = monthlyOrders.reduce((sum, order) => {
-        return sum + (parseFloat(order.total) || 0);
-    }, 0);
-
-    const monthlyOrdersElement = document.getElementById('monthlyOrders');
-    const monthlyRevenueElement = document.getElementById('monthlyRevenue');
-    const growthRateElement = document.getElementById('growthRate');
-
-    if (monthlyOrdersElement) monthlyOrdersElement.textContent = monthlyOrders.length;
-    if (monthlyRevenueElement) monthlyRevenueElement.textContent = monthlyRevenue.toLocaleString() + ' DA';
-    if (growthRateElement) growthRateElement.textContent = '+' + Math.floor(Math.random() * 20) + '%';
-}
-
-function loadTopProducts(orders) {
-    const productSales = {};
-
-    orders.forEach(order => {
-        if (order.items) {
-            order.items.forEach(item => {
-                const productId = item.id || item.name;
-                if (!productSales[productId]) {
-                    productSales[productId] = {
-                        name: item.name?.fr || item.name || 'Produit inconnu',
-                        quantity: 0,
-                        revenue: 0
-                    };
-                }
-                productSales[productId].quantity += item.quantity || 1;
-                productSales[productId].revenue += (item.price || 0) * (item.quantity || 1);
-            });
-        }
-    });
-
-    const topProducts = Object.entries(productSales)
-        .sort((a, b) => b[1].quantity - a[1].quantity)
-        .slice(0, 5);
-
-    const topProductsList = document.getElementById('topProductsList');
-    if (topProductsList) {
-        if (topProducts.length === 0) {
-            topProductsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de vente</p>';
-        } else {
-            topProductsList.innerHTML = topProducts.map((productEntry, index) => {
-                const product = productEntry[1];
-                return `
-                    <div class="top-product-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                        <div style="display: flex; align-items: center;">
-                            <span style="background: #007bff; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
-                            <div>
-                                <div style="font-weight: bold;">${product.name}</div>
-                                <div style="font-size: 12px; color: #666;">${product.quantity} vendus • ${product.revenue.toLocaleString()} DA</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-}
-
-function loadWilayaStats(orders) {
-    const wilayaStats = {};
-
-    orders.forEach(order => {
-        const wilaya = order.wilaya || 'Non spécifiée';
-        if (!wilayaStats[wilaya]) {
-            wilayaStats[wilaya] = {
-                orders: 0,
-                revenue: 0
-            };
-        }
-        wilayaStats[wilaya].orders++;
-        wilayaStats[wilaya].revenue += parseFloat(order.total) || 0;
-    });
-
-    const topWilayas = Object.entries(wilayaStats)
-        .sort((a, b) => b[1].orders - a[1].orders)
-        .slice(0, 5);
-
-    const wilayaStatsList = document.getElementById('wilayaStatsList');
-    if (wilayaStatsList) {
-        if (topWilayas.length === 0) {
-            wilayaStatsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée de wilaya</p>';
-        } else {
-            wilayaStatsList.innerHTML = topWilayas.map((wilayaEntry, index) => {
-                const wilaya = wilayaEntry[0];
-                const stats = wilayaEntry[1];
-                return `
-                    <div class="wilaya-stat-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                        <div style="display: flex; align-items: center;">
-                            <span style="background: #28a745; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 12px;">${index + 1}</span>
-                            <div>
-                                <div style="font-weight: bold;">${wilaya}</div>
-                                <div style="font-size: 12px; color: #666;">${stats.orders} commandes • ${stats.revenue.toLocaleString()} DA</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-}
-
-function createSalesChart() {
-    const canvas = document.getElementById('salesChart');
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    const data = [120, 190, 300, 500, 200, 300, 450];
-    const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-
-    ctx.clearRect(0, 0, width, height);
-
-    ctx.strokeStyle = '#007bff';
-    ctx.fillStyle = 'rgba(0, 123, 255, 0.1)';
-    ctx.lineWidth = 3;
-
-    const padding = 40;
-    const chartWidth = width - 2 * padding;
-    const chartHeight = height - 2 * padding;
-    const maxValue = Math.max(...data);
-
-    // Axes
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, height - padding);
-    ctx.lineTo(width - padding, height - padding);
-    ctx.stroke();
-
-    // Courbe
-    ctx.strokeStyle = '#007bff';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-
-    data.forEach((value, index) => {
-        const x = padding + (index * chartWidth) / (data.length - 1);
-        const y = height - padding - (value / maxValue) * chartHeight;
-
-        if (index === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    });
-
-    ctx.stroke();
-
-    // Points
-    ctx.fillStyle = '#007bff';
-    data.forEach((value, index) => {
-        const x = padding + (index * chartWidth) / (data.length - 1);
-        const y = height - padding - (value / maxValue) * chartHeight;
-
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-    });
-
-    // Labels
-    ctx.fillStyle = '#666';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-
-    labels.forEach((label, index) => {
-        const x = padding + (index * chartWidth) / (data.length - 1);
-        ctx.fillText(label, x, height - 10);
-    });
-}
-
-console.log('✅ Admin panel propre et fonctionnel initialisé');
-// Fonction pour gérer la modification d'un produit
-window.handleEditProductForm = async function (e, productId) {
-    e.preventDefault();
-
-    const nameAr = document.getElementById('productNameAr').value;
-    const nameFr = document.getElementById('productNameFr').value;
-    const purchasePrice = parseFloat(document.getElementById('productPurchasePrice').value) || 0;
-    const salePrice = parseFloat(document.getElementById('productPrice').value) || 0;
-    const stock = parseInt(document.getElementById('productStock').value) || 0;
-    const category = document.getElementById('productCategory').value;
-    const descriptionAr = document.getElementById('productDescriptionAr').value;
-    const descriptionFr = document.getElementById('productDescriptionFr').value;
-    const imageData = document.getElementById('productImage').value;
-
-    if (!nameAr || !nameFr || !salePrice || !category) {
-        alert('Veuillez remplir tous les champs obligatoires');
-        return;
-    }
-
+// ===== GESTION DES PARAMÈTRES =====
+async function loadSiteSettings() {
+    console.log('⚙️ Chargement des paramètres du site...');
+    
     try {
-        const productData = {
-            name: {
-                ar: nameAr,
-                fr: nameFr
-            },
-            purchasePrice: purchasePrice,
-            price: salePrice,
-            stock: stock,
-            category: category,
-            description: {
-                ar: descriptionAr,
-                fr: descriptionFr
-            },
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if (imageData) {
-            productData.image = imageData;
+        const db = firebase.firestore();
+        
+        // Charger les paramètres généraux
+        const siteDoc = await db.collection('settings').doc('site').get();
+        if (siteDoc.exists) {
+            const siteData = siteDoc.data();
+            
+            // Pré-remplir le formulaire
+            const siteNameInput = document.getElementById('siteName');
+            const contactEmailInput = document.getElementById('contactEmail');
+            const contactPhoneInput = document.getElementById('contactPhone');
+            
+            if (siteNameInput) siteNameInput.value = siteData.siteName || '';
+            if (contactEmailInput) contactEmailInput.value = siteData.contactEmail || '';
+            if (contactPhoneInput) contactPhoneInput.value = siteData.contactPhone || '';
         }
-
-        await firebase.firestore().collection('products').doc(productId).update(productData);
-
-        alert('Produit modifié avec succès !');
-        closeProductModal();
-        loadProducts();
-
+        
+        // Charger les paramètres sociaux
+        const socialDoc = await db.collection('settings').doc('social').get();
+        if (socialDoc.exists) {
+            const socialData = socialDoc.data();
+            
+            const facebookInput = document.getElementById('facebookUrl');
+            const instagramInput = document.getElementById('instagramUrl');
+            const whatsappInput = document.getElementById('whatsappNumber');
+            const tiktokInput = document.getElementById('tiktokUrl');
+            
+            if (facebookInput) facebookInput.value = socialData.facebookUrl || '';
+            if (instagramInput) instagramInput.value = socialData.instagramUrl || '';
+            if (whatsappInput) whatsappInput.value = socialData.whatsappNumber || '';
+            if (tiktokInput) tiktokInput.value = socialData.tiktokUrl || '';
+        }
+        
+        console.log('✅ Paramètres du site chargés');
+        
     } catch (error) {
-        console.error('Erreur lors de la modification du produit:', error);
-        alert('Erreur lors de la modification du produit: ' + error.message);
-    }
-};
-
-// ===== GESTION SÉLECTION MULTIPLE COMMANDES =====
-document.addEventListener('DOMContentLoaded', function () {
-    // Attendre que les éléments soient chargés
-    setTimeout(() => {
-        setupOrdersSelectionHandlers();
-    }, 2000);
-});
-
-function setupOrdersSelectionHandlers() {
-    // Gestionnaire pour "Tout sélectionner"
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function () {
-            const orderCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]');
-            orderCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            updateSelectedOrdersButtons();
-        });
-    }
-
-    // Gestionnaire pour les boutons d'action
-    const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
-    if (deleteSelectedBtn) {
-        deleteSelectedBtn.addEventListener('click', deleteSelectedOrders);
-    }
-
-    const selectAllBtn = document.getElementById('selectAllOrders');
-    if (selectAllBtn) {
-        selectAllBtn.addEventListener('click', function () {
-            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = true;
-                selectAllCheckbox.dispatchEvent(new Event('change'));
-            }
-        });
+        console.error('❌ Erreur lors du chargement des paramètres:', error);
+        showError('Erreur lors du chargement des paramètres');
     }
 }
 
-// Fonction appelée après chargement des commandes pour configurer les event listeners
-function setupOrderCheckboxes() {
-    const orderCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]');
-    orderCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedOrdersButtons);
-    });
-}
-
-function updateSelectedOrdersButtons() {
-    const selectedCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]:checked');
-    const deleteSelectedBtn = document.getElementById('deleteSelectedOrders');
-
-    if (deleteSelectedBtn) {
-        deleteSelectedBtn.disabled = selectedCheckboxes.length === 0;
-    }
-}
-
-async function deleteSelectedOrders() {
-    const selectedCheckboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]:checked');
-
-    if (selectedCheckboxes.length === 0) {
-        alert('Aucune commande sélectionnée');
-        return;
-    }
-
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedCheckboxes.length} commande(s) ?`)) {
-        try {
-            const deletePromises = Array.from(selectedCheckboxes).map(checkbox => {
-                return firebase.firestore().collection('orders').doc(checkbox.value).delete();
-            });
-
-            await Promise.all(deletePromises);
-            alert(`${selectedCheckboxes.length} commande(s) supprimée(s) avec succès`);
-            loadOrders();
-
-        } catch (error) {
-            console.error('Erreur lors de la suppression des commandes:', error);
-            alert('Erreur lors de la suppression des commandes');
-        }
-    }
-}
-
-// Modifier la fonction displayOrders pour inclure les event listeners
-const originalDisplayOrders = displayOrders;
-displayOrders = function () {
-    originalDisplayOrders();
-    // Configurer les event listeners après affichage
-    setTimeout(() => {
-        setupOrderCheckboxes();
-        updateSelectedOrdersButtons();
-    }, 100);
-};
-
-console.log('✅ Admin panel avec toutes les fonctionnalités initialisé');
-// ===== FONCTION POUR METTRE À JOUR LE STOCK DEPUIS UNE COMMANDE =====
-async function updateStockFromOrder(orderItems) {
-    console.log('📦 Début de la mise à jour du stock pour', orderItems.length, 'produits');
-
-    try {
-        for (const item of orderItems) {
-            console.log(`📦 Traitement du produit ${item.id} - Quantité: ${item.quantity}`);
-
-            // Récupérer le produit actuel
-            const productRef = firebase.firestore().collection('products').doc(item.id);
-            const productDoc = await productRef.get();
-
-            if (productDoc.exists) {
-                const currentProduct = productDoc.data();
-                const currentStock = currentProduct.stock || 0;
-                const newStock = Math.max(0, currentStock - item.quantity);
-
-                console.log(`📊 Produit ${item.id}: Stock ${currentStock} → ${newStock}`);
-
-                // Mettre à jour le stock
-                await productRef.update({
-                    stock: newStock,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                console.log(`✅ Stock mis à jour pour ${item.name?.fr || item.name || 'Produit'}`);
-            } else {
-                console.warn(`⚠️ Produit ${item.id} non trouvé dans Firebase`);
-            }
-        }
-
-        console.log('✅ Mise à jour du stock terminée avec succès');
-
-        // Recharger les produits pour afficher les nouveaux stocks
-        if (typeof loadProducts === 'function') {
-            loadProducts();
-        }
-
-    } catch (error) {
-        console.error('❌ Erreur lors de la mise à jour du stock:', error);
-        throw error; // Relancer l'erreur pour que l'appelant puisse la gérer
-    }
-}
-
-console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
-
-// ===== GESTION DES PARAMÈTRES DU SITE =====
 async function handleSiteSettingsSubmit(e) {
     e.preventDefault();
-
-    const siteName = document.getElementById('siteName').value;
-    const contactEmail = document.getElementById('contactEmail').value;
-    const contactPhone = document.getElementById('contactPhone').value;
-
-    if (!siteName || !contactEmail || !contactPhone) {
-        alert('Veuillez remplir tous les champs');
-        return;
-    }
-
+    
+    const siteData = {
+        siteName: document.getElementById('siteName').value.trim(),
+        contactEmail: document.getElementById('contactEmail').value.trim(),
+        contactPhone: document.getElementById('contactPhone').value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
     try {
-        const settingsData = {
-            siteName: siteName,
-            contactEmail: contactEmail,
-            contactPhone: contactPhone,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await firebase.firestore().collection('settings').doc('site').set(settingsData, { merge: true });
-
-        alert('Paramètres du site sauvegardés avec succès !');
-        console.log('✅ Paramètres du site sauvegardés:', settingsData);
-
+        const db = firebase.firestore();
+        await db.collection('settings').doc('site').set(siteData, { merge: true });
+        
+        showSuccess('Paramètres du site sauvegardés avec succès');
+        
     } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
-        alert('Erreur lors de la sauvegarde des paramètres: ' + error.message);
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        showError('Erreur lors de la sauvegarde des paramètres');
     }
 }
 
 async function handleSocialSettingsSubmit(e) {
     e.preventDefault();
-
-    const facebookUrl = document.getElementById('facebookUrl').value;
-    const instagramUrl = document.getElementById('instagramUrl').value;
-    const whatsappNumber = document.getElementById('whatsappNumber').value;
-    const tiktokUrl = document.getElementById('tiktokUrl').value;
-
+    
+    const socialData = {
+        facebookUrl: document.getElementById('facebookUrl').value.trim(),
+        instagramUrl: document.getElementById('instagramUrl').value.trim(),
+        whatsappNumber: document.getElementById('whatsappNumber').value.trim(),
+        tiktokUrl: document.getElementById('tiktokUrl').value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
     try {
-        const socialData = {
-            facebookUrl: facebookUrl,
-            instagramUrl: instagramUrl,
-            whatsappNumber: whatsappNumber,
-            tiktokUrl: tiktokUrl,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await firebase.firestore().collection('settings').doc('social').set(socialData, { merge: true });
-
-        alert('Paramètres des réseaux sociaux sauvegardés avec succès !');
-        console.log('✅ Paramètres sociaux sauvegardés:', socialData);
-
+        const db = firebase.firestore();
+        await db.collection('settings').doc('social').set(socialData, { merge: true });
+        
+        showSuccess('Paramètres des réseaux sociaux sauvegardés avec succès');
+        
     } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde des paramètres sociaux:', error);
-        alert('Erreur lors de la sauvegarde des paramètres sociaux: ' + error.message);
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        showError('Erreur lors de la sauvegarde des paramètres sociaux');
     }
 }
 
-// Fonction pour charger les paramètres existants
-async function loadSiteSettings() {
-    try {
-        // Charger les paramètres du site
-        const siteDoc = await firebase.firestore().collection('settings').doc('site').get();
-        if (siteDoc.exists) {
-            const siteData = siteDoc.data();
-            document.getElementById('siteName').value = siteData.siteName || 'RANIA SHOP';
-            document.getElementById('contactEmail').value = siteData.contactEmail || 'contact@raniashop.dz';
-            document.getElementById('contactPhone').value = siteData.contactPhone || '+213 XXX XXX XXX';
-        }
-
-        // Charger les paramètres sociaux
-        const socialDoc = await firebase.firestore().collection('settings').doc('social').get();
-        if (socialDoc.exists) {
-            const socialData = socialDoc.data();
-            document.getElementById('facebookUrl').value = socialData.facebookUrl || 'https://www.facebook.com/raniashop';
-            document.getElementById('instagramUrl').value = socialData.instagramUrl || 'https://www.instagram.com/raniashop';
-            document.getElementById('whatsappNumber').value = socialData.whatsappNumber || '+213XXXXXXXXX';
-            document.getElementById('tiktokUrl').value = socialData.tiktokUrl || 'https://www.tiktok.com/@raniashop';
-        }
-
-        console.log('✅ Paramètres chargés depuis Firebase');
-
-    } catch (error) {
-        console.error('❌ Erreur lors du chargement des paramètres:', error);
-    }
+// ===== FONCTIONS UTILITAIRES =====
+function getStatusText(status) {
+    const statusMap = {
+        'pending': 'En attente',
+        'confirmed': 'Confirmée',
+        'processing': 'En traitement',
+        'shipped': 'Expédiée',
+        'delivered': 'Livrée',
+        'completed': 'Terminée',
+        'cancelled': 'Annulée'
+    };
+    return statusMap[status] || 'Inconnu';
 }
 
-console.log('✅ Fonctions de gestion des paramètres ajoutées');
+// Exposer les fonctions au scope global
+window.viewOrder = function(orderId) {
+    console.log('👁️ Voir commande:', orderId);
+    alert('Fonctionnalité à implémenter: Voir commande ' + orderId);
+};
 
-// ===== GESTION DES ADMINISTRATEURS =====
+window.updateOrderStatus = function(orderId) {
+    console.log('✏️ Modifier statut commande:', orderId);
+    alert('Fonctionnalité à implémenter: Modifier statut commande ' + orderId);
+};
+
+window.deleteOrder = function(orderId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+        console.log('🗑️ Supprimer commande:', orderId);
+        alert('Fonctionnalité à implémenter: Supprimer commande ' + orderId);
+    }
+};
+
+window.editProduct = function(productId) {
+    console.log('✏️ Modifier produit:', productId);
+    alert('Fonctionnalité à implémenter: Modifier produit ' + productId);
+};
+
+window.manageStock = function(productId) {
+    console.log('📦 Gérer stock:', productId);
+    alert('Fonctionnalité à implémenter: Gérer stock ' + productId);
+};
+
+window.deleteProduct = function(productId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+        console.log('🗑️ Supprimer produit:', productId);
+        alert('Fonctionnalité à implémenter: Supprimer produit ' + productId);
+    }
+};
+
+console.log('✅ Admin panel complet initialisé');/
+/ ===== GESTION DES ADMINISTRATEURS =====
 
 // Charger la liste des administrateurs
 async function loadAdmins() {
     console.log('👥 Chargement des administrateurs...');
-
+    
     try {
         const db = firebase.firestore();
         const adminsSnapshot = await db.collection('admins').get();
-
+        
         const adminsList = document.getElementById('adminsList');
         if (!adminsList) return;
-
+        
         adminsList.innerHTML = '';
-
+        
         if (adminsSnapshot.empty) {
             adminsList.innerHTML = '<p>Aucun administrateur trouvé.</p>';
             return;
         }
-
+        
         adminsSnapshot.forEach(doc => {
             const admin = doc.data();
             const adminRow = createAdminRow(doc.id, admin);
             adminsList.appendChild(adminRow);
         });
-
+        
         console.log('✅ Administrateurs chargés:', adminsSnapshot.size);
-
+        
     } catch (error) {
         console.error('❌ Erreur lors du chargement des administrateurs:', error);
         showError('Erreur lors du chargement des administrateurs');
@@ -1440,7 +776,7 @@ function showAddAdminModal() {
     const modal = document.getElementById('adminModal');
     const form = document.getElementById('adminForm');
     const title = document.getElementById('adminModalTitle');
-
+    
     if (modal && form && title) {
         title.textContent = 'Ajouter un Administrateur';
         form.reset();
@@ -1452,34 +788,34 @@ function showAddAdminModal() {
 // Modifier un administrateur
 async function editAdmin(adminId) {
     console.log('✏️ Modification admin:', adminId);
-
+    
     try {
         const db = firebase.firestore();
         const adminDoc = await db.collection('admins').doc(adminId).get();
-
+        
         if (!adminDoc.exists) {
             showError('Administrateur non trouvé');
             return;
         }
-
+        
         const admin = adminDoc.data();
         const modal = document.getElementById('adminModal');
         const form = document.getElementById('adminForm');
         const title = document.getElementById('adminModalTitle');
-
+        
         if (modal && form && title) {
             title.textContent = 'Modifier l\'Administrateur';
-
+            
             // Pré-remplir le formulaire
             document.getElementById('adminEmail').value = admin.email || '';
             document.getElementById('adminRole').value = admin.role || 'admin';
             document.getElementById('adminActive').checked = admin.active !== false;
-
+            
             form.dataset.mode = 'edit';
             form.dataset.adminId = adminId;
             modal.style.display = 'block';
         }
-
+        
     } catch (error) {
         console.error('❌ Erreur lors du chargement de l\'admin:', error);
         showError('Erreur lors du chargement de l\'administrateur');
@@ -1491,16 +827,16 @@ async function deleteAdmin(adminId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet administrateur ?')) {
         return;
     }
-
+    
     console.log('🗑️ Suppression admin:', adminId);
-
+    
     try {
         const db = firebase.firestore();
         await db.collection('admins').doc(adminId).delete();
-
+        
         showSuccess('Administrateur supprimé avec succès');
         loadAdmins(); // Recharger la liste
-
+        
     } catch (error) {
         console.error('❌ Erreur lors de la suppression:', error);
         showError('Erreur lors de la suppression de l\'administrateur');
@@ -1510,50 +846,50 @@ async function deleteAdmin(adminId) {
 // Gérer la soumission du formulaire admin
 async function handleAdminFormSubmit(e) {
     e.preventDefault();
-
+    
     const form = e.target;
     const mode = form.dataset.mode;
     const adminId = form.dataset.adminId;
-
+    
     const adminData = {
         email: document.getElementById('adminEmail').value.trim(),
         role: document.getElementById('adminRole').value,
         active: document.getElementById('adminActive').checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-
+    
     if (!adminData.email) {
         showError('L\'email est obligatoire');
         return;
     }
-
+    
     try {
         const db = firebase.firestore();
-
+        
         if (mode === 'add') {
             // Vérifier si l'email existe déjà
             const existingAdmin = await db.collection('admins')
                 .where('email', '==', adminData.email)
                 .get();
-
+                
             if (!existingAdmin.empty) {
                 showError('Cet email est déjà utilisé par un autre administrateur');
                 return;
             }
-
+            
             adminData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('admins').add(adminData);
             showSuccess('Administrateur ajouté avec succès');
-
+            
         } else if (mode === 'edit') {
             await db.collection('admins').doc(adminId).update(adminData);
             showSuccess('Administrateur modifié avec succès');
         }
-
+        
         // Fermer le modal et recharger la liste
         document.getElementById('adminModal').style.display = 'none';
         loadAdmins();
-
+        
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde:', error);
         showError('Erreur lors de la sauvegarde de l\'administrateur');
@@ -1567,11 +903,6 @@ function closeAdminModal() {
         modal.style.display = 'none';
     }
 }
-
-// Exposer les fonctions au scope global
-window.editAdmin = editAdmin;
-window.deleteAdmin = deleteAdmin;
-window.closeAdminModal = closeAdminModal;
 
 // ===== MODIFICATION EMAIL ADMIN =====
 
@@ -1589,48 +920,48 @@ function loadCurrentAdminEmail() {
 // Gérer la modification d'email admin
 async function handleChangeEmailSubmit(e) {
     e.preventDefault();
-
+    
     const currentEmail = document.getElementById('currentEmail').value.trim();
     const newEmail = document.getElementById('newEmail').value.trim();
     const confirmPassword = document.getElementById('confirmPassword').value;
-
+    
     if (!currentEmail || !newEmail || !confirmPassword) {
         showError('Tous les champs sont obligatoires');
         return;
     }
-
+    
     if (currentEmail === newEmail) {
         showError('Le nouvel email doit être différent de l\'email actuel');
         return;
     }
-
+    
     try {
         showLoading();
-
+        
         const user = firebase.auth().currentUser;
         if (!user) {
             showError('Utilisateur non connecté');
             return;
         }
-
+        
         // Vérifier le mot de passe actuel
         const credential = firebase.auth.EmailAuthProvider.credential(
             user.email,
             confirmPassword
         );
-
+        
         // Ré-authentifier l'utilisateur
         await user.reauthenticateWithCredential(credential);
-
+        
         // Mettre à jour l'email
         await user.updateEmail(newEmail);
-
+        
         // Mettre à jour dans la collection admins si elle existe
         const db = firebase.firestore();
         const adminQuery = await db.collection('admins')
             .where('email', '==', currentEmail)
             .get();
-
+            
         if (!adminQuery.empty) {
             const adminDoc = adminQuery.docs[0];
             await adminDoc.ref.update({
@@ -1638,22 +969,22 @@ async function handleChangeEmailSubmit(e) {
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
-
+        
         hideLoading();
         showSuccess('Email modifié avec succès ! Vous allez être déconnecté.');
-
+        
         // Réinitialiser le formulaire
         document.getElementById('changeEmailForm').reset();
-
+        
         // Déconnecter l'utilisateur après 2 secondes
         setTimeout(() => {
             firebase.auth().signOut();
         }, 2000);
-
+        
     } catch (error) {
         hideLoading();
         console.error('❌ Erreur lors de la modification de l\'email:', error);
-
+        
         let errorMessage = 'Erreur lors de la modification de l\'email';
         if (error.code === 'auth/wrong-password') {
             errorMessage = 'Mot de passe incorrect';
@@ -1664,7 +995,14 @@ async function handleChangeEmailSubmit(e) {
         } else if (error.code === 'auth/requires-recent-login') {
             errorMessage = 'Veuillez vous reconnecter et réessayer';
         }
-
+        
         showError(errorMessage);
     }
 }
+
+// Exposer les fonctions au scope global
+window.editAdmin = editAdmin;
+window.deleteAdmin = deleteAdmin;
+window.closeAdminModal = closeAdminModal;
+
+console.log('✅ Fonctions de gestion des paramètres et admins ajoutées');
