@@ -1263,8 +1263,9 @@ async function updateStockFromOrder(orderItems) {
     }
 }
 
-console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');// =
-==== GESTION DES PARAMÈTRES DU SITE =====
+console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
+
+// ===== GESTION DES PARAMÈTRES DU SITE =====
 async function handleSiteSettingsSubmit(e) {
     e.preventDefault();
     
