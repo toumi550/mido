@@ -94,6 +94,12 @@ function setupEventListeners() {
         if (adminForm) {
             adminForm.addEventListener('submit', handleAdminFormSubmit);
         }
+
+        // Event listener pour la modification d'email admin
+        const changeEmailForm = document.getElementById('changeEmailForm');
+        if (changeEmailForm) {
+            changeEmailForm.addEventListener('submit', handleChangeEmailSubmit);
+        }
     }, 1000);
 }
 
@@ -226,6 +232,9 @@ function loadSectionData(sectionName) {
         case 'settings':
             loadSiteSettings();
             loadAdmins();
+            break;
+        case 'account':
+            loadCurrentAdminEmail();
             break;
     }
 }
@@ -1562,4 +1571,99 @@ function closeAdminModal() {
 // Exposer les fonctions au scope global
 window.editAdmin = editAdmin;
 window.deleteAdmin = deleteAdmin;
-window.closeAdminModal = closeAdminModal;
+window.closeAdminModal = closeAdminModal;/
+/ ===== MODIFICATION EMAIL ADMIN =====
+
+// Charger l'email actuel de l'admin connecté
+function loadCurrentAdminEmail() {
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+        const currentEmailInput = document.getElementById('currentEmail');
+        if (currentEmailInput) {
+            currentEmailInput.value = currentUser.email;
+        }
+    }
+}
+
+// Gérer la modification d'email admin
+async function handleChangeEmailSubmit(e) {
+    e.preventDefault();
+    
+    const currentEmail = document.getElementById('currentEmail').value.trim();
+    const newEmail = document.getElementById('newEmail').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (!currentEmail || !newEmail || !confirmPassword) {
+        showError('Tous les champs sont obligatoires');
+        return;
+    }
+    
+    if (currentEmail === newEmail) {
+        showError('Le nouvel email doit être différent de l\'email actuel');
+        return;
+    }
+    
+    try {
+        showLoading();
+        
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            showError('Utilisateur non connecté');
+            return;
+        }
+        
+        // Vérifier le mot de passe actuel
+        const credential = firebase.auth.EmailAuthProvider.credential(
+            user.email,
+            confirmPassword
+        );
+        
+        // Ré-authentifier l'utilisateur
+        await user.reauthenticateWithCredential(credential);
+        
+        // Mettre à jour l'email
+        await user.updateEmail(newEmail);
+        
+        // Mettre à jour dans la collection admins si elle existe
+        const db = firebase.firestore();
+        const adminQuery = await db.collection('admins')
+            .where('email', '==', currentEmail)
+            .get();
+            
+        if (!adminQuery.empty) {
+            const adminDoc = adminQuery.docs[0];
+            await adminDoc.ref.update({
+                email: newEmail,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        hideLoading();
+        showSuccess('Email modifié avec succès ! Vous allez être déconnecté.');
+        
+        // Réinitialiser le formulaire
+        document.getElementById('changeEmailForm').reset();
+        
+        // Déconnecter l'utilisateur après 2 secondes
+        setTimeout(() => {
+            firebase.auth().signOut();
+        }, 2000);
+        
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Erreur lors de la modification de l\'email:', error);
+        
+        let errorMessage = 'Erreur lors de la modification de l\'email';
+        if (error.code === 'auth/wrong-password') {
+            errorMessage = 'Mot de passe incorrect';
+        } else if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'Cet email est déjà utilisé';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Format d\'email invalide';
+        } else if (error.code === 'auth/requires-recent-login') {
+            errorMessage = 'Veuillez vous reconnecter et réessayer';
+        }
+        
+        showError(errorMessage);
+    }
+}

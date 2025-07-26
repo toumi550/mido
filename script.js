@@ -1278,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== CHARGEMENT DES PARAMÈTRES DU SITE =====
 async function loadSiteSettingsFromFirebase() {
     console.log('⚙️ Chargement des paramètres du site...');
-    
+
     try {
         if (typeof firebase === 'undefined' || !firebase.firestore) {
             console.log('⚠️ Firebase non disponible, utilisation des valeurs par défaut');
@@ -1286,27 +1286,27 @@ async function loadSiteSettingsFromFirebase() {
         }
 
         const db = firebase.firestore();
-        
+
         // Charger les paramètres généraux du site
         const siteDoc = await db.collection('settings').doc('site').get();
         if (siteDoc.exists) {
             const siteData = siteDoc.data();
             console.log('✅ Paramètres du site chargés:', siteData);
-            
+
             // Mettre à jour les éléments du site avec les nouvelles valeurs
             updateSiteElements(siteData);
         }
-        
+
         // Charger les paramètres des réseaux sociaux
         const socialDoc = await db.collection('settings').doc('social').get();
         if (socialDoc.exists) {
             const socialData = socialDoc.data();
             console.log('✅ Paramètres sociaux chargés:', socialData);
-            
+
             // Mettre à jour les liens sociaux
             updateSocialLinks(socialData);
         }
-        
+
     } catch (error) {
         console.error('❌ Erreur lors du chargement des paramètres:', error);
     }
@@ -1320,11 +1320,11 @@ function updateSiteElements(siteData) {
         titleElements.forEach(el => {
             if (el) el.textContent = siteData.siteName;
         });
-        
+
         // Mettre à jour le titre de la page
         document.title = siteData.siteName;
     }
-    
+
     // Mettre à jour l'email de contact
     if (siteData.contactEmail) {
         const emailElements = document.querySelectorAll('.contact-email');
@@ -1335,7 +1335,7 @@ function updateSiteElements(siteData) {
             }
         });
     }
-    
+
     // Mettre à jour le téléphone de contact
     if (siteData.contactPhone) {
         const phoneElements = document.querySelectorAll('.contact-phone');
@@ -1346,7 +1346,7 @@ function updateSiteElements(siteData) {
             }
         });
     }
-    
+
     console.log('✅ Éléments du site mis à jour avec les paramètres Firebase');
 }
 
@@ -1359,7 +1359,7 @@ function updateSocialLinks(socialData) {
             if (link) link.href = socialData.facebookUrl;
         });
     }
-    
+
     // Mettre à jour Instagram
     if (socialData.instagramUrl) {
         const igLinks = document.querySelectorAll('.social-instagram');
@@ -1367,7 +1367,7 @@ function updateSocialLinks(socialData) {
             if (link) link.href = socialData.instagramUrl;
         });
     }
-    
+
     // Mettre à jour WhatsApp
     if (socialData.whatsappNumber) {
         const waLinks = document.querySelectorAll('.social-whatsapp');
@@ -1375,7 +1375,7 @@ function updateSocialLinks(socialData) {
             if (link) link.href = `https://wa.me/${socialData.whatsappNumber.replace(/[^0-9]/g, '')}`;
         });
     }
-    
+
     // Mettre à jour TikTok
     if (socialData.tiktokUrl) {
         const ttLinks = document.querySelectorAll('.social-tiktok');
@@ -1383,6 +1383,6 @@ function updateSocialLinks(socialData) {
             if (link) link.href = socialData.tiktokUrl;
         });
     }
-    
+
     console.log('✅ Liens sociaux mis à jour avec les paramètres Firebase');
 }
