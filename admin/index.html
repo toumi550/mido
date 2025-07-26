@@ -411,6 +411,20 @@
                             <button type="submit" class="btn btn-primary">Sauvegarder</button>
                         </form>
                     </div>
+
+                    <div class="settings-card">
+                        <h4>Gestion des Administrateurs</h4>
+                        <div class="admin-management">
+                            <div class="admin-header">
+                                <button id="addAdminBtn" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Ajouter un Admin
+                                </button>
+                            </div>
+                            <div id="adminsList" class="admins-list">
+                                <!-- Les administrateurs seront chargés ici -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -521,6 +535,40 @@
             <div class="modal-body" id="orderDetails">
                 <!-- Order details will be loaded here -->
             </div>
+        </div>
+    </div>
+
+    <!-- Admin Management Modal -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="adminModalTitle">Ajouter un Administrateur</h3>
+                <button class="close-modal" onclick="closeAdminModal()">&times;</button>
+            </div>
+            <form id="adminForm" class="modal-body">
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="adminEmail" required placeholder="admin@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Rôle</label>
+                    <select id="adminRole">
+                        <option value="admin">Administrateur</option>
+                        <option value="super_admin">Super Administrateur</option>
+                        <option value="moderator">Modérateur</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="adminActive" checked>
+                        Compte actif
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeAdminModal()" class="btn btn-secondary">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Sauvegarder</button>
+                </div>
+            </form>
         </div>
     </div>
 

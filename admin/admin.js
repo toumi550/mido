@@ -54,7 +54,7 @@ function setupEventListeners() {
     // Menu hamburger mobile
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function() {
+        mobileMenuToggle.addEventListener('click', function () {
             const sidebar = document.querySelector('.admin-sidebar');
             if (sidebar) {
                 sidebar.classList.toggle('mobile-open');
@@ -82,6 +82,17 @@ function setupEventListeners() {
         const socialSettingsForm = document.getElementById('socialSettingsForm');
         if (socialSettingsForm) {
             socialSettingsForm.addEventListener('submit', handleSocialSettingsSubmit);
+        }
+
+        // Event listeners pour la gestion des admins
+        const addAdminBtn = document.getElementById('addAdminBtn');
+        if (addAdminBtn) {
+            addAdminBtn.addEventListener('click', showAddAdminModal);
+        }
+
+        const adminForm = document.getElementById('adminForm');
+        if (adminForm) {
+            adminForm.addEventListener('submit', handleAdminFormSubmit);
         }
     }, 1000);
 }
@@ -214,6 +225,7 @@ function loadSectionData(sectionName) {
             break;
         case 'settings':
             loadSiteSettings();
+            loadAdmins();
             break;
     }
 }
@@ -1268,16 +1280,16 @@ console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
 // ===== GESTION DES PARAMÈTRES DU SITE =====
 async function handleSiteSettingsSubmit(e) {
     e.preventDefault();
-    
+
     const siteName = document.getElementById('siteName').value;
     const contactEmail = document.getElementById('contactEmail').value;
     const contactPhone = document.getElementById('contactPhone').value;
-    
+
     if (!siteName || !contactEmail || !contactPhone) {
         alert('Veuillez remplir tous les champs');
         return;
     }
-    
+
     try {
         const settingsData = {
             siteName: siteName,
@@ -1285,12 +1297,12 @@ async function handleSiteSettingsSubmit(e) {
             contactPhone: contactPhone,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
+
         await firebase.firestore().collection('settings').doc('site').set(settingsData, { merge: true });
-        
+
         alert('Paramètres du site sauvegardés avec succès !');
         console.log('✅ Paramètres du site sauvegardés:', settingsData);
-        
+
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
         alert('Erreur lors de la sauvegarde des paramètres: ' + error.message);
@@ -1299,12 +1311,12 @@ async function handleSiteSettingsSubmit(e) {
 
 async function handleSocialSettingsSubmit(e) {
     e.preventDefault();
-    
+
     const facebookUrl = document.getElementById('facebookUrl').value;
     const instagramUrl = document.getElementById('instagramUrl').value;
     const whatsappNumber = document.getElementById('whatsappNumber').value;
     const tiktokUrl = document.getElementById('tiktokUrl').value;
-    
+
     try {
         const socialData = {
             facebookUrl: facebookUrl,
@@ -1313,12 +1325,12 @@ async function handleSocialSettingsSubmit(e) {
             tiktokUrl: tiktokUrl,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
+
         await firebase.firestore().collection('settings').doc('social').set(socialData, { merge: true });
-        
+
         alert('Paramètres des réseaux sociaux sauvegardés avec succès !');
         console.log('✅ Paramètres sociaux sauvegardés:', socialData);
-        
+
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde des paramètres sociaux:', error);
         alert('Erreur lors de la sauvegarde des paramètres sociaux: ' + error.message);
@@ -1336,7 +1348,7 @@ async function loadSiteSettings() {
             document.getElementById('contactEmail').value = siteData.contactEmail || 'contact@raniashop.dz';
             document.getElementById('contactPhone').value = siteData.contactPhone || '+213 XXX XXX XXX';
         }
-        
+
         // Charger les paramètres sociaux
         const socialDoc = await firebase.firestore().collection('settings').doc('social').get();
         if (socialDoc.exists) {
@@ -1346,12 +1358,208 @@ async function loadSiteSettings() {
             document.getElementById('whatsappNumber').value = socialData.whatsappNumber || '+213XXXXXXXXX';
             document.getElementById('tiktokUrl').value = socialData.tiktokUrl || 'https://www.tiktok.com/@raniashop';
         }
-        
+
         console.log('✅ Paramètres chargés depuis Firebase');
-        
+
     } catch (error) {
         console.error('❌ Erreur lors du chargement des paramètres:', error);
     }
 }
 
 console.log('✅ Fonctions de gestion des paramètres ajoutées');
+
+// ===== GESTION DES ADMINISTRATEURS =====
+
+// Charger la liste des administrateurs
+async function loadAdmins() {
+    console.log('👥 Chargement des administrateurs...');
+    
+    try {
+        const db = firebase.firestore();
+        const adminsSnapshot = await db.collection('admins').get();
+        
+        const adminsList = document.getElementById('adminsList');
+        if (!adminsList) return;
+        
+        adminsList.innerHTML = '';
+        
+        if (adminsSnapshot.empty) {
+            adminsList.innerHTML = '<p>Aucun administrateur trouvé.</p>';
+            return;
+        }
+        
+        adminsSnapshot.forEach(doc => {
+            const admin = doc.data();
+            const adminRow = createAdminRow(doc.id, admin);
+            adminsList.appendChild(adminRow);
+        });
+        
+        console.log('✅ Administrateurs chargés:', adminsSnapshot.size);
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des administrateurs:', error);
+        showError('Erreur lors du chargement des administrateurs');
+    }
+}
+
+// Créer une ligne d'administrateur
+function createAdminRow(adminId, admin) {
+    const row = document.createElement('div');
+    row.className = 'admin-row';
+    row.innerHTML = `
+        <div class="admin-info">
+            <strong>${admin.email}</strong>
+            <span class="admin-role">${admin.role || 'Admin'}</span>
+            <span class="admin-status ${admin.active ? 'active' : 'inactive'}">
+                ${admin.active ? 'Actif' : 'Inactif'}
+            </span>
+        </div>
+        <div class="admin-actions">
+            <button onclick="editAdmin('${adminId}')" class="btn-edit" title="Modifier">
+                ✏️
+            </button>
+            <button onclick="deleteAdmin('${adminId}')" class="btn-delete" title="Supprimer">
+                🗑️
+            </button>
+        </div>
+    `;
+    return row;
+}
+
+// Afficher le modal d'ajout d'administrateur
+function showAddAdminModal() {
+    const modal = document.getElementById('adminModal');
+    const form = document.getElementById('adminForm');
+    const title = document.getElementById('adminModalTitle');
+    
+    if (modal && form && title) {
+        title.textContent = 'Ajouter un Administrateur';
+        form.reset();
+        form.dataset.mode = 'add';
+        modal.style.display = 'block';
+    }
+}
+
+// Modifier un administrateur
+async function editAdmin(adminId) {
+    console.log('✏️ Modification admin:', adminId);
+    
+    try {
+        const db = firebase.firestore();
+        const adminDoc = await db.collection('admins').doc(adminId).get();
+        
+        if (!adminDoc.exists) {
+            showError('Administrateur non trouvé');
+            return;
+        }
+        
+        const admin = adminDoc.data();
+        const modal = document.getElementById('adminModal');
+        const form = document.getElementById('adminForm');
+        const title = document.getElementById('adminModalTitle');
+        
+        if (modal && form && title) {
+            title.textContent = 'Modifier l\'Administrateur';
+            
+            // Pré-remplir le formulaire
+            document.getElementById('adminEmail').value = admin.email || '';
+            document.getElementById('adminRole').value = admin.role || 'admin';
+            document.getElementById('adminActive').checked = admin.active !== false;
+            
+            form.dataset.mode = 'edit';
+            form.dataset.adminId = adminId;
+            modal.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement de l\'admin:', error);
+        showError('Erreur lors du chargement de l\'administrateur');
+    }
+}
+
+// Supprimer un administrateur
+async function deleteAdmin(adminId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet administrateur ?')) {
+        return;
+    }
+    
+    console.log('🗑️ Suppression admin:', adminId);
+    
+    try {
+        const db = firebase.firestore();
+        await db.collection('admins').doc(adminId).delete();
+        
+        showSuccess('Administrateur supprimé avec succès');
+        loadAdmins(); // Recharger la liste
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la suppression:', error);
+        showError('Erreur lors de la suppression de l\'administrateur');
+    }
+}
+
+// Gérer la soumission du formulaire admin
+async function handleAdminFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const mode = form.dataset.mode;
+    const adminId = form.dataset.adminId;
+    
+    const adminData = {
+        email: document.getElementById('adminEmail').value.trim(),
+        role: document.getElementById('adminRole').value,
+        active: document.getElementById('adminActive').checked,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    if (!adminData.email) {
+        showError('L\'email est obligatoire');
+        return;
+    }
+    
+    try {
+        const db = firebase.firestore();
+        
+        if (mode === 'add') {
+            // Vérifier si l'email existe déjà
+            const existingAdmin = await db.collection('admins')
+                .where('email', '==', adminData.email)
+                .get();
+                
+            if (!existingAdmin.empty) {
+                showError('Cet email est déjà utilisé par un autre administrateur');
+                return;
+            }
+            
+            adminData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('admins').add(adminData);
+            showSuccess('Administrateur ajouté avec succès');
+            
+        } else if (mode === 'edit') {
+            await db.collection('admins').doc(adminId).update(adminData);
+            showSuccess('Administrateur modifié avec succès');
+        }
+        
+        // Fermer le modal et recharger la liste
+        document.getElementById('adminModal').style.display = 'none';
+        loadAdmins();
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde:', error);
+        showError('Erreur lors de la sauvegarde de l\'administrateur');
+    }
+}
+
+// Fermer le modal admin
+function closeAdminModal() {
+    const modal = document.getElementById('adminModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Exposer les fonctions au scope global
+window.editAdmin = editAdmin;
+window.deleteAdmin = deleteAdmin;
+window.closeAdminModal = closeAdminModal;

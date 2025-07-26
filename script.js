@@ -1224,6 +1224,7 @@ function initializeApp() {
         }
     }, 2000);
 
+    loadSiteSettingsFromFirebase();
     loadProductsFromFirebase();
     setupEventListeners();
     setupSidebarAutoHide();
@@ -1273,3 +1274,115 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(section);
     });
 });
+
+// ===== CHARGEMENT DES PARAMÈTRES DU SITE =====
+async function loadSiteSettingsFromFirebase() {
+    console.log('⚙️ Chargement des paramètres du site...');
+    
+    try {
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            console.log('⚠️ Firebase non disponible, utilisation des valeurs par défaut');
+            return;
+        }
+
+        const db = firebase.firestore();
+        
+        // Charger les paramètres généraux du site
+        const siteDoc = await db.collection('settings').doc('site').get();
+        if (siteDoc.exists) {
+            const siteData = siteDoc.data();
+            console.log('✅ Paramètres du site chargés:', siteData);
+            
+            // Mettre à jour les éléments du site avec les nouvelles valeurs
+            updateSiteElements(siteData);
+        }
+        
+        // Charger les paramètres des réseaux sociaux
+        const socialDoc = await db.collection('settings').doc('social').get();
+        if (socialDoc.exists) {
+            const socialData = socialDoc.data();
+            console.log('✅ Paramètres sociaux chargés:', socialData);
+            
+            // Mettre à jour les liens sociaux
+            updateSocialLinks(socialData);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des paramètres:', error);
+    }
+}
+
+// Fonction pour mettre à jour les éléments du site
+function updateSiteElements(siteData) {
+    // Mettre à jour le titre du site
+    if (siteData.siteName) {
+        const titleElements = document.querySelectorAll('.site-title, .brand-name');
+        titleElements.forEach(el => {
+            if (el) el.textContent = siteData.siteName;
+        });
+        
+        // Mettre à jour le titre de la page
+        document.title = siteData.siteName;
+    }
+    
+    // Mettre à jour l'email de contact
+    if (siteData.contactEmail) {
+        const emailElements = document.querySelectorAll('.contact-email');
+        emailElements.forEach(el => {
+            if (el) {
+                el.textContent = siteData.contactEmail;
+                el.href = `mailto:${siteData.contactEmail}`;
+            }
+        });
+    }
+    
+    // Mettre à jour le téléphone de contact
+    if (siteData.contactPhone) {
+        const phoneElements = document.querySelectorAll('.contact-phone');
+        phoneElements.forEach(el => {
+            if (el) {
+                el.textContent = siteData.contactPhone;
+                el.href = `tel:${siteData.contactPhone}`;
+            }
+        });
+    }
+    
+    console.log('✅ Éléments du site mis à jour avec les paramètres Firebase');
+}
+
+// Fonction pour mettre à jour les liens sociaux
+function updateSocialLinks(socialData) {
+    // Mettre à jour Facebook
+    if (socialData.facebookUrl) {
+        const fbLinks = document.querySelectorAll('.social-facebook');
+        fbLinks.forEach(link => {
+            if (link) link.href = socialData.facebookUrl;
+        });
+    }
+    
+    // Mettre à jour Instagram
+    if (socialData.instagramUrl) {
+        const igLinks = document.querySelectorAll('.social-instagram');
+        igLinks.forEach(link => {
+            if (link) link.href = socialData.instagramUrl;
+        });
+    }
+    
+    // Mettre à jour WhatsApp
+    if (socialData.whatsappNumber) {
+        const waLinks = document.querySelectorAll('.social-whatsapp');
+        waLinks.forEach(link => {
+            if (link) link.href = `https://wa.me/${socialData.whatsappNumber.replace(/[^0-9]/g, '')}`;
+        });
+    }
+    
+    // Mettre à jour TikTok
+    if (socialData.tiktokUrl) {
+        const ttLinks = document.querySelectorAll('.social-tiktok');
+        ttLinks.forEach(link => {
+            if (link) link.href = socialData.tiktokUrl;
+        });
+    }
+    
+    console.log('✅ Liens sociaux mis à jour avec les paramètres Firebase');
+}
