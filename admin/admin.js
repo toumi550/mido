@@ -1382,29 +1382,29 @@ console.log('✅ Fonctions de gestion des paramètres ajoutées');
 // Charger la liste des administrateurs
 async function loadAdmins() {
     console.log('👥 Chargement des administrateurs...');
-    
+
     try {
         const db = firebase.firestore();
         const adminsSnapshot = await db.collection('admins').get();
-        
+
         const adminsList = document.getElementById('adminsList');
         if (!adminsList) return;
-        
+
         adminsList.innerHTML = '';
-        
+
         if (adminsSnapshot.empty) {
             adminsList.innerHTML = '<p>Aucun administrateur trouvé.</p>';
             return;
         }
-        
+
         adminsSnapshot.forEach(doc => {
             const admin = doc.data();
             const adminRow = createAdminRow(doc.id, admin);
             adminsList.appendChild(adminRow);
         });
-        
+
         console.log('✅ Administrateurs chargés:', adminsSnapshot.size);
-        
+
     } catch (error) {
         console.error('❌ Erreur lors du chargement des administrateurs:', error);
         showError('Erreur lors du chargement des administrateurs');
@@ -1440,7 +1440,7 @@ function showAddAdminModal() {
     const modal = document.getElementById('adminModal');
     const form = document.getElementById('adminForm');
     const title = document.getElementById('adminModalTitle');
-    
+
     if (modal && form && title) {
         title.textContent = 'Ajouter un Administrateur';
         form.reset();
@@ -1452,34 +1452,34 @@ function showAddAdminModal() {
 // Modifier un administrateur
 async function editAdmin(adminId) {
     console.log('✏️ Modification admin:', adminId);
-    
+
     try {
         const db = firebase.firestore();
         const adminDoc = await db.collection('admins').doc(adminId).get();
-        
+
         if (!adminDoc.exists) {
             showError('Administrateur non trouvé');
             return;
         }
-        
+
         const admin = adminDoc.data();
         const modal = document.getElementById('adminModal');
         const form = document.getElementById('adminForm');
         const title = document.getElementById('adminModalTitle');
-        
+
         if (modal && form && title) {
             title.textContent = 'Modifier l\'Administrateur';
-            
+
             // Pré-remplir le formulaire
             document.getElementById('adminEmail').value = admin.email || '';
             document.getElementById('adminRole').value = admin.role || 'admin';
             document.getElementById('adminActive').checked = admin.active !== false;
-            
+
             form.dataset.mode = 'edit';
             form.dataset.adminId = adminId;
             modal.style.display = 'block';
         }
-        
+
     } catch (error) {
         console.error('❌ Erreur lors du chargement de l\'admin:', error);
         showError('Erreur lors du chargement de l\'administrateur');
@@ -1491,16 +1491,16 @@ async function deleteAdmin(adminId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet administrateur ?')) {
         return;
     }
-    
+
     console.log('🗑️ Suppression admin:', adminId);
-    
+
     try {
         const db = firebase.firestore();
         await db.collection('admins').doc(adminId).delete();
-        
+
         showSuccess('Administrateur supprimé avec succès');
         loadAdmins(); // Recharger la liste
-        
+
     } catch (error) {
         console.error('❌ Erreur lors de la suppression:', error);
         showError('Erreur lors de la suppression de l\'administrateur');
@@ -1510,50 +1510,50 @@ async function deleteAdmin(adminId) {
 // Gérer la soumission du formulaire admin
 async function handleAdminFormSubmit(e) {
     e.preventDefault();
-    
+
     const form = e.target;
     const mode = form.dataset.mode;
     const adminId = form.dataset.adminId;
-    
+
     const adminData = {
         email: document.getElementById('adminEmail').value.trim(),
         role: document.getElementById('adminRole').value,
         active: document.getElementById('adminActive').checked,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    
+
     if (!adminData.email) {
         showError('L\'email est obligatoire');
         return;
     }
-    
+
     try {
         const db = firebase.firestore();
-        
+
         if (mode === 'add') {
             // Vérifier si l'email existe déjà
             const existingAdmin = await db.collection('admins')
                 .where('email', '==', adminData.email)
                 .get();
-                
+
             if (!existingAdmin.empty) {
                 showError('Cet email est déjà utilisé par un autre administrateur');
                 return;
             }
-            
+
             adminData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection('admins').add(adminData);
             showSuccess('Administrateur ajouté avec succès');
-            
+
         } else if (mode === 'edit') {
             await db.collection('admins').doc(adminId).update(adminData);
             showSuccess('Administrateur modifié avec succès');
         }
-        
+
         // Fermer le modal et recharger la liste
         document.getElementById('adminModal').style.display = 'none';
         loadAdmins();
-        
+
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde:', error);
         showError('Erreur lors de la sauvegarde de l\'administrateur');
@@ -1571,8 +1571,9 @@ function closeAdminModal() {
 // Exposer les fonctions au scope global
 window.editAdmin = editAdmin;
 window.deleteAdmin = deleteAdmin;
-window.closeAdminModal = closeAdminModal;/
-/ ===== MODIFICATION EMAIL ADMIN =====
+window.closeAdminModal = closeAdminModal;
+
+// ===== MODIFICATION EMAIL ADMIN =====
 
 // Charger l'email actuel de l'admin connecté
 function loadCurrentAdminEmail() {
@@ -1588,48 +1589,48 @@ function loadCurrentAdminEmail() {
 // Gérer la modification d'email admin
 async function handleChangeEmailSubmit(e) {
     e.preventDefault();
-    
+
     const currentEmail = document.getElementById('currentEmail').value.trim();
     const newEmail = document.getElementById('newEmail').value.trim();
     const confirmPassword = document.getElementById('confirmPassword').value;
-    
+
     if (!currentEmail || !newEmail || !confirmPassword) {
         showError('Tous les champs sont obligatoires');
         return;
     }
-    
+
     if (currentEmail === newEmail) {
         showError('Le nouvel email doit être différent de l\'email actuel');
         return;
     }
-    
+
     try {
         showLoading();
-        
+
         const user = firebase.auth().currentUser;
         if (!user) {
             showError('Utilisateur non connecté');
             return;
         }
-        
+
         // Vérifier le mot de passe actuel
         const credential = firebase.auth.EmailAuthProvider.credential(
             user.email,
             confirmPassword
         );
-        
+
         // Ré-authentifier l'utilisateur
         await user.reauthenticateWithCredential(credential);
-        
+
         // Mettre à jour l'email
         await user.updateEmail(newEmail);
-        
+
         // Mettre à jour dans la collection admins si elle existe
         const db = firebase.firestore();
         const adminQuery = await db.collection('admins')
             .where('email', '==', currentEmail)
             .get();
-            
+
         if (!adminQuery.empty) {
             const adminDoc = adminQuery.docs[0];
             await adminDoc.ref.update({
@@ -1637,22 +1638,22 @@ async function handleChangeEmailSubmit(e) {
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
-        
+
         hideLoading();
         showSuccess('Email modifié avec succès ! Vous allez être déconnecté.');
-        
+
         // Réinitialiser le formulaire
         document.getElementById('changeEmailForm').reset();
-        
+
         // Déconnecter l'utilisateur après 2 secondes
         setTimeout(() => {
             firebase.auth().signOut();
         }, 2000);
-        
+
     } catch (error) {
         hideLoading();
         console.error('❌ Erreur lors de la modification de l\'email:', error);
-        
+
         let errorMessage = 'Erreur lors de la modification de l\'email';
         if (error.code === 'auth/wrong-password') {
             errorMessage = 'Mot de passe incorrect';
@@ -1663,7 +1664,7 @@ async function handleChangeEmailSubmit(e) {
         } else if (error.code === 'auth/requires-recent-login') {
             errorMessage = 'Veuillez vous reconnecter et réessayer';
         }
-        
+
         showError(errorMessage);
     }
 }
