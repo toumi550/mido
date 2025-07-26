@@ -51,6 +51,17 @@ function setupEventListeners() {
     // Logout
     document.querySelector('.logout-btn')?.addEventListener('click', handleLogout);
 
+    // Menu hamburger mobile
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function() {
+            const sidebar = document.querySelector('.admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        });
+    }
+
     // Event listeners avec délai pour les éléments chargés dynamiquement
     setTimeout(() => {
         const refreshBtn = document.getElementById('refreshAnalytics');
@@ -60,6 +71,17 @@ function setupEventListeners() {
                 console.log('🔄 Actualisation des analytics...');
                 loadAnalytics();
             });
+        }
+
+        // Formulaires de paramètres
+        const siteSettingsForm = document.getElementById('siteSettingsForm');
+        if (siteSettingsForm) {
+            siteSettingsForm.addEventListener('submit', handleSiteSettingsSubmit);
+        }
+
+        const socialSettingsForm = document.getElementById('socialSettingsForm');
+        if (socialSettingsForm) {
+            socialSettingsForm.addEventListener('submit', handleSocialSettingsSubmit);
         }
     }, 1000);
 }
@@ -189,6 +211,9 @@ function loadSectionData(sectionName) {
             break;
         case 'analytics':
             loadAnalytics();
+            break;
+        case 'settings':
+            loadSiteSettings();
             break;
     }
 }
@@ -1238,4 +1263,94 @@ async function updateStockFromOrder(orderItems) {
     }
 }
 
-console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
+console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');// =
+==== GESTION DES PARAMÈTRES DU SITE =====
+async function handleSiteSettingsSubmit(e) {
+    e.preventDefault();
+    
+    const siteName = document.getElementById('siteName').value;
+    const contactEmail = document.getElementById('contactEmail').value;
+    const contactPhone = document.getElementById('contactPhone').value;
+    
+    if (!siteName || !contactEmail || !contactPhone) {
+        alert('Veuillez remplir tous les champs');
+        return;
+    }
+    
+    try {
+        const settingsData = {
+            siteName: siteName,
+            contactEmail: contactEmail,
+            contactPhone: contactPhone,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await firebase.firestore().collection('settings').doc('site').set(settingsData, { merge: true });
+        
+        alert('Paramètres du site sauvegardés avec succès !');
+        console.log('✅ Paramètres du site sauvegardés:', settingsData);
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde des paramètres:', error);
+        alert('Erreur lors de la sauvegarde des paramètres: ' + error.message);
+    }
+}
+
+async function handleSocialSettingsSubmit(e) {
+    e.preventDefault();
+    
+    const facebookUrl = document.getElementById('facebookUrl').value;
+    const instagramUrl = document.getElementById('instagramUrl').value;
+    const whatsappNumber = document.getElementById('whatsappNumber').value;
+    const tiktokUrl = document.getElementById('tiktokUrl').value;
+    
+    try {
+        const socialData = {
+            facebookUrl: facebookUrl,
+            instagramUrl: instagramUrl,
+            whatsappNumber: whatsappNumber,
+            tiktokUrl: tiktokUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await firebase.firestore().collection('settings').doc('social').set(socialData, { merge: true });
+        
+        alert('Paramètres des réseaux sociaux sauvegardés avec succès !');
+        console.log('✅ Paramètres sociaux sauvegardés:', socialData);
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde des paramètres sociaux:', error);
+        alert('Erreur lors de la sauvegarde des paramètres sociaux: ' + error.message);
+    }
+}
+
+// Fonction pour charger les paramètres existants
+async function loadSiteSettings() {
+    try {
+        // Charger les paramètres du site
+        const siteDoc = await firebase.firestore().collection('settings').doc('site').get();
+        if (siteDoc.exists) {
+            const siteData = siteDoc.data();
+            document.getElementById('siteName').value = siteData.siteName || 'RANIA SHOP';
+            document.getElementById('contactEmail').value = siteData.contactEmail || 'contact@raniashop.dz';
+            document.getElementById('contactPhone').value = siteData.contactPhone || '+213 XXX XXX XXX';
+        }
+        
+        // Charger les paramètres sociaux
+        const socialDoc = await firebase.firestore().collection('settings').doc('social').get();
+        if (socialDoc.exists) {
+            const socialData = socialDoc.data();
+            document.getElementById('facebookUrl').value = socialData.facebookUrl || 'https://www.facebook.com/raniashop';
+            document.getElementById('instagramUrl').value = socialData.instagramUrl || 'https://www.instagram.com/raniashop';
+            document.getElementById('whatsappNumber').value = socialData.whatsappNumber || '+213XXXXXXXXX';
+            document.getElementById('tiktokUrl').value = socialData.tiktokUrl || 'https://www.tiktok.com/@raniashop';
+        }
+        
+        console.log('✅ Paramètres chargés depuis Firebase');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des paramètres:', error);
+    }
+}
+
+console.log('✅ Fonctions de gestion des paramètres ajoutées');

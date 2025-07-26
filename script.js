@@ -310,17 +310,17 @@ function addToCart(productId, quantity = 1) {
 function removeFromCart(productId) {
     console.log('🗑️ Suppression du produit du panier:', productId);
     console.log('📦 Panier avant suppression:', cart);
-    
+
     const initialLength = cart.length;
     cart = cart.filter(item => item.id !== productId);
-    
+
     console.log('📦 Panier après suppression:', cart);
     console.log(`📊 Produits supprimés: ${initialLength - cart.length}`);
-    
+
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-    
+
     console.log('✅ Produit supprimé du panier - Affichage mis à jour');
 }
 
@@ -825,8 +825,8 @@ async function handleCheckoutSubmission(e) {
             name: item.name,
             price: item.price,
             quantity: item.quantity,
-            image: item.image,
             category: item.category
+            // Image supprimée pour éviter de dépasser la limite de taille Firebase (1MB)
         })),
         subtotal: subtotal,
         deliveryPrice: deliveryPrice,
@@ -1092,14 +1092,35 @@ function setupEventListeners() {
 
     setupSearchListeners();
 
+    // Configuration du menu mobile
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebarMenu = document.getElementById('sidebarMenu');
 
-    if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', () => {
+    console.log('🍔 Configuration du menu mobile...');
+    console.log('- mobileMenuToggle trouvé:', !!mobileMenuToggle);
+    console.log('- sidebarMenu trouvé:', !!sidebarMenu);
+
+    if (mobileMenuToggle && sidebarMenu) {
+        mobileMenuToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🍔 Menu hamburger cliqué');
             sidebarMenu.classList.toggle('active');
+            console.log('🍔 Menu sidebar active:', sidebarMenu.classList.contains('active'));
         });
+        console.log('✅ Event listener menu mobile configuré');
+    } else {
+        console.warn('⚠️ Éléments du menu mobile non trouvés');
     }
+
+    // Fermer le menu en cliquant à l'extérieur
+    document.addEventListener('click', (e) => {
+        if (sidebarMenu && sidebarMenu.classList.contains('active')) {
+            if (!sidebarMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                sidebarMenu.classList.remove('active');
+                console.log('🍔 Menu fermé en cliquant à l\'extérieur');
+            }
+        }
+    });
 
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
@@ -1209,6 +1230,7 @@ function initializeApp() {
     populateWilayaDropdown();
     loadCartFromStorage();
     setupSmoothScrolling();
+    loadAnalytics();
 
     console.log('✅ Application initialisée avec succès');
 }
