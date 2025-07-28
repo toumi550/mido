@@ -310,17 +310,17 @@ function addToCart(productId, quantity = 1) {
 function removeFromCart(productId) {
     console.log('🗑️ Suppression du produit du panier:', productId);
     console.log('📦 Panier avant suppression:', cart);
-    
+
     const initialLength = cart.length;
     cart = cart.filter(item => item.id !== productId);
-    
+
     console.log('📦 Panier après suppression:', cart);
     console.log(`📊 Produits supprimés: ${initialLength - cart.length}`);
-    
+
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-    
+
     console.log('✅ Produit supprimé du panier - Affichage mis à jour');
 }
 
@@ -825,8 +825,8 @@ async function handleCheckoutSubmission(e) {
             name: item.name,
             price: item.price,
             quantity: item.quantity,
-            image: item.image,
             category: item.category
+            // Image supprimée pour éviter de dépasser la limite de taille Firebase (1MB)
         })),
         subtotal: subtotal,
         deliveryPrice: deliveryPrice,

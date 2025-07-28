@@ -1557,50 +1557,7 @@ body {
     color: #6c757d;
 }
 
-/* Liste des administrateurs */
-.admin-users-list {
-    margin-bottom: 25px;
-    max-height: 300px;
-    overflow-y: auto;
-}
 
-.admin-user-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    background: #f8f9fa;
-}
-
-.admin-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.admin-info i {
-    color: #e91e63;
-    font-size: 18px;
-}
-
-.admin-info small {
-    display: block;
-    color: #6c757d;
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.current-user {
-    background: #e91e63;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-}
 
 .btn-sm {
     padding: 6px 12px;
@@ -1823,11 +1780,7 @@ body {
         flex-direction: column;
     }
 
-    .admin-user-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
+
 
     .analytics-controls {
         flex-direction: column;
