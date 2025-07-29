@@ -23,7 +23,7 @@ function initializeAdmin() {
     console.log('🔥 Firebase disponible:', typeof firebase !== 'undefined');
     console.log('🔐 Firebase Auth disponible:', typeof firebase !== 'undefined' && !!firebase.auth);
     console.log('🗄️ Firebase Firestore disponible:', typeof firebase !== 'undefined' && !!firebase.firestore);
-    
+
     if (typeof firebase === 'undefined') {
         console.error('❌ Firebase non chargé');
         showError('Firebase non chargé - Vérifiez la connexion internet');
@@ -39,7 +39,7 @@ function initializeAdmin() {
     // Authentification
     firebase.auth().onAuthStateChanged((user) => {
         console.log('🔄 État d\'authentification changé:', user ? user.email : 'Non connecté');
-        
+
         if (user) {
             console.log('✅ Utilisateur connecté:', user.email);
             currentUser = user;
@@ -77,7 +77,7 @@ function setupEventListeners() {
                 loadAnalytics();
             });
         }
-        
+
         // Configurer les event listeners pour les paramètres
         setupSettingsListeners();
     }, 1000);
@@ -98,15 +98,15 @@ async function handleLogin(e) {
     try {
         console.log('🔐 Tentative de connexion avec:', email);
         console.log('🔥 Firebase Auth disponible:', !!firebase.auth);
-        
+
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
         console.log('✅ Connexion réussie:', userCredential.user.email);
-        
+
     } catch (error) {
         console.error('❌ Erreur de connexion:', error);
         console.error('Code d\'erreur:', error.code);
         console.error('Message d\'erreur:', error.message);
-        
+
         let errorMessage = 'Erreur de connexion';
 
         if (error.code === 'auth/user-not-found') {
@@ -1282,9 +1282,9 @@ console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
 async function loadSettings() {
     try {
         console.log('📋 Chargement des paramètres...');
-        
+
         const settingsSnapshot = await firebase.firestore().collection('settings').get();
-        
+
         if (settingsSnapshot.empty) {
             console.log('⚠️ Aucun paramètre trouvé, création des paramètres par défaut');
             await createDefaultSettings();
@@ -1295,9 +1295,9 @@ async function loadSettings() {
         settingsSnapshot.forEach(doc => {
             const setting = doc.data();
             const settingId = doc.id;
-            
+
             console.log(`📝 Chargement paramètre: ${settingId}`, setting);
-            
+
             // Remplir les champs du formulaire
             if (settingId === 'general') {
                 document.getElementById('siteName').value = setting.siteName || 'RANIA SHOP';
@@ -1340,7 +1340,7 @@ async function createDefaultSettings() {
         await firebase.firestore().collection('settings').doc('social').set(defaultSocial);
 
         console.log('✅ Paramètres par défaut créés');
-        
+
         // Recharger les paramètres
         await loadSettings();
 
@@ -1352,10 +1352,10 @@ async function createDefaultSettings() {
 // Sauvegarder les paramètres généraux
 async function saveSiteSettings(e) {
     e.preventDefault();
-    
+
     try {
         console.log('💾 Sauvegarde des paramètres généraux...');
-        
+
         const siteName = document.getElementById('siteName').value.trim();
         const contactEmail = document.getElementById('contactEmail').value.trim();
         const contactPhone = document.getElementById('contactPhone').value.trim();
@@ -1373,7 +1373,7 @@ async function saveSiteSettings(e) {
         };
 
         await firebase.firestore().collection('settings').doc('general').set(settingsData);
-        
+
         console.log('✅ Paramètres généraux sauvegardés:', settingsData);
         alert('Paramètres généraux sauvegardés avec succès !');
 
@@ -1386,10 +1386,10 @@ async function saveSiteSettings(e) {
 // Sauvegarder les paramètres des réseaux sociaux
 async function saveSocialSettings(e) {
     e.preventDefault();
-    
+
     try {
         console.log('💾 Sauvegarde des paramètres réseaux sociaux...');
-        
+
         const facebookUrl = document.getElementById('facebookUrl').value.trim();
         const instagramUrl = document.getElementById('instagramUrl').value.trim();
         const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
@@ -1404,7 +1404,7 @@ async function saveSocialSettings(e) {
         };
 
         await firebase.firestore().collection('settings').doc('social').set(settingsData);
-        
+
         console.log('✅ Paramètres réseaux sociaux sauvegardés:', settingsData);
         alert('Paramètres des réseaux sociaux sauvegardés avec succès !');
 
@@ -1440,16 +1440,16 @@ console.log('✅ Fonctions de gestion des paramètres ajoutées');
 // ===== FONCTIONS DE DEBUG ADMIN =====
 
 // Fonction pour tester la connexion Firebase
-window.testFirebaseConnection = function() {
+window.testFirebaseConnection = function () {
     console.log('🧪 Test de connexion Firebase...');
     console.log('- Firebase disponible:', typeof firebase !== 'undefined');
     console.log('- Firebase Auth:', !!firebase?.auth);
     console.log('- Firebase Firestore:', !!firebase?.firestore);
-    
+
     if (firebase?.auth) {
         console.log('- Utilisateur actuel:', firebase.auth().currentUser?.email || 'Non connecté');
     }
-    
+
     return {
         firebase: typeof firebase !== 'undefined',
         auth: !!firebase?.auth,
@@ -1459,9 +1459,9 @@ window.testFirebaseConnection = function() {
 };
 
 // Fonction pour tester la connexion avec des identifiants
-window.testLogin = async function(email, password) {
+window.testLogin = async function (email, password) {
     console.log('🧪 Test de connexion avec:', email);
-    
+
     try {
         const result = await firebase.auth().signInWithEmailAndPassword(email, password);
         console.log('✅ Test de connexion réussi:', result.user.email);
@@ -1473,9 +1473,9 @@ window.testLogin = async function(email, password) {
 };
 
 // Fonction pour créer un utilisateur admin (à utiliser une seule fois)
-window.createAdminUser = async function(email, password) {
+window.createAdminUser = async function (email, password) {
     console.log('👤 Création d\'un utilisateur admin:', email);
-    
+
     try {
         const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
         console.log('✅ Utilisateur admin créé:', result.user.email);
@@ -1495,81 +1495,81 @@ console.log('- createAdminUser(email, password) : Crée un utilisateur admin');
 // Solution simple et efficace pour le menu hamburger mobile
 
 // Attendre que le DOM soit complètement chargé
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Attendre un délai supplémentaire pour s'assurer que tous les éléments sont rendus
-    setTimeout(function() {
+    setTimeout(function () {
         initMobileMenu();
     }, 1000);
 });
 
 function initMobileMenu() {
     console.log('🔧 Initialisation du menu mobile...');
-    
+
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     const adminSidebar = document.querySelector('.admin-sidebar');
-    
+
     console.log('Éléments trouvés:', {
         mobileMenuToggle: !!mobileMenuToggle,
         adminSidebar: !!adminSidebar,
         toggleVisible: mobileMenuToggle ? getComputedStyle(mobileMenuToggle).display !== 'none' : false
     });
-    
+
     if (mobileMenuToggle && adminSidebar) {
         // Supprimer les anciens event listeners s'ils existent
         mobileMenuToggle.replaceWith(mobileMenuToggle.cloneNode(true));
         const newToggle = document.querySelector('.mobile-menu-toggle');
-        
+
         // Ajouter le nouvel event listener
-        newToggle.addEventListener('click', function(e) {
+        newToggle.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             console.log('📱 Clic sur menu hamburger');
-            
+
             // Toggle des classes
             adminSidebar.classList.toggle('active');
             newToggle.classList.toggle('active');
-            
+
             const isOpen = adminSidebar.classList.contains('active');
             console.log('📱 Menu', isOpen ? 'ouvert' : 'fermé');
         });
-        
+
         // Fermer le menu en cliquant en dehors
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!adminSidebar.contains(e.target) && !newToggle.contains(e.target)) {
                 adminSidebar.classList.remove('active');
                 newToggle.classList.remove('active');
             }
         });
-        
+
         // Fermer le menu lors de la navigation
         document.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function () {
                 adminSidebar.classList.remove('active');
                 newToggle.classList.remove('active');
             });
         });
-        
+
         console.log('✅ Menu mobile configuré avec succès');
-        
+
         // Fonction de test disponible dans la console
-        window.testMobileMenuNow = function() {
+        window.testMobileMenuNow = function () {
             console.log('🧪 Test du menu mobile...');
             adminSidebar.classList.add('active');
             newToggle.classList.add('active');
-            
+
             setTimeout(() => {
                 adminSidebar.classList.remove('active');
                 newToggle.classList.remove('active');
                 console.log('✅ Test terminé');
             }, 2000);
         };
-        
+
     } else {
         console.error('❌ Menu mobile non configuré - éléments manquants');
-        
+
         // Réessayer après un délai
-        setTimeout(function() {
+        setTimeout(function () {
             console.log('🔄 Nouvelle tentative...');
             initMobileMenu();
         }, 2000);
