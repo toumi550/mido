@@ -249,11 +249,27 @@ body {
 
 .mobile-menu-toggle {
     display: none;
-    background: none;
+    background: var(--primary-color);
     border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     font-size: 1.2rem;
     cursor: pointer;
-    color: var(--text-color);
+    color: var(--white);
+    transition: var(--transition);
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--accent-color);
+    transform: scale(1.05);
+}
+
+.mobile-menu-toggle.active {
+    background: var(--accent-color);
+    transform: rotate(90deg);
 }
 
 .header-left h2 {
@@ -716,7 +732,7 @@ body {
     }
 
     .mobile-menu-toggle {
-        display: block;
+        display: flex;
     }
 
     .stats-grid {
