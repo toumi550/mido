@@ -48,6 +48,13 @@ Ce document sert de **roadmap complète** pour le développement futur du projet
   - Nouveaux fichiers : Documentation technique, guides, règles Firebase
   - **Résultat** : Projet entièrement synchronisé et documenté sur GitHub
 
+- ✅ **Suppression section "Mon Compte"** - Simplification interface admin
+  - Supprimé élément menu "Mon Compte" dans `admin/index.html`
+  - Supprimé section `accountSection` complète
+  - Supprimé styles CSS `.account-content`, `.account-card` dans `admin/admin.css`
+  - Supprimé référence 'account' dans `admin/admin.js`
+  - **Résultat** : Interface admin allégée, gestion 100% Firebase Console
+
 #### 📋 PROCHAINES ACTIONS IDENTIFIÉES
 - 🎯 **Tests unitaires** (Priorité 1) - Jamais implémentés
 - 🎯 **Gestion d'erreurs** améliorée - Basique actuellement

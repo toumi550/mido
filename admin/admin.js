@@ -164,7 +164,6 @@ function handleNavigation(e) {
         products: 'Gestion des Produits',
         orders: 'Gestion des Commandes',
         analytics: 'Statistiques',
-        account: 'Mon Compte',
         settings: 'Paramètres'
     };
 
