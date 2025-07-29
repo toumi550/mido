@@ -1193,15 +1193,18 @@ function initializeApp() {
     const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
     changeLanguage(savedLanguage);
 
+    // Fermer l'écran de chargement plus rapidement
     setTimeout(() => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
+            console.log('🔄 Fermeture de l\'écran de chargement...');
             loadingScreen.style.opacity = '0';
             setTimeout(() => {
                 loadingScreen.style.display = 'none';
-            }, 500);
+                console.log('✅ Écran de chargement fermé');
+            }, 300);
         }
-    }, 2000);
+    }, 1000);
 
     loadProductsFromFirebase();
     setupEventListeners();
@@ -1217,22 +1220,29 @@ function initializeApp() {
 document.addEventListener('DOMContentLoaded', function () {
     console.log('🔄 DOM Content Loaded - Démarrage de l\'application');
     
+    // Fermeture d'urgence après 2 secondes maximum
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen && loadingScreen.style.display !== 'none') {
+            console.log('⚠️ Fermeture d\'urgence de l\'écran de chargement');
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 300);
+        }
+    }, 2000);
+
     try {
         initializeApp();
     } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation:', error);
-        
-        // Forcer la fermeture de l'écran de chargement en cas d'erreur
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loading-screen');
-            if (loadingScreen) {
-                console.log('🔧 Fermeture forcée de l\'écran de chargement');
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-            }
-        }, 3000);
+
+        // Forcer la fermeture immédiate en cas d'erreur
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            console.log('🔧 Fermeture immédiate suite à une erreur');
+            loadingScreen.style.display = 'none';
+        }
     }
 });
 
@@ -1387,22 +1397,21 @@ document.addEventListener('DOMContentLoaded', () => {
 window.loadSiteSettings = loadSiteSettings;
 
 console.log('✅ Fonction de chargement des paramètres du site ajoutée');
-// ===== F
-ONCTION DE DEBUG =====
-// Fonction pour fermer manuellement l'écran de chargement (debug)
-window.forceCloseLoading = function() {
-    console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
-    }
-};
+// ===== FONCTION DE DEBUG =====
+    // Fonction pour fermer manuellement l'écran de chargement (debug)
+    window.forceCloseLoading = function() {
+        console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+    };
 
 // Fonction pour diagnostiquer les problèmes
-window.debugApp = function() {
+window.debugApp = function () {
     console.log('🔍 Diagnostic de l\'application:');
     console.log('- Firebase disponible:', typeof firebase !== 'undefined');
     console.log('- Firestore disponible:', typeof firebase !== 'undefined' && firebase.firestore);
@@ -1410,7 +1419,7 @@ window.debugApp = function() {
     console.log('- Panier:', cart.length);
     console.log('- Langue actuelle:', currentLanguage);
     console.log('- LocalStorage panier:', localStorage.getItem('raniaShopCart'));
-    
+
     // Tester les fonctions principales
     try {
         console.log('- Test changeLanguage:', typeof changeLanguage);
