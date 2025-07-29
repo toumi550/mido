@@ -1215,7 +1215,25 @@ function initializeApp() {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', function () {
-    initializeApp();
+    console.log('🔄 DOM Content Loaded - Démarrage de l\'application');
+    
+    try {
+        initializeApp();
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation:', error);
+        
+        // Forcer la fermeture de l'écran de chargement en cas d'erreur
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                console.log('🔧 Fermeture forcée de l\'écran de chargement');
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        }, 3000);
+    }
 });
 
 // Add CSS for fadeInOut animation
@@ -1251,16 +1269,16 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(section);
     });
 });
-//
- ===== CHARGEMENT DES PARAMÈTRES DEPUIS FIREBASE =====
+
+// ===== CHARGEMENT DES PARAMÈTRES DEPUIS FIREBASE =====
 
 // Charger et appliquer les paramètres du site
 async function loadSiteSettings() {
     try {
         console.log('📋 Chargement des paramètres du site...');
-        
+
         const settingsSnapshot = await firebase.firestore().collection('settings').get();
-        
+
         if (settingsSnapshot.empty) {
             console.log('⚠️ Aucun paramètre trouvé, utilisation des valeurs par défaut');
             return;
@@ -1269,9 +1287,9 @@ async function loadSiteSettings() {
         settingsSnapshot.forEach(doc => {
             const setting = doc.data();
             const settingId = doc.id;
-            
+
             console.log(`📝 Application paramètre: ${settingId}`, setting);
-            
+
             if (settingId === 'general') {
                 // Mettre à jour le nom du site
                 if (setting.siteName) {
@@ -1282,7 +1300,7 @@ async function loadSiteSettings() {
                             title.textContent = setting.siteName;
                         }
                     });
-                    
+
                     // Footer
                     const footerTitles = document.querySelectorAll('.footer-logo h3');
                     footerTitles.forEach(title => {
@@ -1290,7 +1308,7 @@ async function loadSiteSettings() {
                             title.textContent = setting.siteName;
                         }
                     });
-                    
+
                     // Copyright
                     const copyrightElements = document.querySelectorAll('.footer-copyright p');
                     copyrightElements.forEach(copyright => {
@@ -1299,7 +1317,7 @@ async function loadSiteSettings() {
                         }
                     });
                 }
-                
+
                 // Mettre à jour les informations de contact
                 if (setting.contactEmail) {
                     const emailElements = document.querySelectorAll('.contact-info p:nth-child(2)');
@@ -1307,7 +1325,7 @@ async function loadSiteSettings() {
                         email.innerHTML = `<i class="fas fa-envelope"></i> ${setting.contactEmail}`;
                     });
                 }
-                
+
                 if (setting.contactPhone) {
                     const phoneElements = document.querySelectorAll('.contact-info p:nth-child(1)');
                     phoneElements.forEach(phone => {
@@ -1315,7 +1333,7 @@ async function loadSiteSettings() {
                     });
                 }
             }
-            
+
             if (settingId === 'social') {
                 // Mettre à jour les liens des réseaux sociaux
                 if (setting.facebookUrl) {
@@ -1324,21 +1342,21 @@ async function loadSiteSettings() {
                         link.href = setting.facebookUrl;
                     });
                 }
-                
+
                 if (setting.instagramUrl) {
                     const instagramLinks = document.querySelectorAll('.social-link.instagram');
                     instagramLinks.forEach(link => {
                         link.href = setting.instagramUrl;
                     });
                 }
-                
+
                 if (setting.whatsappNumber) {
                     const whatsappLinks = document.querySelectorAll('.social-link.whatsapp');
                     whatsappLinks.forEach(link => {
                         link.href = `https://wa.me/${setting.whatsappNumber.replace(/[^0-9]/g, '')}`;
                     });
                 }
-                
+
                 if (setting.tiktokUrl) {
                     const tiktokLinks = document.querySelectorAll('.social-link.tiktok');
                     tiktokLinks.forEach(link => {
@@ -1369,3 +1387,38 @@ document.addEventListener('DOMContentLoaded', () => {
 window.loadSiteSettings = loadSiteSettings;
 
 console.log('✅ Fonction de chargement des paramètres du site ajoutée');
+// ===== F
+ONCTION DE DEBUG =====
+// Fonction pour fermer manuellement l'écran de chargement (debug)
+window.forceCloseLoading = function() {
+    console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 500);
+    }
+};
+
+// Fonction pour diagnostiquer les problèmes
+window.debugApp = function() {
+    console.log('🔍 Diagnostic de l\'application:');
+    console.log('- Firebase disponible:', typeof firebase !== 'undefined');
+    console.log('- Firestore disponible:', typeof firebase !== 'undefined' && firebase.firestore);
+    console.log('- Produits chargés:', products.length);
+    console.log('- Panier:', cart.length);
+    console.log('- Langue actuelle:', currentLanguage);
+    console.log('- LocalStorage panier:', localStorage.getItem('raniaShopCart'));
+    
+    // Tester les fonctions principales
+    try {
+        console.log('- Test changeLanguage:', typeof changeLanguage);
+        console.log('- Test loadProductsFromFirebase:', typeof loadProductsFromFirebase);
+        console.log('- Test setupEventListeners:', typeof setupEventListeners);
+    } catch (error) {
+        console.error('❌ Erreur lors du diagnostic:', error);
+    }
+};
+
+console.log('✅ Fonctions de debug ajoutées - Utilisez forceCloseLoading() ou debugApp() dans la console');
