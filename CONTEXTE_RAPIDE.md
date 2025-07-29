@@ -10,7 +10,7 @@
 
 ---
 
-## 🚨 ÉTAT ACTUEL (Dernière MAJ: 28/07/2025)
+## 🚨 ÉTAT ACTUEL (Dernière MAJ: 28/07/2025 - Commit 1a97555)
 
 ### ✅ CE QUI MARCHE
 - Site e-commerce 100% fonctionnel
@@ -126,7 +126,8 @@ console.log('Current User:', firebase.auth().currentUser);
 ### 🔗 Liens Importants
 - **Firebase Console** : https://console.firebase.google.com/project/rania-shop
 - **Vercel Dashboard** : https://vercel.com/dashboard
-- **Repo Git** : (à configurer si nécessaire)
+- **Repo GitHub** : https://github.com/toumi550/mido.git
+- **Dernier Commit** : 1a97555 (Documentation complète + Simplification admin)
 
 ### 👨‍💻 Développeur
 - **Email Admin** : toumitony@gmail.com
