@@ -55,6 +55,13 @@ Ce document sert de **roadmap complète** pour le développement futur du projet
   - Supprimé référence 'account' dans `admin/admin.js`
   - **Résultat** : Interface admin allégée, gestion 100% Firebase Console
 
+- ✅ **Implémentation gestion Paramètres** - Synchronisation admin ↔ site principal
+  - Ajouté fonctions `loadSettings()`, `saveSiteSettings()`, `saveSocialSettings()` dans `admin/admin.js`
+  - Ajouté collection Firebase 'settings' avec documents 'general' et 'social'
+  - Ajouté fonction `loadSiteSettings()` dans `script.js` pour appliquer les paramètres
+  - Ajouté event listeners pour formulaires de paramètres
+  - **Résultat** : Changements admin se reflètent automatiquement sur le site principal
+
 #### 📋 PROCHAINES ACTIONS IDENTIFIÉES
 - 🎯 **Tests unitaires** (Priorité 1) - Jamais implémentés
 - 🎯 **Gestion d'erreurs** améliorée - Basique actuellement

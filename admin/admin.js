@@ -61,6 +61,9 @@ function setupEventListeners() {
                 loadAnalytics();
             });
         }
+        
+        // Configurer les event listeners pour les paramètres
+        setupSettingsListeners();
     }, 1000);
 }
 
@@ -188,6 +191,9 @@ function loadSectionData(sectionName) {
             break;
         case 'analytics':
             loadAnalytics();
+            break;
+        case 'settings':
+            loadSettings();
             break;
     }
 }
@@ -1238,3 +1244,165 @@ async function updateStockFromOrder(orderItems) {
 }
 
 console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
+//
+ ===== GESTION DES PARAMÈTRES =====
+
+// Charger les paramètres depuis Firebase
+async function loadSettings() {
+    try {
+        console.log('📋 Chargement des paramètres...');
+        
+        const settingsSnapshot = await firebase.firestore().collection('settings').get();
+        
+        if (settingsSnapshot.empty) {
+            console.log('⚠️ Aucun paramètre trouvé, création des paramètres par défaut');
+            await createDefaultSettings();
+            return;
+        }
+
+        // Charger les paramètres dans les formulaires
+        settingsSnapshot.forEach(doc => {
+            const setting = doc.data();
+            const settingId = doc.id;
+            
+            console.log(`📝 Chargement paramètre: ${settingId}`, setting);
+            
+            // Remplir les champs du formulaire
+            if (settingId === 'general') {
+                document.getElementById('siteName').value = setting.siteName || 'RANIA SHOP';
+                document.getElementById('contactEmail').value = setting.contactEmail || 'contact@raniashop.dz';
+                document.getElementById('contactPhone').value = setting.contactPhone || '+213 XXX XXX XXX';
+            } else if (settingId === 'social') {
+                document.getElementById('facebookUrl').value = setting.facebookUrl || 'https://www.facebook.com/raniashop';
+                document.getElementById('instagramUrl').value = setting.instagramUrl || 'https://www.instagram.com/raniashop';
+                document.getElementById('whatsappNumber').value = setting.whatsappNumber || '+213XXXXXXXXX';
+                document.getElementById('tiktokUrl').value = setting.tiktokUrl || 'https://www.tiktok.com/@raniashop';
+            }
+        });
+
+        console.log('✅ Paramètres chargés avec succès');
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des paramètres:', error);
+    }
+}
+
+// Créer les paramètres par défaut
+async function createDefaultSettings() {
+    try {
+        const defaultGeneral = {
+            siteName: 'RANIA SHOP',
+            contactEmail: 'contact@raniashop.dz',
+            contactPhone: '+213 XXX XXX XXX',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const defaultSocial = {
+            facebookUrl: 'https://www.facebook.com/raniashop',
+            instagramUrl: 'https://www.instagram.com/raniashop',
+            whatsappNumber: '+213XXXXXXXXX',
+            tiktokUrl: 'https://www.tiktok.com/@raniashop',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await firebase.firestore().collection('settings').doc('general').set(defaultGeneral);
+        await firebase.firestore().collection('settings').doc('social').set(defaultSocial);
+
+        console.log('✅ Paramètres par défaut créés');
+        
+        // Recharger les paramètres
+        await loadSettings();
+
+    } catch (error) {
+        console.error('❌ Erreur lors de la création des paramètres par défaut:', error);
+    }
+}
+
+// Sauvegarder les paramètres généraux
+async function saveSiteSettings(e) {
+    e.preventDefault();
+    
+    try {
+        console.log('💾 Sauvegarde des paramètres généraux...');
+        
+        const siteName = document.getElementById('siteName').value.trim();
+        const contactEmail = document.getElementById('contactEmail').value.trim();
+        const contactPhone = document.getElementById('contactPhone').value.trim();
+
+        if (!siteName || !contactEmail || !contactPhone) {
+            alert('Veuillez remplir tous les champs');
+            return;
+        }
+
+        const settingsData = {
+            siteName: siteName,
+            contactEmail: contactEmail,
+            contactPhone: contactPhone,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await firebase.firestore().collection('settings').doc('general').set(settingsData);
+        
+        console.log('✅ Paramètres généraux sauvegardés:', settingsData);
+        alert('Paramètres généraux sauvegardés avec succès !');
+
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde des paramètres généraux:', error);
+        alert('Erreur lors de la sauvegarde: ' + error.message);
+    }
+}
+
+// Sauvegarder les paramètres des réseaux sociaux
+async function saveSocialSettings(e) {
+    e.preventDefault();
+    
+    try {
+        console.log('💾 Sauvegarde des paramètres réseaux sociaux...');
+        
+        const facebookUrl = document.getElementById('facebookUrl').value.trim();
+        const instagramUrl = document.getElementById('instagramUrl').value.trim();
+        const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+        const tiktokUrl = document.getElementById('tiktokUrl').value.trim();
+
+        const settingsData = {
+            facebookUrl: facebookUrl,
+            instagramUrl: instagramUrl,
+            whatsappNumber: whatsappNumber,
+            tiktokUrl: tiktokUrl,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await firebase.firestore().collection('settings').doc('social').set(settingsData);
+        
+        console.log('✅ Paramètres réseaux sociaux sauvegardés:', settingsData);
+        alert('Paramètres des réseaux sociaux sauvegardés avec succès !');
+
+    } catch (error) {
+        console.error('❌ Erreur lors de la sauvegarde des paramètres réseaux sociaux:', error);
+        alert('Erreur lors de la sauvegarde: ' + error.message);
+    }
+}
+
+// Configurer les event listeners pour les paramètres
+function setupSettingsListeners() {
+    const siteSettingsForm = document.getElementById('siteSettingsForm');
+    const socialSettingsForm = document.getElementById('socialSettingsForm');
+
+    if (siteSettingsForm) {
+        siteSettingsForm.addEventListener('submit', saveSiteSettings);
+        console.log('✅ Event listener ajouté pour siteSettingsForm');
+    }
+
+    if (socialSettingsForm) {
+        socialSettingsForm.addEventListener('submit', saveSocialSettings);
+        console.log('✅ Event listener ajouté pour socialSettingsForm');
+    }
+}
+
+// Exposer les fonctions au scope global
+window.loadSettings = loadSettings;
+window.saveSiteSettings = saveSiteSettings;
+window.saveSocialSettings = saveSocialSettings;
+window.setupSettingsListeners = setupSettingsListeners;
+
+console.log('✅ Fonctions de gestion des paramètres ajoutées');

@@ -1251,3 +1251,121 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollObserver.observe(section);
     });
 });
+//
+ ===== CHARGEMENT DES PARAMÈTRES DEPUIS FIREBASE =====
+
+// Charger et appliquer les paramètres du site
+async function loadSiteSettings() {
+    try {
+        console.log('📋 Chargement des paramètres du site...');
+        
+        const settingsSnapshot = await firebase.firestore().collection('settings').get();
+        
+        if (settingsSnapshot.empty) {
+            console.log('⚠️ Aucun paramètre trouvé, utilisation des valeurs par défaut');
+            return;
+        }
+
+        settingsSnapshot.forEach(doc => {
+            const setting = doc.data();
+            const settingId = doc.id;
+            
+            console.log(`📝 Application paramètre: ${settingId}`, setting);
+            
+            if (settingId === 'general') {
+                // Mettre à jour le nom du site
+                if (setting.siteName) {
+                    // Titre principal
+                    const heroTitles = document.querySelectorAll('.hero-title');
+                    heroTitles.forEach(title => {
+                        if (currentLanguage === 'ar') {
+                            title.textContent = setting.siteName;
+                        }
+                    });
+                    
+                    // Footer
+                    const footerTitles = document.querySelectorAll('.footer-logo h3');
+                    footerTitles.forEach(title => {
+                        if (currentLanguage === 'ar') {
+                            title.textContent = setting.siteName;
+                        }
+                    });
+                    
+                    // Copyright
+                    const copyrightElements = document.querySelectorAll('.footer-copyright p');
+                    copyrightElements.forEach(copyright => {
+                        if (currentLanguage === 'ar') {
+                            copyright.textContent = `© 2024 ${setting.siteName}. جميع الحقوق محفوظة.`;
+                        }
+                    });
+                }
+                
+                // Mettre à jour les informations de contact
+                if (setting.contactEmail) {
+                    const emailElements = document.querySelectorAll('.contact-info p:nth-child(2)');
+                    emailElements.forEach(email => {
+                        email.innerHTML = `<i class="fas fa-envelope"></i> ${setting.contactEmail}`;
+                    });
+                }
+                
+                if (setting.contactPhone) {
+                    const phoneElements = document.querySelectorAll('.contact-info p:nth-child(1)');
+                    phoneElements.forEach(phone => {
+                        phone.innerHTML = `<i class="fas fa-phone"></i> <span dir="ltr">${setting.contactPhone}</span>`;
+                    });
+                }
+            }
+            
+            if (settingId === 'social') {
+                // Mettre à jour les liens des réseaux sociaux
+                if (setting.facebookUrl) {
+                    const facebookLinks = document.querySelectorAll('.social-link.facebook');
+                    facebookLinks.forEach(link => {
+                        link.href = setting.facebookUrl;
+                    });
+                }
+                
+                if (setting.instagramUrl) {
+                    const instagramLinks = document.querySelectorAll('.social-link.instagram');
+                    instagramLinks.forEach(link => {
+                        link.href = setting.instagramUrl;
+                    });
+                }
+                
+                if (setting.whatsappNumber) {
+                    const whatsappLinks = document.querySelectorAll('.social-link.whatsapp');
+                    whatsappLinks.forEach(link => {
+                        link.href = `https://wa.me/${setting.whatsappNumber.replace(/[^0-9]/g, '')}`;
+                    });
+                }
+                
+                if (setting.tiktokUrl) {
+                    const tiktokLinks = document.querySelectorAll('.social-link.tiktok');
+                    tiktokLinks.forEach(link => {
+                        link.href = setting.tiktokUrl;
+                    });
+                }
+            }
+        });
+
+        console.log('✅ Paramètres du site appliqués avec succès');
+
+    } catch (error) {
+        console.error('❌ Erreur lors du chargement des paramètres:', error);
+    }
+}
+
+// Charger les paramètres au démarrage de la page
+document.addEventListener('DOMContentLoaded', () => {
+    // Attendre que Firebase soit initialisé
+    setTimeout(() => {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            loadSiteSettings();
+        }
+    }, 2000);
+});
+
+// Exposer la fonction pour pouvoir la tester
+window.loadSiteSettings = loadSiteSettings;
+
+console.log('✅ Fonction de chargement des paramètres du site ajoutée');
