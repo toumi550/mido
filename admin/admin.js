@@ -1490,3 +1490,90 @@ console.log('✅ Fonctions de debug admin ajoutées:');
 console.log('- testFirebaseConnection() : Teste la connexion Firebase');
 console.log('- testLogin(email, password) : Teste la connexion avec des identifiants');
 console.log('- createAdminUser(email, password) : Crée un utilisateur admin');
+
+// ===== CORRECTION MENU MOBILE =====
+// Solution simple et efficace pour le menu hamburger mobile
+
+// Attendre que le DOM soit complètement chargé
+document.addEventListener('DOMContentLoaded', function() {
+    // Attendre un délai supplémentaire pour s'assurer que tous les éléments sont rendus
+    setTimeout(function() {
+        initMobileMenu();
+    }, 1000);
+});
+
+function initMobileMenu() {
+    console.log('🔧 Initialisation du menu mobile...');
+    
+    const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+    const adminSidebar = document.querySelector('.admin-sidebar');
+    
+    console.log('Éléments trouvés:', {
+        mobileMenuToggle: !!mobileMenuToggle,
+        adminSidebar: !!adminSidebar,
+        toggleVisible: mobileMenuToggle ? getComputedStyle(mobileMenuToggle).display !== 'none' : false
+    });
+    
+    if (mobileMenuToggle && adminSidebar) {
+        // Supprimer les anciens event listeners s'ils existent
+        mobileMenuToggle.replaceWith(mobileMenuToggle.cloneNode(true));
+        const newToggle = document.querySelector('.mobile-menu-toggle');
+        
+        // Ajouter le nouvel event listener
+        newToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('📱 Clic sur menu hamburger');
+            
+            // Toggle des classes
+            adminSidebar.classList.toggle('active');
+            newToggle.classList.toggle('active');
+            
+            const isOpen = adminSidebar.classList.contains('active');
+            console.log('📱 Menu', isOpen ? 'ouvert' : 'fermé');
+        });
+        
+        // Fermer le menu en cliquant en dehors
+        document.addEventListener('click', function(e) {
+            if (!adminSidebar.contains(e.target) && !newToggle.contains(e.target)) {
+                adminSidebar.classList.remove('active');
+                newToggle.classList.remove('active');
+            }
+        });
+        
+        // Fermer le menu lors de la navigation
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                adminSidebar.classList.remove('active');
+                newToggle.classList.remove('active');
+            });
+        });
+        
+        console.log('✅ Menu mobile configuré avec succès');
+        
+        // Fonction de test disponible dans la console
+        window.testMobileMenuNow = function() {
+            console.log('🧪 Test du menu mobile...');
+            adminSidebar.classList.add('active');
+            newToggle.classList.add('active');
+            
+            setTimeout(() => {
+                adminSidebar.classList.remove('active');
+                newToggle.classList.remove('active');
+                console.log('✅ Test terminé');
+            }, 2000);
+        };
+        
+    } else {
+        console.error('❌ Menu mobile non configuré - éléments manquants');
+        
+        // Réessayer après un délai
+        setTimeout(function() {
+            console.log('🔄 Nouvelle tentative...');
+            initMobileMenu();
+        }, 2000);
+    }
+}
+
+console.log('📱 Script menu mobile chargé - Fonction testMobileMenuNow() disponible');
