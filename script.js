@@ -1193,18 +1193,7 @@ function initializeApp() {
     const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
     changeLanguage(savedLanguage);
 
-    // Fermer l'écran de chargement plus rapidement
-    setTimeout(() => {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            console.log('🔄 Fermeture de l\'écran de chargement...');
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                console.log('✅ Écran de chargement fermé');
-            }, 300);
-        }
-    }, 1000);
+    // L'écran de chargement est déjà fermé dans DOMContentLoaded
 
     loadProductsFromFirebase();
     setupEventListeners();
@@ -1219,18 +1208,22 @@ function initializeApp() {
 // Initialize App
 document.addEventListener('DOMContentLoaded', function () {
     console.log('🔄 DOM Content Loaded - Démarrage de l\'application');
-    
-    // Fermeture d'urgence après 2 secondes maximum
+
+    // FERMETURE IMMÉDIATE de l'écran de chargement
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        console.log('🚀 Fermeture immédiate de l\'écran de chargement');
+        loadingScreen.style.display = 'none';
+    }
+
+    // Fermeture de sécurité après 500ms au cas où
     setTimeout(() => {
         const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen && loadingScreen.style.display !== 'none') {
-            console.log('⚠️ Fermeture d\'urgence de l\'écran de chargement');
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 300);
+        if (loadingScreen) {
+            console.log('🔒 Fermeture de sécurité');
+            loadingScreen.style.display = 'none';
         }
-    }, 2000);
+    }, 500);
 
     try {
         initializeApp();
@@ -1398,17 +1391,17 @@ window.loadSiteSettings = loadSiteSettings;
 
 console.log('✅ Fonction de chargement des paramètres du site ajoutée');
 // ===== FONCTION DE DEBUG =====
-    // Fonction pour fermer manuellement l'écran de chargement (debug)
-    window.forceCloseLoading = function() {
-        console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }
-    };
+// Fonction pour fermer manuellement l'écran de chargement (debug)
+window.forceCloseLoading = function () {
+    console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 500);
+    }
+};
 
 // Fonction pour diagnostiquer les problèmes
 window.debugApp = function () {
@@ -1431,3 +1424,40 @@ window.debugApp = function () {
 };
 
 console.log('✅ Fonctions de debug ajoutées - Utilisez forceCloseLoading() ou debugApp() dans la console');
+// ===== FONCTION D'URGENCE =====
+// Fonction d'urgence pour débloquer complètement le site
+window.emergencyUnlock = function() {
+    console.log('🚨 DÉBLOQUAGE D\'URGENCE DU SITE');
+    
+    // Fermer tous les écrans de chargement possibles
+    const loadingScreens = document.querySelectorAll('#loading-screen, .loading-screen, .loader');
+    loadingScreens.forEach(screen => {
+        screen.style.display = 'none';
+        screen.remove();
+    });
+    
+    // Forcer l'affichage du contenu principal
+    const mainContent = document.querySelector('.main-content, main, body');
+    if (mainContent) {
+        mainContent.style.display = 'block';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+    }
+    
+    // Réinitialiser le body
+    document.body.style.overflow = 'auto';
+    document.body.style.height = 'auto';
+    
+    console.log('✅ Site débloqué - Rechargez la page si nécessaire');
+    
+    // Essayer de réinitialiser l'application
+    try {
+        if (typeof initializeApp === 'function') {
+            initializeApp();
+        }
+    } catch (error) {
+        console.log('⚠️ Erreur lors de la réinitialisation:', error);
+    }
+};
+
+console.log('🆘 Fonction d\'urgence disponible: emergencyUnlock()');

@@ -19,17 +19,33 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function initializeAdmin() {
+    console.log('🚀 Initialisation du panneau admin...');
+    console.log('🔥 Firebase disponible:', typeof firebase !== 'undefined');
+    console.log('🔐 Firebase Auth disponible:', typeof firebase !== 'undefined' && !!firebase.auth);
+    console.log('🗄️ Firebase Firestore disponible:', typeof firebase !== 'undefined' && !!firebase.firestore);
+    
     if (typeof firebase === 'undefined') {
-        showError('Firebase non chargé');
+        console.error('❌ Firebase non chargé');
+        showError('Firebase non chargé - Vérifiez la connexion internet');
+        return;
+    }
+
+    if (!firebase.auth) {
+        console.error('❌ Firebase Auth non disponible');
+        showError('Firebase Auth non disponible');
         return;
     }
 
     // Authentification
     firebase.auth().onAuthStateChanged((user) => {
+        console.log('🔄 État d\'authentification changé:', user ? user.email : 'Non connecté');
+        
         if (user) {
+            console.log('✅ Utilisateur connecté:', user.email);
             currentUser = user;
             showDashboard();
         } else {
+            console.log('❌ Aucun utilisateur connecté');
             showLoginScreen();
         }
     });
@@ -80,16 +96,31 @@ async function handleLogin(e) {
     }
 
     try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+        console.log('🔐 Tentative de connexion avec:', email);
+        console.log('🔥 Firebase Auth disponible:', !!firebase.auth);
+        
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        console.log('✅ Connexion réussie:', userCredential.user.email);
+        
     } catch (error) {
+        console.error('❌ Erreur de connexion:', error);
+        console.error('Code d\'erreur:', error.code);
+        console.error('Message d\'erreur:', error.message);
+        
         let errorMessage = 'Erreur de connexion';
 
         if (error.code === 'auth/user-not-found') {
-            errorMessage = 'Utilisateur non trouvé';
+            errorMessage = 'Utilisateur non trouvé - Vérifiez que le compte existe dans Firebase Auth';
         } else if (error.code === 'auth/wrong-password') {
             errorMessage = 'Mot de passe incorrect';
         } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Email invalide';
+            errorMessage = 'Format d\'email invalide';
+        } else if (error.code === 'auth/invalid-credential') {
+            errorMessage = 'Identifiants invalides - Vérifiez l\'email et le mot de passe';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = 'Trop de tentatives - Attendez quelques minutes';
+        } else {
+            errorMessage = `Erreur: ${error.message}`;
         }
 
         showLoginError(errorMessage);
@@ -1244,8 +1275,8 @@ async function updateStockFromOrder(orderItems) {
 }
 
 console.log('✅ Fonction updateStockFromOrder ajoutée au panneau admin');
-//
- ===== GESTION DES PARAMÈTRES =====
+
+// ===== GESTION DES PARAMÈTRES =====
 
 // Charger les paramètres depuis Firebase
 async function loadSettings() {
@@ -1406,3 +1437,56 @@ window.saveSocialSettings = saveSocialSettings;
 window.setupSettingsListeners = setupSettingsListeners;
 
 console.log('✅ Fonctions de gestion des paramètres ajoutées');
+// ===== FONCTIONS DE DEBUG ADMIN =====
+
+// Fonction pour tester la connexion Firebase
+window.testFirebaseConnection = function() {
+    console.log('🧪 Test de connexion Firebase...');
+    console.log('- Firebase disponible:', typeof firebase !== 'undefined');
+    console.log('- Firebase Auth:', !!firebase?.auth);
+    console.log('- Firebase Firestore:', !!firebase?.firestore);
+    
+    if (firebase?.auth) {
+        console.log('- Utilisateur actuel:', firebase.auth().currentUser?.email || 'Non connecté');
+    }
+    
+    return {
+        firebase: typeof firebase !== 'undefined',
+        auth: !!firebase?.auth,
+        firestore: !!firebase?.firestore,
+        currentUser: firebase?.auth()?.currentUser?.email || null
+    };
+};
+
+// Fonction pour tester la connexion avec des identifiants
+window.testLogin = async function(email, password) {
+    console.log('🧪 Test de connexion avec:', email);
+    
+    try {
+        const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        console.log('✅ Test de connexion réussi:', result.user.email);
+        return { success: true, user: result.user.email };
+    } catch (error) {
+        console.error('❌ Test de connexion échoué:', error);
+        return { success: false, error: error.code, message: error.message };
+    }
+};
+
+// Fonction pour créer un utilisateur admin (à utiliser une seule fois)
+window.createAdminUser = async function(email, password) {
+    console.log('👤 Création d\'un utilisateur admin:', email);
+    
+    try {
+        const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        console.log('✅ Utilisateur admin créé:', result.user.email);
+        return { success: true, user: result.user.email };
+    } catch (error) {
+        console.error('❌ Erreur lors de la création:', error);
+        return { success: false, error: error.code, message: error.message };
+    }
+};
+
+console.log('✅ Fonctions de debug admin ajoutées:');
+console.log('- testFirebaseConnection() : Teste la connexion Firebase');
+console.log('- testLogin(email, password) : Teste la connexion avec des identifiants');
+console.log('- createAdminUser(email, password) : Crée un utilisateur admin');
