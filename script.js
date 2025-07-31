@@ -276,30 +276,21 @@ const sampleProducts = [
 
 // Fonction d'ajout au panier
 function addToCart(productId, quantity = 1) {
-    console.log('🛒 addToCart appelée avec productId:', productId, 'quantity:', quantity);
-
     const product = products.find(p => p.id === productId);
     if (!product) {
-        console.error('❌ Produit non trouvé avec ID:', productId);
         return;
     }
-
-    console.log('✅ Produit trouvé:', product);
 
     const existingItem = cart.find(item => item.id === productId);
 
     if (existingItem) {
         existingItem.quantity += quantity;
-        console.log('📈 Quantité mise à jour:', existingItem);
     } else {
         cart.push({
             ...product,
             quantity: quantity
         });
-        console.log('🆕 Nouveau produit ajouté au panier');
     }
-
-    console.log('🛒 Panier actuel:', cart);
 
     updateCartDisplay();
     updateCartCount();
@@ -308,20 +299,10 @@ function addToCart(productId, quantity = 1) {
 }
 
 function removeFromCart(productId) {
-    console.log('🗑️ Suppression du produit du panier:', productId);
-    console.log('📦 Panier avant suppression:', cart);
-
-    const initialLength = cart.length;
     cart = cart.filter(item => item.id !== productId);
-
-    console.log('📦 Panier après suppression:', cart);
-    console.log(`📊 Produits supprimés: ${initialLength - cart.length}`);
-
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-
-    console.log('✅ Produit supprimé du panier - Affichage mis à jour');
 }
 
 function updateCartQuantity(productId, newQuantity) {
@@ -448,7 +429,7 @@ function scrollToSection(sectionId) {
     }
 }
 
-// Exposer toutes les fonctions au scope global pour les attributs onclick
+// Exposer les fonctions au scope global
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.updateCartQuantity = updateCartQuantity;
@@ -461,15 +442,6 @@ window.closeModal = closeModal;
 window.closeSuccessModal = closeSuccessModal;
 window.selectProduct = selectProduct;
 window.scrollToSection = scrollToSection;
-
-console.log('✅ Toutes les fonctions ont été exposées au scope global');
-
-// Test des fonctions exposées
-console.log('🔍 Test des fonctions exposées:');
-console.log('- addToCart:', typeof window.addToCart);
-console.log('- openProductModal:', typeof window.openProductModal);
-console.log('- showCheckoutForm:', typeof window.showCheckoutForm);
-console.log('- calculateDelivery:', typeof window.calculateDelivery);
 
 // ===== FONCTIONS D'AFFICHAGE ET DE GESTION =====
 
@@ -599,12 +571,10 @@ function createProductCard(product) {
     const addToCartBtn = card.querySelector('.add-to-cart');
 
     quickViewBtn.addEventListener('click', () => {
-        console.log('🔍 Bouton aperçu rapide cliqué pour le produit:', product.id);
         openProductModal(product.id);
     });
 
     addToCartBtn.addEventListener('click', () => {
-        console.log('🛒 Bouton ajouter au panier cliqué pour le produit:', product.id);
         addToCart(product.id);
     });
 
@@ -853,7 +823,7 @@ async function handleCheckoutSubmission(e) {
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log('✅ Commande sauvegardée avec succès dans Firebase avec ID:', docRef.id);
+
             orderSavedSuccessfully = true;
 
         } else {
@@ -861,9 +831,7 @@ async function handleCheckoutSubmission(e) {
         }
     } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
-        console.error('Détails de l\'erreur:', error.message);
-        console.error('Code d\'erreur:', error.code);
-
+        
         alert('Attention: Il y a eu un problème technique lors de l\'enregistrement de votre commande. Veuillez contacter le service client avec votre numéro de commande: ' + orderData.orderNumber);
     }
 
@@ -1188,12 +1156,8 @@ function setupSidebarAutoHide() {
 // ===== INITIALISATION =====
 
 function initializeApp() {
-    console.log('🚀 Initialisation de l\'application...');
-
     const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
     changeLanguage(savedLanguage);
-
-    // L'écran de chargement est déjà fermé dans DOMContentLoaded
 
     loadProductsFromFirebase();
     setupEventListeners();
@@ -1201,26 +1165,20 @@ function initializeApp() {
     populateWilayaDropdown();
     loadCartFromStorage();
     setupSmoothScrolling();
-
-    console.log('✅ Application initialisée avec succès');
 }
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('🔄 DOM Content Loaded - Démarrage de l\'application');
-
-    // FERMETURE IMMÉDIATE de l'écran de chargement
+    // Fermer l'écran de chargement
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
-        console.log('🚀 Fermeture immédiate de l\'écran de chargement');
         loadingScreen.style.display = 'none';
     }
 
-    // Fermeture de sécurité après 500ms au cas où
+    // Fermeture de sécurité
     setTimeout(() => {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
-            console.log('🔒 Fermeture de sécurité');
             loadingScreen.style.display = 'none';
         }
     }, 500);
@@ -1228,12 +1186,9 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
         initializeApp();
     } catch (error) {
-        console.error('❌ Erreur lors de l\'initialisation:', error);
-
-        // Forcer la fermeture immédiate en cas d'erreur
+        console.error('Erreur lors de l\'initialisation:', error);
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
-            console.log('🔧 Fermeture immédiate suite à une erreur');
             loadingScreen.style.display = 'none';
         }
     }
@@ -1369,7 +1324,7 @@ async function loadSiteSettings() {
             }
         });
 
-        console.log('✅ Paramètres du site appliqués avec succès');
+
 
     } catch (error) {
         console.error('❌ Erreur lors du chargement des paramètres:', error);
@@ -1389,75 +1344,3 @@ document.addEventListener('DOMContentLoaded', () => {
 // Exposer la fonction pour pouvoir la tester
 window.loadSiteSettings = loadSiteSettings;
 
-console.log('✅ Fonction de chargement des paramètres du site ajoutée');
-// ===== FONCTION DE DEBUG =====
-// Fonction pour fermer manuellement l'écran de chargement (debug)
-window.forceCloseLoading = function () {
-    console.log('🔧 Fermeture forcée de l\'écran de chargement (debug)');
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.opacity = '0';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
-    }
-};
-
-// Fonction pour diagnostiquer les problèmes
-window.debugApp = function () {
-    console.log('🔍 Diagnostic de l\'application:');
-    console.log('- Firebase disponible:', typeof firebase !== 'undefined');
-    console.log('- Firestore disponible:', typeof firebase !== 'undefined' && firebase.firestore);
-    console.log('- Produits chargés:', products.length);
-    console.log('- Panier:', cart.length);
-    console.log('- Langue actuelle:', currentLanguage);
-    console.log('- LocalStorage panier:', localStorage.getItem('raniaShopCart'));
-
-    // Tester les fonctions principales
-    try {
-        console.log('- Test changeLanguage:', typeof changeLanguage);
-        console.log('- Test loadProductsFromFirebase:', typeof loadProductsFromFirebase);
-        console.log('- Test setupEventListeners:', typeof setupEventListeners);
-    } catch (error) {
-        console.error('❌ Erreur lors du diagnostic:', error);
-    }
-};
-
-console.log('✅ Fonctions de debug ajoutées - Utilisez forceCloseLoading() ou debugApp() dans la console');
-// ===== FONCTION D'URGENCE =====
-// Fonction d'urgence pour débloquer complètement le site
-window.emergencyUnlock = function() {
-    console.log('🚨 DÉBLOQUAGE D\'URGENCE DU SITE');
-    
-    // Fermer tous les écrans de chargement possibles
-    const loadingScreens = document.querySelectorAll('#loading-screen, .loading-screen, .loader');
-    loadingScreens.forEach(screen => {
-        screen.style.display = 'none';
-        screen.remove();
-    });
-    
-    // Forcer l'affichage du contenu principal
-    const mainContent = document.querySelector('.main-content, main, body');
-    if (mainContent) {
-        mainContent.style.display = 'block';
-        mainContent.style.visibility = 'visible';
-        mainContent.style.opacity = '1';
-    }
-    
-    // Réinitialiser le body
-    document.body.style.overflow = 'auto';
-    document.body.style.height = 'auto';
-    
-    console.log('✅ Site débloqué - Rechargez la page si nécessaire');
-    
-    // Essayer de réinitialiser l'application
-    try {
-        if (typeof initializeApp === 'function') {
-            initializeApp();
-        }
-    } catch (error) {
-        console.log('⚠️ Erreur lors de la réinitialisation:', error);
-    }
-};
-
-console.log('🆘 Fonction d\'urgence disponible: emergencyUnlock()');

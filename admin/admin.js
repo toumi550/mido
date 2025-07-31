@@ -1,5 +1,4 @@
-// PANNEAU ADMIN RANIA SHOP - VERSION FINALE SANS ERREURS
-// ======================================================
+// PANNEAU ADMIN RANIA SHOP
 
 // Variables globales
 let currentUser = null;
@@ -14,38 +13,38 @@ const loginError = document.getElementById('loginError');
 
 // ===== INITIALISATION =====
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('🚀 Initialisation du panneau admin...');
+    console.log('Initialisation du panneau admin...');
     initializeAdmin();
 });
 
 function initializeAdmin() {
-    console.log('🚀 Initialisation du panneau admin...');
-    console.log('🔥 Firebase disponible:', typeof firebase !== 'undefined');
-    console.log('🔐 Firebase Auth disponible:', typeof firebase !== 'undefined' && !!firebase.auth);
-    console.log('🗄️ Firebase Firestore disponible:', typeof firebase !== 'undefined' && !!firebase.firestore);
+    console.log('Initialisation du panneau admin...');
+    console.log('Firebase disponible:', typeof firebase !== 'undefined');
+    console.log('Firebase Auth disponible:', typeof firebase !== 'undefined' && !!firebase.auth);
+    console.log('Firebase Firestore disponible:', typeof firebase !== 'undefined' && !!firebase.firestore);
 
     if (typeof firebase === 'undefined') {
-        console.error('❌ Firebase non chargé');
+        console.error('Firebase non chargé');
         showError('Firebase non chargé - Vérifiez la connexion internet');
         return;
     }
 
     if (!firebase.auth) {
-        console.error('❌ Firebase Auth non disponible');
+        console.error('Firebase Auth non disponible');
         showError('Firebase Auth non disponible');
         return;
     }
 
     // Authentification
     firebase.auth().onAuthStateChanged((user) => {
-        console.log('🔄 État d\'authentification changé:', user ? user.email : 'Non connecté');
+        console.log('État d\'authentification changé:', user ? user.email : 'Non connecté');
 
         if (user) {
-            console.log('✅ Utilisateur connecté:', user.email);
+            console.log('Utilisateur connecté:', user.email);
             currentUser = user;
             showDashboard();
         } else {
-            console.log('❌ Aucun utilisateur connecté');
+            console.log('Aucun utilisateur connecté');
             showLoginScreen();
         }
     });
@@ -96,33 +95,23 @@ async function handleLogin(e) {
     }
 
     try {
-        console.log('🔐 Tentative de connexion avec:', email);
-        console.log('🔥 Firebase Auth disponible:', !!firebase.auth);
+        console.log('Tentative de connexion avec:', email);
+        console.log('Firebase Auth disponible:', !!firebase.auth);
 
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        console.log('✅ Connexion réussie:', userCredential.user.email);
+        console.log('Connexion réussie:', userCredential.user.email);
 
     } catch (error) {
-        console.error('❌ Erreur de connexion:', error);
-        console.error('Code d\'erreur:', error.code);
-        console.error('Message d\'erreur:', error.message);
-
+        console.error('Erreur de connexion:', error);
+        
         let errorMessage = 'Erreur de connexion';
-
         if (error.code === 'auth/user-not-found') {
             errorMessage = 'Utilisateur non trouvé - Vérifiez que le compte existe dans Firebase Auth';
         } else if (error.code === 'auth/wrong-password') {
             errorMessage = 'Mot de passe incorrect';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'Format d\'email invalide';
         } else if (error.code === 'auth/invalid-credential') {
             errorMessage = 'Identifiants invalides - Vérifiez l\'email et le mot de passe';
-        } else if (error.code === 'auth/too-many-requests') {
-            errorMessage = 'Trop de tentatives - Attendez quelques minutes';
-        } else {
-            errorMessage = `Erreur: ${error.message}`;
         }
-
         showLoginError(errorMessage);
     }
 }
