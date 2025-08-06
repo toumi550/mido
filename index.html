@@ -25,6 +25,17 @@
         </div>
     </div>
 
+    <!-- Emergency loading screen removal -->
+    <script>
+        // Fermeture d'urgence après 3 secondes maximum
+        setTimeout(function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
+        }, 3000);
+    </script>
+
     <!-- Language Toggle -->
     <div class="language-toggle">
         <button class="lang-btn active" data-lang="ar">العربية</button>

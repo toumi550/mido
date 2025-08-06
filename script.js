@@ -1208,6 +1208,14 @@ function initializeApp() {
 }
 
 // Initialize App
+// Fermeture immédiate de l'écran de chargement
+setTimeout(() => {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+}, 100);
+
 document.addEventListener('DOMContentLoaded', function () {
     // Fermer l'écran de chargement
     const loadingScreen = document.getElementById('loading-screen');
