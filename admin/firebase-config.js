@@ -1,13 +1,13 @@
 // Firebase Configuration
 // IMPORTANT: Remplacez ces valeurs par votre configuration Firebase
 const firebaseConfig = {
-    // Vous devez remplacer ces valeurs par votre propre configuration Firebase
-    apiKey: "AIzaSyAammDyOIAra8S0I4kSTAbrJKOldPDYPA0",
-    authDomain: "rania-shop.firebaseapp.com",
-    projectId: "rania-shop",
-    storageBucket: "rania-shop.firebasestorage.app",
-    messagingSenderId: "79782603239",
-    appId: "1:79782603239:web:1985a0885dd7fc3968b542"
+    // Configuration Firebase pour le nouveau projet rania-shop-1fc2e
+    apiKey: "AIzaSyCMHnyFo55VTydqqNJ29x1O0NrUOzQ2dj8",
+    authDomain: "rania-shop-1fc2e.firebaseapp.com",
+    projectId: "rania-shop-1fc2e",
+    storageBucket: "rania-shop-1fc2e.firebasestorage.app",
+    messagingSenderId: "1051956451",
+    appId: "1:1051956451:web:b8f8f8f8f8f8f8f8f8f8f8"
 };
 
 // Instructions pour obtenir votre configuration Firebase :
