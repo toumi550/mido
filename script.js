@@ -1062,52 +1062,12 @@ function setupEventListeners() {
 
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebarMenu = document.getElementById('sidebarMenu');
-    const menuOverlay = document.getElementById('menuOverlay');
 
-    // Fonction pour ouvrir le menu
-    function openMenu() {
-        sidebarMenu.classList.add('active');
-        menuOverlay.classList.add('active');
-        mobileMenuToggle.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Empêcher le scroll
-    }
-
-    // Fonction pour fermer le menu
-    function closeMenu() {
-        sidebarMenu.classList.remove('active');
-        menuOverlay.classList.remove('active');
-        mobileMenuToggle.classList.remove('active');
-        document.body.style.overflow = ''; // Restaurer le scroll
-    }
-
-    // Toggle du menu
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', () => {
-            if (sidebarMenu.classList.contains('active')) {
-                closeMenu();
-            } else {
-                openMenu();
-            }
+            sidebarMenu.classList.toggle('active');
         });
     }
-
-    // Fermer le menu en cliquant sur l'overlay
-    if (menuOverlay) {
-        menuOverlay.addEventListener('click', closeMenu);
-    }
-
-    // Fermer le menu en cliquant sur un lien
-    const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', closeMenu);
-    });
-
-    // Fermer le menu avec la touche Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && sidebarMenu.classList.contains('active')) {
-            closeMenu();
-        }
-    });
 
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
@@ -1208,14 +1168,6 @@ function initializeApp() {
 }
 
 // Initialize App
-// Fermeture immédiate de l'écran de chargement
-setTimeout(() => {
-    const loadingScreen = document.getElementById('loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.display = 'none';
-    }
-}, 100);
-
 document.addEventListener('DOMContentLoaded', function () {
     // Fermer l'écran de chargement
     const loadingScreen = document.getElementById('loading-screen');
