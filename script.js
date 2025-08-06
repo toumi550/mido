@@ -1062,12 +1062,52 @@ function setupEventListeners() {
 
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     const sidebarMenu = document.getElementById('sidebarMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
 
+    // Fonction pour ouvrir le menu
+    function openMenu() {
+        sidebarMenu.classList.add('active');
+        menuOverlay.classList.add('active');
+        mobileMenuToggle.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Empêcher le scroll
+    }
+
+    // Fonction pour fermer le menu
+    function closeMenu() {
+        sidebarMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        mobileMenuToggle.classList.remove('active');
+        document.body.style.overflow = ''; // Restaurer le scroll
+    }
+
+    // Toggle du menu
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', () => {
-            sidebarMenu.classList.toggle('active');
+            if (sidebarMenu.classList.contains('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
         });
     }
+
+    // Fermer le menu en cliquant sur l'overlay
+    if (menuOverlay) {
+        menuOverlay.addEventListener('click', closeMenu);
+    }
+
+    // Fermer le menu en cliquant sur un lien
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav a');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', closeMenu);
+    });
+
+    // Fermer le menu avec la touche Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebarMenu.classList.contains('active')) {
+            closeMenu();
+        }
+    });
 
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
