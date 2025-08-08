@@ -880,17 +880,19 @@ section {
 .product-image {
     position: relative;
     overflow: hidden;
-    height: 250px;
+    height: 300px;
     width: 100%;
+    background: #f8f9fa;
 }
 
 .product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     transition: var(--transition);
     display: block;
+    background: white;
 }
 
 .product-card:hover .product-image img {
