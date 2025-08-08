@@ -11,14 +11,14 @@ const firebaseConfig = {
 };
 
 try {
-    console.log('🔥 Initialisation Firebase...');
+
     
     if (typeof firebase === 'undefined') {
         throw new Error('Firebase SDK non chargé');
     }
     
     firebase.initializeApp(firebaseConfig);
-    console.log('✅ Firebase initialisé avec succès');
+
     
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -26,10 +26,9 @@ try {
     window.firebaseAuth = auth;
     window.firebaseDB = db;
     
-    console.log('✅ Services Firebase prêts');
-    console.log('📧 Compte admin: raniia.shopp@gmail.com');
+
     
 } catch (error) {
-    console.error('❌ Erreur Firebase:', error);
+
     alert('Erreur Firebase: ' + error.message);
 }

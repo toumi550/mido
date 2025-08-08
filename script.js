@@ -963,11 +963,11 @@ function updateModalButtons(t) {
 async function loadProductsFromFirebase() {
     products = [...sampleProducts];
     displayProducts(products);
-    console.log('Sample products loaded as fallback');
+
 
     try {
         if (typeof firebase === 'undefined' || !firebase.firestore) {
-            console.log('Firebase not available, keeping sample products');
+
             return;
         }
 
@@ -984,16 +984,15 @@ async function loadProductsFromFirebase() {
                 products.push({ id: doc.id, ...doc.data() });
             });
             displayProducts(products);
-            console.log(`Loaded ${products.length} products from Firebase`);
+
 
             setupProductsListener();
         } else {
-            console.log('No products in Firebase, using sample products');
+
         }
 
     } catch (error) {
-        console.error('Error loading products from Firebase:', error);
-        console.log('Keeping sample products as fallback');
+
     }
 }
 
@@ -1005,12 +1004,12 @@ function setupProductsListener() {
                 products.push({ id: doc.id, ...doc.data() });
             });
             displayProducts(products);
-            console.log('Products updated in real-time');
+
         }, (error) => {
-            console.error('Error in products listener:', error);
+
         });
     } catch (error) {
-        console.error('Error setting up products listener:', error);
+
     }
 }
 
@@ -1166,7 +1165,7 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
         initializeApp();
     } catch (error) {
-        console.error('Erreur lors de l\'initialisation:', error);
+
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
             loadingScreen.style.display = 'none';
@@ -1213,12 +1212,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // Charger et appliquer les paramètres du site
 async function loadSiteSettings() {
     try {
-        console.log('📋 Chargement des paramètres du site...');
+
 
         const settingsSnapshot = await firebase.firestore().collection('settings').get();
 
         if (settingsSnapshot.empty) {
-            console.log('⚠️ Aucun paramètre trouvé, utilisation des valeurs par défaut');
+
             return;
         }
 
@@ -1226,7 +1225,7 @@ async function loadSiteSettings() {
             const setting = doc.data();
             const settingId = doc.id;
 
-            console.log(`📝 Application paramètre: ${settingId}`, setting);
+
 
             if (settingId === 'general') {
                 // Mettre à jour le nom du site
@@ -1307,7 +1306,7 @@ async function loadSiteSettings() {
 
 
     } catch (error) {
-        console.error('❌ Erreur lors du chargement des paramètres:', error);
+
     }
 }
 
@@ -1325,13 +1324,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== SYNCHRONISATION EN TEMPS RÉEL =====
 function setupSettingsListener() {
     try {
-        console.log('🔄 Configuration de la synchronisation en temps réel...');
+
         
         // Écouter les changements des paramètres généraux
         firebase.firestore().collection('settings').doc('general')
             .onSnapshot((doc) => {
                 if (doc.exists) {
-                    console.log('🔄 Paramètres généraux mis à jour en temps réel');
+
                     const settings = doc.data();
                     applyGeneralSettings(settings);
                 }
@@ -1341,16 +1340,16 @@ function setupSettingsListener() {
         firebase.firestore().collection('settings').doc('social')
             .onSnapshot((doc) => {
                 if (doc.exists) {
-                    console.log('🔄 Paramètres sociaux mis à jour en temps réel');
+
                     const settings = doc.data();
                     applySocialSettings(settings);
                 }
             });
             
-        console.log('✅ Synchronisation en temps réel activée');
+
         
     } catch (error) {
-        console.error('❌ Erreur lors de la configuration de la synchronisation:', error);
+
     }
 }
 
@@ -1397,7 +1396,7 @@ function applyGeneralSettings(settings) {
         });
     }
     
-    console.log('✅ Paramètres généraux appliqués:', settings);
+
 }
 
 function applySocialSettings(settings) {
@@ -1430,7 +1429,7 @@ function applySocialSettings(settings) {
         });
     }
     
-    console.log('✅ Paramètres sociaux appliqués:', settings);
+
 }
 
 // Exposer la fonction pour pouvoir la tester
