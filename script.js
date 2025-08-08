@@ -156,7 +156,6 @@ const deliveryPrices = {
     'الشلف': { home: 750, stopdesk: 450 }
 };
 
-// Sample Products Data
 const sampleProducts = [
     {
         id: 1,
@@ -652,7 +651,6 @@ function loadCartFromStorage() {
             updateCartDisplay();
             updateCartCount();
         } catch (e) {
-            console.error('Error loading cart from storage:', e);
             cart = [];
         }
     }
@@ -761,7 +759,7 @@ function hideSearchSuggestions() {
 async function handleCheckoutSubmission(e) {
     e.preventDefault();
 
-    console.log('=== DÉBUT DE LA SOUMISSION DE COMMANDE ===');
+
 
     const customerName = document.getElementById('customerName')?.value?.trim();
     const customerPhone = document.getElementById('customerPhone')?.value?.trim();
@@ -806,36 +804,20 @@ async function handleCheckoutSubmission(e) {
         orderNumber: 'ORD-' + Date.now()
     };
 
-    console.log('Données de la commande préparées:', orderData);
-
-    console.log('Vérification de Firebase...');
-    console.log('- typeof firebase:', typeof firebase);
-    console.log('- firebase.firestore disponible:', !!(firebase && firebase.firestore));
-
     let orderSavedSuccessfully = false;
 
     try {
         if (typeof firebase !== 'undefined' && firebase.firestore) {
-            console.log('Tentative de sauvegarde dans Firebase...');
-
             const docRef = await firebase.firestore().collection('orders').add({
                 ...orderData,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-
             orderSavedSuccessfully = true;
-
-        } else {
-            console.warn('⚠️ Firebase non disponible, commande non sauvegardée en base');
         }
     } catch (error) {
-        console.error('❌ Erreur lors de la sauvegarde Firebase:', error);
-        
         alert('Attention: Il y a eu un problème technique lors de l\'enregistrement de votre commande. Veuillez contacter le service client avec votre numéro de commande: ' + orderData.orderNumber);
     }
-
-    console.log('État de la sauvegarde:', orderSavedSuccessfully ? 'SUCCÈS' : 'ÉCHEC');
 
     closeModal();
     const successModal = document.getElementById('successModal');
@@ -845,8 +827,6 @@ async function handleCheckoutSubmission(e) {
     updateCartDisplay();
     updateCartCount();
     saveCartToStorage();
-
-    console.log('=== FIN DE LA SOUMISSION DE COMMANDE ===');
 }
 
 // ===== GESTION DES LANGUES =====
@@ -1337,9 +1317,121 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof firebase !== 'undefined' && firebase.firestore) {
             loadSiteSettings();
+            setupSettingsListener(); // Ajouter l'écoute en temps réel
         }
     }, 2000);
 });
+
+// ===== SYNCHRONISATION EN TEMPS RÉEL =====
+function setupSettingsListener() {
+    try {
+        console.log('🔄 Configuration de la synchronisation en temps réel...');
+        
+        // Écouter les changements des paramètres généraux
+        firebase.firestore().collection('settings').doc('general')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    console.log('🔄 Paramètres généraux mis à jour en temps réel');
+                    const settings = doc.data();
+                    applyGeneralSettings(settings);
+                }
+            });
+
+        // Écouter les changements des paramètres sociaux
+        firebase.firestore().collection('settings').doc('social')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    console.log('🔄 Paramètres sociaux mis à jour en temps réel');
+                    const settings = doc.data();
+                    applySocialSettings(settings);
+                }
+            });
+            
+        console.log('✅ Synchronisation en temps réel activée');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la configuration de la synchronisation:', error);
+    }
+}
+
+function applyGeneralSettings(settings) {
+    // Mettre à jour le nom du site
+    if (settings.siteName) {
+        // Titre principal
+        const heroTitles = document.querySelectorAll('.hero-title');
+        heroTitles.forEach(title => {
+            if (currentLanguage === 'ar') {
+                title.textContent = settings.siteName;
+            }
+        });
+
+        // Footer
+        const footerTitles = document.querySelectorAll('.footer-logo h3');
+        footerTitles.forEach(title => {
+            if (currentLanguage === 'ar') {
+                title.textContent = settings.siteName;
+            }
+        });
+
+        // Copyright
+        const copyrightElements = document.querySelectorAll('.footer-copyright p');
+        copyrightElements.forEach(copyright => {
+            if (currentLanguage === 'ar') {
+                copyright.textContent = `© 2024 ${settings.siteName}. جميع الحقوق محفوظة.`;
+            }
+        });
+    }
+
+    // Mettre à jour les informations de contact
+    if (settings.contactEmail) {
+        const emailElements = document.querySelectorAll('.contact-info p:nth-child(2)');
+        emailElements.forEach(email => {
+            email.innerHTML = `<i class="fas fa-envelope"></i> ${settings.contactEmail}`;
+        });
+    }
+
+    if (settings.contactPhone) {
+        const phoneElements = document.querySelectorAll('.contact-info p:nth-child(1)');
+        phoneElements.forEach(phone => {
+            phone.innerHTML = `<i class="fas fa-phone"></i> <span dir="ltr">${settings.contactPhone}</span>`;
+        });
+    }
+    
+    console.log('✅ Paramètres généraux appliqués:', settings);
+}
+
+function applySocialSettings(settings) {
+    // Mettre à jour les liens des réseaux sociaux
+    if (settings.facebookUrl) {
+        const facebookLinks = document.querySelectorAll('.social-link.facebook');
+        facebookLinks.forEach(link => {
+            link.href = settings.facebookUrl;
+        });
+    }
+
+    if (settings.instagramUrl) {
+        const instagramLinks = document.querySelectorAll('.social-link.instagram');
+        instagramLinks.forEach(link => {
+            link.href = settings.instagramUrl;
+        });
+    }
+
+    if (settings.whatsappNumber) {
+        const whatsappLinks = document.querySelectorAll('.social-link.whatsapp');
+        whatsappLinks.forEach(link => {
+            link.href = `https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`;
+        });
+    }
+
+    if (settings.tiktokUrl) {
+        const tiktokLinks = document.querySelectorAll('.social-link.tiktok');
+        tiktokLinks.forEach(link => {
+            link.href = settings.tiktokUrl;
+        });
+    }
+    
+    console.log('✅ Paramètres sociaux appliqués:', settings);
+}
 
 // Exposer la fonction pour pouvoir la tester
 window.loadSiteSettings = loadSiteSettings;
