@@ -866,19 +866,110 @@ function handleImageFile(file) {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    // Compression automatique de l'image
+    compressImage(file, (compressedDataUrl) => {
         const imagePreview = document.getElementById('imagePreview');
         if (imagePreview) {
             imagePreview.innerHTML = `
                 <div style="position: relative; display: inline-block;">
-                    <img src="${e.target.result}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
+                    <img src="${compressedDataUrl}" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #ddd;">
                     <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
                 </div>
             `;
         }
 
-        document.getElementById('productImage').value = e.target.result;
+        document.getElementById('productImage').value = compressedDataUrl;
+    });
+}
+
+// Fonction de compression d'image
+function compressImage(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = function() {
+        // Calculer les nouvelles dimensions (max 800px)
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let { width, height } = img;
+
+        if (width > height) {
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Dessiner l'image redimensionnée
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convertir en base64 avec compression (qualité 0.7)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        callback(compressedDataUrl);
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+} border: 2px solid #ddd;">
+                    <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
+                </div>
+            `;
+        }
+
+        document.getElementById('productImage').value = compressedDataUrl;
+    });
+}
+
+// Fonction de compression d'image
+function compressImage(file, callback) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = function() {
+        // Calculer les nouvelles dimensions (max 800px)
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let { width, height } = img;
+
+        if (width > height) {
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Dessiner l'image redimensionnée
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convertir en base64 avec compression (qualité 0.7)
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        callback(compressedDataUrl);
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
