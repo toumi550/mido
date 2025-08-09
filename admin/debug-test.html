@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test - Admin Rania Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        .log {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .status { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug Test - Admin Rania Shop</h1>
+        <p>Ce fichier va diagnostiquer les problèmes de connexion admin.</p>
+
+        <!-- Test 1: Firebase SDK -->
+        <div id="test1" class="test-section info">
+            <h3>Test 1: Chargement Firebase SDK</h3>
+            <div class="status" id="firebase-status">⏳ En cours...</div>
+            <div class="log" id="firebase-log"></div>
+        </div>
+
+        <!-- Test 2: Configuration Firebase -->
+        <div id="test2" class="test-section info">
+            <h3>Test 2: Configuration Firebase</h3>
+            <div class="status" id="config-status">⏳ En cours...</div>
+            <div class="log" id="config-log"></div>
+        </div>
+
+        <!-- Test 3: Authentification -->
+        <div id="test3" class="test-section info">
+            <h3>Test 3: Test d'authentification</h3>
+            <div class="status" id="auth-status">⏳ En attente...</div>
+            <div class="log" id="auth-log"></div>
+            <button onclick="testAuth()">Tester la connexion</button>
+        </div>
+
+        <!-- Test 4: Firestore -->
+        <div id="test4" class="test-section info">
+            <h3>Test 4: Connexion Firestore</h3>
+            <div class="status" id="firestore-status">⏳ En cours...</div>
+            <div class="log" id="firestore-log"></div>
+        </div>
+
+        <!-- Test 5: Erreurs JavaScript -->
+        <div id="test5" class="test-section info">
+            <h3>Test 5: Erreurs JavaScript</h3>
+            <div class="status" id="js-status">⏳ En cours...</div>
+            <div class="log" id="js-log"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="test-section">
+            <h3>Actions de debug</h3>
+            <button onclick="runAllTests()">🔄 Relancer tous les tests</button>
+            <button onclick="clearLogs()">🗑️ Effacer les logs</button>
+            <button onclick="exportLogs()">📋 Copier les logs</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Variables globales pour les logs
+        let allLogs = [];
+
+        // Fonction pour logger
+        function log(section, message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            allLogs.push(`${section}: ${logMessage}`);
+            
+            const logElement = document.getElementById(`${section}-log`);
+            if (logElement) {
+                logElement.textContent += logMessage + '\n';
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+            
+            console.log(`${section}:`, message);
+        }
+
+        // Fonction pour mettre à jour le statut
+        function updateStatus(section, status, type = 'info') {
+            const statusElement = document.getElementById(`${section}-status`);
+            const sectionElement = document.getElementById(`test${section === 'firebase' ? '1' : section === 'config' ? '2' : section === 'auth' ? '3' : section === 'firestore' ? '4' : '5'}`);
+            
+            if (statusElement) {
+                statusElement.textContent = status;
+            }
+            
+            if (sectionElement) {
+                sectionElement.className = `test-section ${type}`;
+            }
+        }
+
+        // Test 1: Firebase SDK
+        function testFirebaseSDK() {
+            log('firebase', 'Début du test Firebase SDK...');
+            
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK non chargé');
+                }
+                
+                log('firebase', '✅ Firebase SDK chargé avec succès');
+                log('firebase', `Version Firebase: ${firebase.SDK_VERSION || 'Inconnue'}`);
+                
+                // Vérifier les services
+                if (firebase.auth) {
+                    log('firebase', '✅ Firebase Auth disponible');
+                } else {
+                    log('firebase', '❌ Firebase Auth non disponible');
+                }
+                
+                if (firebase.firestore) {
+                    log('firebase', '✅ Firebase Firestore disponible');
+                } else {
+                    log('firebase', '❌ Firebase Firestore non disponible');
+                }
+                
+                updateStatus('firebase', '✅ Firebase SDK OK', 'success');
+                return true;
+                
+            } catch (error) {
+                log('firebase', `❌ Erreur Firebase SDK: ${error.message}`);
+                updateStatus('firebase', '❌ Erreur Firebase SDK', 'error');
+                return false;
+            }
+        }
+
+        // Test 2: Configuration Firebase
+        function testFirebaseConfig() {
+            log('config', 'Début du test de configuration...');
+            
+            try {
+                // Configuration Firebase
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCMHnyFo55VTydqqNJ29x1O0NrUOzQ2dj8",
+                    authDomain: "rania-shop-1fc2e.firebaseapp.com",
+                    projectId: "rania-shop-1fc2e",
+                    storageBucket: "rania-shop-1fc2e.firebasestorage.app",
+                    messagingSenderId: "738134910408",
+                    appId: "1:738134910408:web:ca1dbcfa1d06ff18ad0cfd"
+                };
+                
+                log('config', 'Configuration Firebase chargée');
+                log('config', `Project ID: ${firebaseConfig.projectId}`);
+                log('config', `Auth Domain: ${firebaseConfig.authDomain}`);
+                
+                // Initialiser Firebase
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    log('config', '✅ Firebase initialisé avec succès');
+                } else {
+                    log('config', '✅ Firebase déjà initialisé');
+                }
+                
+                // Créer les références globales
+                window.firebaseAuth = firebase.auth();
+                window.firebaseDB = firebase.firestore();
+                
+                log('config', '✅ Références globales créées');
+                updateStatus('config', '✅ Configuration OK', 'success');
+                return true;
+                
+            } catch (error) {
+                log('config', `❌ Erreur de configuration: ${error.message}`);
+                updateStatus('config', '❌ Erreur de configuration', 'error');
+                return false;
+            }
+        }
+
+        // Test 3: Authentification
+        function testAuth() {
+            log('auth', 'Début du test d\'authentification...');
+            updateStatus('auth', '⏳ Test en cours...', 'warning');
+            
+            try {
+                if (!window.firebaseAuth) {
+                    throw new Error('Firebase Auth non disponible');
+                }
+                
+                log('auth', 'Firebase Auth disponible');
+                
+                // Tester l'état d'authentification
+                window.firebaseAuth.onAuthStateChanged((user) => {
+                    if (user) {
+                        log('auth', `✅ Utilisateur connecté: ${user.email}`);
+                        log('auth', `UID: ${user.uid}`);
+                        log('auth', `Email vérifié: ${user.emailVerified}`);
+                        
+                        if (user.email === 'raniia.shopp@gmail.com') {
+                            log('auth', '✅ Email administrateur autorisé');
+                            updateStatus('auth', '✅ Authentification OK', 'success');
+                        } else {
+                            log('auth', '⚠️ Email non autorisé pour l\'admin');
+                            updateStatus('auth', '⚠️ Email non autorisé', 'warning');
+                        }
+                    } else {
+                        log('auth', '👤 Aucun utilisateur connecté');
+                        updateStatus('auth', '👤 Non connecté', 'info');
+                    }
+                });
+                
+                // Tester une connexion
+                const email = prompt('Email de test (optionnel):') || 'raniia.shopp@gmail.com';
+                const password = prompt('Mot de passe de test (optionnel):');
+                
+                if (email && password) {
+                    log('auth', `Tentative de connexion avec: ${email}`);
+                    
+                    window.firebaseAuth.signInWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            log('auth', '✅ Connexion réussie!');
+                            updateStatus('auth', '✅ Connexion réussie', 'success');
+                        })
+                        .catch((error) => {
+                            log('auth', `❌ Erreur de connexion: ${error.code} - ${error.message}`);
+                            updateStatus('auth', '❌ Erreur de connexion', 'error');
+                        });
+                } else {
+                    log('auth', 'Test de connexion annulé');
+                    updateStatus('auth', '⏸️ Test annulé', 'info');
+                }
+                
+            } catch (error) {
+                log('auth', `❌ Erreur d'authentification: ${error.message}`);
+                updateStatus('auth', '❌ Erreur d\'authentification', 'error');
+            }
+        }
+
+        // Test 4: Firestore
+        function testFirestore() {
+            log('firestore', 'Début du test Firestore...');
+            
+            try {
+                if (!window.firebaseDB) {
+                    throw new Error('Firestore non disponible');
+                }
+                
+                log('firestore', 'Firestore disponible');
+                
+                // Tester une lecture simple
+                window.firebaseDB.collection('products').limit(1).get()
+                    .then((snapshot) => {
+                        log('firestore', `✅ Lecture Firestore réussie (${snapshot.size} documents)`);
+                        updateStatus('firestore', '✅ Firestore OK', 'success');
+                    })
+                    .catch((error) => {
+                        log('firestore', `❌ Erreur de lecture Firestore: ${error.message}`);
+                        updateStatus('firestore', '❌ Erreur Firestore', 'error');
+                    });
+                
+            } catch (error) {
+                log('firestore', `❌ Erreur Firestore: ${error.message}`);
+                updateStatus('firestore', '❌ Erreur Firestore', 'error');
+            }
+        }
+
+        // Test 5: Erreurs JavaScript
+        function testJavaScriptErrors() {
+            log('js', 'Début du test d\'erreurs JavaScript...');
+            
+            // Capturer les erreurs JavaScript
+            window.addEventListener('error', (event) => {
+                log('js', `❌ Erreur JS: ${event.message}`);
+                log('js', `Fichier: ${event.filename}:${event.lineno}:${event.colno}`);
+                updateStatus('js', '❌ Erreurs détectées', 'error');
+            });
+            
+            // Capturer les erreurs de promesses
+            window.addEventListener('unhandledrejection', (event) => {
+                log('js', `❌ Promesse rejetée: ${event.reason}`);
+                updateStatus('js', '❌ Erreurs de promesses', 'error');
+            });
+            
+            // Tester le chargement du fichier admin.js
+            try {
+                const script = document.createElement('script');
+                script.src = 'admin.js';
+                script.onload = () => {
+                    log('js', '✅ admin.js chargé avec succès');
+                    updateStatus('js', '✅ JavaScript OK', 'success');
+                };
+                script.onerror = () => {
+                    log('js', '❌ Erreur de chargement admin.js');
+                    updateStatus('js', '❌ Erreur de chargement', 'error');
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                log('js', `❌ Erreur JavaScript: ${error.message}`);
+                updateStatus('js', '❌ Erreur JavaScript', 'error');
+            }
+        }
+
+        // Fonctions utilitaires
+        function runAllTests() {
+            clearLogs();
+            log('system', '🔄 Relancement de tous les tests...');
+            
+            setTimeout(() => testFirebaseSDK(), 100);
+            setTimeout(() => testFirebaseConfig(), 500);
+            setTimeout(() => testFirestore(), 1000);
+            setTimeout(() => testJavaScriptErrors(), 1500);
+        }
+
+        function clearLogs() {
+            allLogs = [];
+            document.querySelectorAll('.log').forEach(log => log.textContent = '');
+        }
+
+        function exportLogs() {
+            const logsText = allLogs.join('\n');
+            navigator.clipboard.writeText(logsText).then(() => {
+                alert('📋 Logs copiés dans le presse-papiers!');
+            }).catch(() => {
+                // Fallback pour les navigateurs qui ne supportent pas clipboard
+                const textarea = document.createElement('textarea');
+                textarea.value = logsText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('📋 Logs copiés dans le presse-papiers!');
+            });
+        }
+
+        // Lancer les tests au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            log('system', '🚀 Démarrage des tests de diagnostic...');
+            runAllTests();
+        });
+    </script>
+</body>
+</html>

@@ -888,7 +888,7 @@ function compressImage(file, callback) {
     const ctx = canvas.getContext('2d');
     const img = new Image();
 
-    img.onload = function() {
+    img.onload = function () {
         // Calculer les nouvelles dimensions (max 800px)
         const maxWidth = 800;
         const maxHeight = 600;
@@ -979,17 +979,13 @@ function setupProfitCalculation() {
     }
 }
 
-        document.getElementById('productImage').value = compressedDataUrl;
-    });
-}
-
 // Fonction de compression d'image
 function compressImage(file, callback) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
 
-    img.onload = function() {
+    img.onload = function () {
         // Calculer les nouvelles dimensions (max 800px)
         const maxWidth = 800;
         const maxHeight = 600;
