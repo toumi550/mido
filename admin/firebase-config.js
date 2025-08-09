@@ -1,5 +1,4 @@
-// Firebase Configuration - RANIA SHOP
-// Compte administrateur: raniia.shopp@gmail.com
+// Configuration Firebase
 
 const firebaseConfig = {
     apiKey: "AIzaSyCMHnyFo55VTydqqNJ29x1O0NrUOzQ2dj8",

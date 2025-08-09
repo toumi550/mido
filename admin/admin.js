@@ -1,5 +1,4 @@
-// PANNEAU ADMIN RANIA SHOP - VERSION FINALE
-// Compte administrateur: raniia.shopp@gmail.com
+// Panneau d'administration Rania Shop
 
 let currentUser = null;
 let products = [];
@@ -820,7 +819,7 @@ window.deleteOrder = async function (orderId) {
 
 
 
-// ===== UPLOAD D'IMAGE =====
+// Upload d'image
 function setupImageUpload() {
     const imageUploadArea = document.getElementById('imageUploadArea');
     const imageInput = document.getElementById('imageInput');
@@ -1077,7 +1076,7 @@ function setupProfitCalculation() {
     }
 }
 
-// ===== FONCTIONS D'EXPORT =====
+// Fonctions d'export
 window.exportOrdersCSV = function () {
     if (orders.length === 0) {
         alert('Aucune commande à exporter');
@@ -1151,7 +1150,7 @@ function downloadCSV(content, filename) {
     }
 }
 
-// ===== GESTION DES PARAMÈTRES =====
+// Gestion des paramètres
 function loadSettings() {
     loadSiteSettings();
     setupSettingsListeners();
@@ -1233,7 +1232,7 @@ function setupSettingsListeners() {
     }
 }
 
-// ===== GESTION EN LOT DES COMMANDES =====
+// Gestion en lot
 window.selectAllOrders = function () {
     const checkboxes = document.querySelectorAll('#ordersTableBody input[type="checkbox"]');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
@@ -1278,7 +1277,7 @@ window.deleteSelectedOrders = async function () {
     }
 };
 
-// ===== EVENT LISTENERS =====
+// Event listeners
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => {
         const selectAllCheckbox = document.getElementById('selectAllCheckbox');

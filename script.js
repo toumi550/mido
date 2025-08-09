@@ -1,11 +1,11 @@
-// Global Variables
+// Variables globales
 let cart = [];
 let products = [];
 let currentProduct = null;
 let currentLanguage = 'ar';
 let searchTimeout;
 
-// Language translations
+// Traductions
 const translations = {
     ar: {
         home: 'الرئيسية',
@@ -95,7 +95,7 @@ const translations = {
     }
 };
 
-// Delivery Prices Data
+// Prix de livraison
 const deliveryPrices = {
     'الجزائر': { home: 500, stopdesk: 350 },
     'أدرار': { home: 1400, stopdesk: 900 },
@@ -271,7 +271,7 @@ const sampleProducts = [
     }
 ];
 
-// ===== FONCTIONS PRINCIPALES =====
+// Fonctions principales
 
 // Fonction d'ajout au panier
 function addToCart(productId, quantity = 1) {
@@ -428,7 +428,7 @@ function scrollToSection(sectionId) {
     }
 }
 
-// Exposer les fonctions au scope global
+// Fonctions globales
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.updateCartQuantity = updateCartQuantity;
@@ -442,7 +442,7 @@ window.closeSuccessModal = closeSuccessModal;
 window.selectProduct = selectProduct;
 window.scrollToSection = scrollToSection;
 
-// ===== FONCTIONS D'AFFICHAGE ET DE GESTION =====
+// Fonctions d'affichage
 
 function updateCartDisplay() {
     const cartItems = document.getElementById('cartItems');
@@ -656,7 +656,7 @@ function loadCartFromStorage() {
     }
 }
 
-// ===== FONCTIONS DE RECHERCHE =====
+// Fonctions de recherche
 
 function setupSearchListeners() {
     const searchInput = document.getElementById('searchInput');
@@ -754,7 +754,7 @@ function hideSearchSuggestions() {
     }
 }
 
-// ===== GESTION DES COMMANDES =====
+// Gestion des commandes
 
 async function handleCheckoutSubmission(e) {
     e.preventDefault();
@@ -829,7 +829,7 @@ async function handleCheckoutSubmission(e) {
     saveCartToStorage();
 }
 
-// ===== GESTION DES LANGUES =====
+// Gestion des langues
 
 function changeLanguage(lang) {
     currentLanguage = lang;
@@ -958,7 +958,7 @@ function updateModalButtons(t) {
     }
 }
 
-// ===== GESTION DES PRODUITS ET FIREBASE =====
+// Gestion des produits
 
 async function loadProductsFromFirebase() {
     products = [...sampleProducts];
@@ -1027,7 +1027,7 @@ function populateWilayaDropdown() {
     });
 }
 
-// ===== GESTION DES ÉVÉNEMENTS =====
+// Gestion des événements
 
 function setupEventListeners() {
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -1132,7 +1132,7 @@ function setupSidebarAutoHide() {
     observer.observe(footer);
 }
 
-// ===== INITIALISATION =====
+// Initialisation
 
 function initializeApp() {
     const savedLanguage = localStorage.getItem('raniaShopLanguage') || 'ar';
@@ -1207,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ===== CHARGEMENT DES PARAMÈTRES DEPUIS FIREBASE =====
+// Chargement des paramètres
 
 // Charger et appliquer les paramètres du site
 async function loadSiteSettings() {
@@ -1321,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
 });
 
-// ===== SYNCHRONISATION EN TEMPS RÉEL =====
+// Synchronisation temps réel
 function setupSettingsListener() {
     try {
 
