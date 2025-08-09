@@ -922,11 +922,62 @@ function compressImage(file, callback) {
         img.src = e.target.result;
     };
     reader.readAsDataURL(file);
-} border: 2px solid #ddd;">
-                    <button type="button" onclick="removeImagePreview()" style="position: absolute; top: -10px; right: -10px; background: red; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
-                </div>
-            `;
-        }
+}
+
+window.removeImagePreview = function () {
+    const imagePreview = document.getElementById('imagePreview');
+    const imageInput = document.getElementById('imageInput');
+    const productImage = document.getElementById('productImage');
+
+    if (imagePreview) imagePreview.innerHTML = '';
+    if (imageInput) imageInput.value = '';
+    if (productImage) productImage.value = '';
+};
+
+// ===== CALCUL DE RENTABILITÉ =====
+function setupProfitCalculation() {
+    const purchasePriceInput = document.getElementById('productPurchasePrice');
+    const salePriceInput = document.getElementById('productPrice');
+    const profitCalculation = document.getElementById('profitCalculation');
+
+    if (purchasePriceInput && salePriceInput && profitCalculation) {
+        const updateProfitCalculation = () => {
+            const purchasePrice = parseFloat(purchasePriceInput.value) || 0;
+            const salePrice = parseFloat(salePriceInput.value) || 0;
+            const profit = salePrice - purchasePrice;
+            const profitPercentage = purchasePrice > 0 ? ((profit / purchasePrice) * 100) : 0;
+
+            const profitMargin = document.getElementById('profitMargin');
+            const profitPercentageEl = document.getElementById('profitPercentage');
+            const profitStatus = document.getElementById('profitStatus');
+
+            if (profitMargin) profitMargin.textContent = `${profit.toFixed(2)} DA`;
+            if (profitPercentageEl) profitPercentageEl.textContent = `${profitPercentage.toFixed(1)}%`;
+
+            if (profitStatus) {
+                if (profit > 0) {
+                    profitStatus.textContent = 'Rentable';
+                    profitStatus.style.color = '#27ae60';
+                } else if (profit === 0) {
+                    profitStatus.textContent = 'Équilibré';
+                    profitStatus.style.color = '#f39c12';
+                } else {
+                    profitStatus.textContent = 'Perte';
+                    profitStatus.style.color = '#e74c3c';
+                }
+            }
+
+            if (purchasePrice > 0 || salePrice > 0) {
+                profitCalculation.style.display = 'block';
+            } else {
+                profitCalculation.style.display = 'none';
+            }
+        };
+
+        purchasePriceInput.addEventListener('input', updateProfitCalculation);
+        salePriceInput.addEventListener('input', updateProfitCalculation);
+    }
+}
 
         document.getElementById('productImage').value = compressedDataUrl;
     });
